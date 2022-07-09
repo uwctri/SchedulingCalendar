@@ -1,0 +1,57 @@
+{
+    "name": "Scheduling and Availability",
+    "tt_name": "module_name",
+    "description": "Manage availability, appoitments, and calendars",
+    "tt_description": "module_desc",
+    "documentation": "README.md",
+    "namespace": "UWMadison\\Scheduling",
+    "authors": [
+        {
+            "name": "Adam Nunez",
+            "email": "Adam.Nunez@ctri.wisc.edu",
+            "institution": "UW Madison - Center for Tobacco Research and Intervention"
+        }
+    ],
+    "permissions": [],
+    "framework-version": 10,
+    "no-auth-pages": [
+        "api"
+    ],
+    "no-csrf-pages": [
+        "api"
+    ],
+    "links": {
+        "project": [
+            {
+                "name": "Edit Availability",
+                "icon": "fa fa-calendar",
+                "url": "calendar.php",
+                "show-header-and-footer": true
+            },
+            {
+                "name": "My Calendar",
+                "icon": "fa fa-calendar",
+                "url": "calendar.php",
+                "show-header-and-footer": true
+            },
+            {
+                "name": "Project Calendar",
+                "icon": "fa fa-calendar",
+                "url": "calendar.php",
+                "show-header-and-footer": true
+            }
+        ]
+    },
+    "project-settings": [
+        {
+            "key": "calendar-descriptive",
+            "name": "<b>This module is configured by a link on the sidebar called 'Calendar Setup'.</b><br><i>The actual config is stored in a hidden external module variable</i>",
+            "tt_name": "module_config",
+            "type": "descriptive"
+        }
+    ],
+    "system-settings": [],
+    "compatibility": {
+        "redcap-version-min": "12.5.0"
+    }
+}
