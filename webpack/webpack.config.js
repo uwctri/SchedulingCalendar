@@ -1,10 +1,11 @@
-const path = require('path')
+const path = require("path")
 
 module.exports = {
-    mode: 'development',
-    entry: './index.js',
+    mode: "development",
+    devtool: "inline-source-map",
+    entry: "./index.js",
     resolve: {
-        extensions: ['.js']
+        extensions: [".js"]
     },
     module: {
         rules: [
@@ -26,7 +27,7 @@ module.exports = {
         ]
     },
     output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, '../'),
+        filename: "bundle.js",
+        path: path.resolve(__dirname, "../"),
     },
 }

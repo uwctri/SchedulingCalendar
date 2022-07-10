@@ -6,6 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use ExternalModules\ExternalModules;
 use REDCap;
 use RestUtility;
+use Project;
 
 class Scheduling extends AbstractExternalModule
 {
@@ -53,8 +54,8 @@ class Scheduling extends AbstractExternalModule
         return json_encode([
             [
                 "title" => "test thing",
-                "start" => date("Y-m-d")."T11:00",
-                "end" =>  date("Y-m-d")."T13:00"
+                "start" => date("Y-m-d") . "T11:00",
+                "end" =>  date("Y-m-d") . "T13:00"
             ]
         ]);
     }

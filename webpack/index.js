@@ -1,9 +1,9 @@
-import { Calendar, config, Emitter } from '@fullcalendar/core';
+import { Calendar } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
-import { DateTime, Settings } from "luxon";
+import { DateTime, Duration } from "luxon";
 import './style.less';
 
 const hiddenDays = [0] // TODO
@@ -31,13 +31,36 @@ document.addEventListener('DOMContentLoaded', () => {
         slotMaxTime: '19:00',
         expandRows: true,
         selectable: true,
-        select: (selectionInfo) => {
-            // TODO close any open forms
-            if (selectionInfo.view.type == 'singleMonth') {
-                calendar.changeView("singleWeek");
-                calendar.gotoDate(selectionInfo.start);
+        dateClick: (dateClickInfo) => {
+            if (dateClickInfo.view.type == 'singleMonth') {
+                calendar.changeView("singleWeek")
+                calendar.gotoDate(dateClickInfo.date)
             }
         },
+        select: (selectionInfo) => {
+            // TODO close any open forms
+        },
+        selectAllow: (selectionInfo) => {
+
+            // Prevent from selecting multiple days
+            if (calendar.view.type == 'singleMonth') {
+                let start = DateTime.fromISO(selectionInfo.endStr)
+                let end = DateTime.fromISO(selectionInfo.startStr)
+                if (start.diff(end, 'days').toObject().days > 1) {
+                    return false
+                }
+            }
+
+            // TODO can we allow selction as non-continuous square of time?
+            if (calendar.view.type == 'singleWeek') {
+
+            }
+            return true
+        },
+        unselect: function (jsEvent, view) {
+            // TODO close any open forms
+        },
+        unselectAuto: false,
         views: {
             singleMonth: {
                 type: 'dayGridMonth',
@@ -56,11 +79,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 type: 'list',
                 visibleRange: () => {
                     // half year forward ad back
-                    let dt = DateTime.now();
+                    let dt = DateTime.now()
                     return {
                         start: dt.minus({ day: 364 / 2 }).toJSDate(),
                         end: dt.plus({ day: 364 / 2 }).toJSDate()
-                    };
+                    }
                 },
                 listDayFormat: {
                     month: 'long',
@@ -79,12 +102,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     return {
                         redcap_csrf_token: php.csrf,
                         method: "eventUpdate",
+                        page: pageURL.type,
                         providers: [],
-                    };
+                    }
                 }
             }
         ]
-    });
+    })
 
-    calendar.render();
-});
+    calendar.render()
+})
