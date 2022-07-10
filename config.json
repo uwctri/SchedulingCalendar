@@ -26,18 +26,21 @@
                 "name": "Edit Availability",
                 "icon": "fa fa-calendar",
                 "url": "calendar.php",
+                "type": "edit",
                 "show-header-and-footer": true
             },
             {
                 "name": "My Calendar",
                 "icon": "fa fa-calendar",
                 "url": "calendar.php",
+                "type": "my",
                 "show-header-and-footer": true
             },
             {
                 "name": "Project Calendar",
                 "icon": "fa fa-calendar",
                 "url": "calendar.php",
+                "type": "project",
                 "show-header-and-footer": true
             }
         ]

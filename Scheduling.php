@@ -14,7 +14,9 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_module_link_check_display($project_id, $link)
     {
-        return true;
+        // TODO if SOT project then hide the project calendar
+        $link["url"] = $link["url"] . "&calType=" . $link["type"];
+        return $link;
     }
 
     public function loadSettings()

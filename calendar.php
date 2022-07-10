@@ -8,7 +8,10 @@ $module->tt_transferToJavascriptModuleObject();
 </script>
 
 <div class="projhdr"><i class="fas fa-calendar"></i> <?= $module->tt('module_name'); ?></div>
-<div id="content" class="w-100" style="min-width:1200px">
+<div id="content" class="w-100 pr-4" style="min-width:1200px">
 
-<script src="<?= $module->getUrl('bundle.js'); ?>"></script>
+    <div id="calendar">
+    </div>
+
 </div>
+<script src="<?= $module->getUrl('bundle.js'); ?>"></script>

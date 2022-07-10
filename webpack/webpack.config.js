@@ -11,9 +11,18 @@ module.exports = {
             {
                 test: /\.css$/,
                 use: [
-                    { loader: 'css-loader', options: { importLoaders: 1 } }
+                    "style-loader",
+                    "css-loader"
                 ]
-            }
+            },
+            {
+                test: /\.less$/i,
+                use: [
+                    "style-loader",
+                    "css-loader",
+                    "less-loader",
+                ],
+            },
         ]
     },
     output: {
