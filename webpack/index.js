@@ -1,9 +1,9 @@
-import { Calendar } from '@fullcalendar/core';
+import { Calendar, config, Emitter } from '@fullcalendar/core';
 import interactionPlugin from '@fullcalendar/interaction';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
-import { DateTime } from "luxon";
+import { DateTime, Settings } from "luxon";
 import './style.less';
 
 const hiddenDays = [0] // TODO
@@ -71,60 +71,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 buttonText: 'agenda'
             }
         },
-        events: [
+        eventSources: [
             {
-                title: 'All Day Event',
-                start: '2022-01-01',
-            },
-            {
-                title: 'Long Event',
-                start: '2022-01-07',
-                end: '2022-01-10'
-            },
-            {
-                groupId: 999,
-                title: 'Repeating Event',
-                start: '2022-01-09T16:00:00'
-            },
-            {
-                groupId: 999,
-                title: 'Repeating Event',
-                start: '2022-01-16T16:00:00'
-            },
-            {
-                title: 'Conference',
-                start: '2022-01-11',
-                end: '2022-01-13'
-            },
-            {
-                title: 'Meeting',
-                start: '2022-01-12T10:30:00',
-                end: '2022-01-12T12:30:00'
-            },
-            {
-                title: 'Lunch',
-                start: '2022-01-12T12:00:00'
-            },
-            {
-                title: 'Meeting',
-                start: '2022-01-12T14:30:00'
-            },
-            {
-                title: 'Happy Hour',
-                start: '2022-01-12T17:30:00'
-            },
-            {
-                title: 'Dinner',
-                start: '2022-01-12T20:00:00'
-            },
-            {
-                title: 'Birthday Party',
-                start: '2022-01-13T07:00:00'
-            },
-            {
-                title: 'Click for Google',
-                url: 'http://google.com/',
-                start: '2022-01-28'
+                url: php.router,
+                method: 'POST',
+                extraParams: () => {
+                    return {
+                        redcap_csrf_token: php.csrf,
+                        method: "eventUpdate",
+                        providers: [],
+                    };
+                }
             }
         ]
     });

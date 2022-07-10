@@ -15,13 +15,16 @@ class Scheduling extends AbstractExternalModule
     public function redcap_module_link_check_display($project_id, $link)
     {
         // TODO if SOT project then hide the project calendar
-        $link["url"] = $link["url"] . "&calType=" . $link["type"];
+        $link["url"] = $link["url"] . "&type=" . $link["type"];
         return $link;
     }
 
     public function loadSettings()
     {
-        return json_encode([]);
+        return [
+            "csrf" => $this->getCSRFToken(),
+            "router" => $this->getUrl('router.php')
+        ];
     }
 
     /*
@@ -33,7 +36,7 @@ class Scheduling extends AbstractExternalModule
 
         $request = RestUtility::processRequest($tokenRequired);
         $params = $request->getRequestVars();
-        $project_id = $params['projectid'];
+        $project_id = $params["projectid"] ?? $_GET["pid"];
 
         // API calls need to have a new project instance created
         if (!isset($Proj)) {
@@ -47,7 +50,13 @@ class Scheduling extends AbstractExternalModule
 
         // Run core code
         // TODO
-        return json_encode([]);
+        return json_encode([
+            [
+                "title" => "test thing",
+                "start" => date("Y-m-d")."T11:00",
+                "end" =>  date("Y-m-d")."T13:00"
+            ]
+        ]);
     }
 
     /*
