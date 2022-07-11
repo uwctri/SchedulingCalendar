@@ -55,6 +55,6 @@
     ],
     "system-settings": [],
     "compatibility": {
-        "redcap-version-min": "12.5.0"
+        "redcap-version-min": "12.5.1"
     }
 }

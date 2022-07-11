@@ -1,38 +1,54 @@
-import { Calendar } from '@fullcalendar/core';
-import interactionPlugin from '@fullcalendar/interaction';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import listPlugin from '@fullcalendar/list';
-import { DateTime, Duration } from "luxon";
-import './style.less';
+import { Calendar } from "@fullcalendar/core"
+import interactionPlugin from "@fullcalendar/interaction"
+import dayGridPlugin from "@fullcalendar/daygrid"
+import timeGridPlugin from "@fullcalendar/timegrid"
+import listPlugin from "@fullcalendar/list"
+import { DateTime } from "luxon"
+import openUserConfig from "./openUserConfig"
+import "./observerHotfix"
+import "./style.less"
+
+// TODO User Calnedar Config Screen
+// Changes days visible
+// Change start and end times for calendar
+// Foce to fit on one screen (no scroll)
 
 const hiddenDays = [0] // TODO
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 
-let toolbar = ["singleMonth", "singleWeek", "singleDay"]
+// Build out the toolbars 
+let rightToolbar = ["singleMonth", "singleWeek", "singleDay"]
 if (pageURL.type != "edit") {
-    toolbar = ["agenda"].concat(toolbar)
+    rightToolbar = ["agenda"].concat(rightToolbar)
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    var calendarEl = document.getElementById('calendar');
+let leftToolbar = ["prev,next", "today", "config"]
+
+document.addEventListener("DOMContentLoaded", () => {
+    var calendarEl = document.getElementById("calendar");
 
     var calendar = new Calendar(calendarEl, {
         plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
+        customButtons: {
+            config: {
+                icon: "fa-gear",
+                click: openUserConfig
+            }
+        },
         headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: toolbar.join(',')
+            left: leftToolbar.join(" "),
+            center: "title",
+            right: rightToolbar.join(",")
         },
         editable: true,
-        dayMaxEvents: true, // allow "more" link when too many events
-        initialView: 'singleWeek',
-        slotMinTime: '05:00', // TODO make configurable
-        slotMaxTime: '19:00',
+        dayMaxEvents: true,
+        initialView: "singleWeek",
+        slotMinTime: "05:00", // TODO make configurable
+        slotMaxTime: "19:00",
         expandRows: true,
         selectable: true,
         dateClick: (dateClickInfo) => {
-            if (dateClickInfo.view.type == 'singleMonth') {
+            if (dateClickInfo.view.type == "singleMonth") {
                 calendar.changeView("singleWeek")
                 calendar.gotoDate(dateClickInfo.date)
             }
@@ -43,16 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
         selectAllow: (selectionInfo) => {
 
             // Prevent from selecting multiple days
-            if (calendar.view.type == 'singleMonth') {
+            if (calendar.view.type == "singleMonth") {
                 let start = DateTime.fromISO(selectionInfo.endStr)
                 let end = DateTime.fromISO(selectionInfo.startStr)
-                if (start.diff(end, 'days').toObject().days > 1) {
+                if (start.diff(end, "days").toObject().days > 1) {
                     return false
                 }
             }
 
             // TODO can we allow selction as non-continuous square of time?
-            if (calendar.view.type == 'singleWeek') {
+            if (calendar.view.type == "singleWeek") {
 
             }
             return true
@@ -63,20 +79,20 @@ document.addEventListener('DOMContentLoaded', () => {
         unselectAuto: false,
         views: {
             singleMonth: {
-                type: 'dayGridMonth',
+                type: "dayGridMonth",
             },
             singleDay: {
                 allDaySlot: false,
-                type: 'timeGridDay',
+                type: "timeGridDay",
             },
             singleWeek: {
-                type: 'timeGridWeek',
+                type: "timeGridWeek",
                 hiddenDays: hiddenDays, // Hide sunday/saturday
-                buttonText: 'week',
+                buttonText: "week",
                 allDaySlot: false
             },
             agenda: {
-                type: 'list',
+                type: "list",
                 visibleRange: () => {
                     // half year forward ad back
                     let dt = DateTime.now()
@@ -86,18 +102,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 },
                 listDayFormat: {
-                    month: 'long',
-                    year: 'numeric',
-                    day: 'numeric',
-                    weekday: 'long'
+                    month: "long",
+                    year: "numeric",
+                    day: "numeric",
+                    weekday: "long"
                 },
-                buttonText: 'agenda'
+                buttonText: "agenda"
             }
         },
         eventSources: [
             {
                 url: php.router,
-                method: 'POST',
+                method: "POST",
                 extraParams: () => {
                     return {
                         redcap_csrf_token: php.csrf,

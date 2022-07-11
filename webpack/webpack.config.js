@@ -24,10 +24,14 @@ module.exports = {
                     "less-loader",
                 ],
             },
+            {
+                test: /\.html$/i,
+                loader: "html-loader",
+            },
         ]
     },
     output: {
-        filename: "bundle.js",
+        filename: "calendar.js",
         path: path.resolve(__dirname, "../"),
     },
 }
