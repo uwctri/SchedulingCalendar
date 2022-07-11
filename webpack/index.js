@@ -4,16 +4,11 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
-import openUserConfig from "./openUserConfig"
+import UserConfig from "./userConfig"
 import "./observerHotfix"
 import "./style.less"
 
-// TODO User Calnedar Config Screen
-// Changes days visible
-// Change start and end times for calendar
-// Foce to fit on one screen (no scroll)
-
-const hiddenDays = [0] // TODO
+const { start: startTime, end: endTime, hiddenDays, expandRows } = UserConfig.get()
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 
 // Build out the toolbars 
@@ -24,6 +19,7 @@ if (pageURL.type != "edit") {
 
 let leftToolbar = ["prev,next", "today", "config"]
 
+// Init the calendar
 document.addEventListener("DOMContentLoaded", () => {
     var calendarEl = document.getElementById("calendar");
 
@@ -32,7 +28,7 @@ document.addEventListener("DOMContentLoaded", () => {
         customButtons: {
             config: {
                 icon: "fa-gear",
-                click: openUserConfig
+                click: UserConfig.open
             }
         },
         headerToolbar: {
@@ -43,9 +39,9 @@ document.addEventListener("DOMContentLoaded", () => {
         editable: true,
         dayMaxEvents: true,
         initialView: "singleWeek",
-        slotMinTime: "05:00", // TODO make configurable
-        slotMaxTime: "19:00",
-        expandRows: true,
+        slotMinTime: startTime,
+        slotMaxTime: endTime,
+        expandRows: expandRows,
         selectable: true,
         dateClick: (dateClickInfo) => {
             if (dateClickInfo.view.type == "singleMonth") {
@@ -87,14 +83,14 @@ document.addEventListener("DOMContentLoaded", () => {
             },
             singleWeek: {
                 type: "timeGridWeek",
-                hiddenDays: hiddenDays, // Hide sunday/saturday
+                hiddenDays: hiddenDays,
                 buttonText: "week",
                 allDaySlot: false
             },
             agenda: {
                 type: "list",
                 visibleRange: () => {
-                    // half year forward ad back
+                    // half year forward and back
                     let dt = DateTime.now()
                     return {
                         start: dt.minus({ day: 364 / 2 }).toJSDate(),

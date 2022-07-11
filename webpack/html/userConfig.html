@@ -8,7 +8,7 @@
                     <i class="fa-solid fa-clock"></i>
                 </div>
             </div>
-            <input id="configStart" name="configStart" type="time" value="05:00" class="form-control">
+            <input id="configStart" name="configStart" type="time" value="START-TIME" class="form-control">
         </div>
     </div>
     <div class="form-group">
@@ -19,15 +19,27 @@
                     <i class="fa-solid fa-clock"></i>
                 </div>
             </div>
-            <input id="configEnd" name="configEnd" type="time" value="18:00" class="form-control">
+            <input id="configEnd" name="configEnd" type="time" value="END-TIME" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="float-left mb-2">Days to Hide</div><br>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+            <button type="button" class="btn btn-primary configWeek">Sun</button>
+            <button type="button" class="btn btn-primary configWeek">Mon</button>
+            <button type="button" class="btn btn-primary configWeek">Tue</button>
+            <button type="button" class="btn btn-primary configWeek">Wed</button>
+            <button type="button" class="btn btn-primary configWeek">Thu</button>
+            <button type="button" class="btn btn-primary configWeek">Fri</button>
+            <button type="button" class="btn btn-primary configWeek">Sat</button>
         </div>
     </div>
     <div class="form-group">
         <div>
             <div class="custom-control custom-checkbox custom-control-inline">
-                <input name="checkbox" id="checkbox_0" type="checkbox" checked="checked" class="custom-control-input"
+                <input name="checkbox" id="expandRows" type="checkbox" checked="CHECKED" class="custom-control-input"
                     value="1">
-                <label for="checkbox_0" class="custom-control-label">Size time slots to fit calendar</label>
+                <label for="expandRows" class="custom-control-label">Size time slots to fit calendar</label>
             </div>
         </div>
     </div>

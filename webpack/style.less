@@ -30,7 +30,11 @@
         width: max-content;
     }
 
-    input[type=checkbox] {
-        transform: scale(1.25);
+    .btn,
+    .btn-primary,
+    .btn-danger {
+        &:focus {
+            box-shadow: none;
+        }
     }
 }
