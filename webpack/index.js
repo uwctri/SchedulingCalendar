@@ -8,7 +8,7 @@ import UserConfig from "./userConfig"
 import "./observerHotfix"
 import "./style.less"
 
-const { start: startTime, end: endTime, hiddenDays, expandRows } = UserConfig.get()
+const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 
 // Build out the toolbars 
@@ -36,6 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
             center: "title",
             right: rightToolbar.join(",")
         },
+        slotDuration: `00:${slotSize}:00`,
+        navLinks: true,
         editable: true,
         dayMaxEvents: true,
         initialView: "singleWeek",
@@ -56,16 +58,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Prevent from selecting multiple days
             if (calendar.view.type == "singleMonth") {
-                let start = DateTime.fromISO(selectionInfo.endStr)
-                let end = DateTime.fromISO(selectionInfo.startStr)
+                const start = DateTime.fromISO(selectionInfo.endStr)
+                const end = DateTime.fromISO(selectionInfo.startStr)
                 if (start.diff(end, "days").toObject().days > 1) {
                     return false
                 }
             }
 
             // TODO can we allow selction as non-continuous square of time?
-            if (calendar.view.type == "singleWeek") {
-
+            // TODO why does SELECT also unselct stuff? Crap.
+            if (calendar.view.type == "singleWeek" && pageURL.type === "edit") {
+                calendar.unselect()
+                let start = DateTime.fromISO(selectionInfo.startStr)
+                let end = DateTime.fromISO(selectionInfo.endStr)
+                for (let day = start.day; day <= end.day; day++) {
+                    calendar.select(start.set({ day: day }).toISO(), end.set({ day: day }).toISO())
+                }
             }
             return true
         },

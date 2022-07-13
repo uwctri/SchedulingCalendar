@@ -6,6 +6,7 @@ const sameSite = { sameSite: 'strict' }
 const redcapBtnColor = "#337ab7"
 const defaultStart = "05:00"
 const defaultEnd = "18:00"
+const defaultSlotSize = "30"
 const defaultHiddenDays = [0] //Sunday
 const defaultExpandRows = true
 
@@ -25,16 +26,17 @@ let UserConfig = {
             start: Cookies.get("configStart") || defaultStart,
             end: Cookies.get("configEnd") || defaultEnd,
             hiddenDays: Cookies.get("configDays") || defaultHiddenDays,
+            slotSize: Cookies.get("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows !== "boolean" ? defaultExpandRows : expandRows
         }
     },
 
     open: () => {
 
-        const { start, end, hiddenDays, expandRows } = UserConfig.get()
+        const { start, end, hiddenDays, slotSize, expandRows } = UserConfig.get()
 
         // Modify the html with current values
-        let newHtml = html.replace("START-TIME", start).replace("END-TIME", end).replace("CHECKED", expandRows ? "checked" : "")
+        let newHtml = html.replace("START-TIME", start).replace("END-TIME", end).replace("SLOT-SIZE", slotSize).replace("CHECKED", expandRows ? "checked" : "")
 
         Swal.fire({
             title: "User Configuration",
@@ -44,10 +46,15 @@ let UserConfig = {
             customClass: {
                 container: 'userConfigModal'
             }
-        }).then(() => {
+        }).then((result) => {
+
+            // Bail if save wasn't clicked
+            if (!result.isConfirmed) return
+
             // Save everything back to cookies
             Cookies.set("configStart", document.getElementById("configStart").value, sameSite)
             Cookies.set("configEnd", document.getElementById("configEnd").value, sameSite)
+            Cookies.set("slotSize", document.getElementById("slotSize").value, sameSite)
             Cookies.set("expandRows", document.getElementById("expandRows").value == "1", sameSite)
             const els = document.getElementsByClassName("configWeek")
             let saveDays = []
@@ -56,6 +63,9 @@ let UserConfig = {
                 saveDays.push(index)
             })
             Cookies.set("configDays", saveDays, sameSite)
+
+            // Refresh
+            location.reload()
         })
 
         // Load days to hide values

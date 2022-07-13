@@ -23,23 +23,39 @@
         </div>
     </div>
     <div class="form-group">
-        <div class="float-left mb-2">Days to Hide</div><br>
-        <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
-            <button type="button" class="btn btn-primary configWeek">Sun</button>
-            <button type="button" class="btn btn-primary configWeek">Mon</button>
-            <button type="button" class="btn btn-primary configWeek">Tue</button>
-            <button type="button" class="btn btn-primary configWeek">Wed</button>
-            <button type="button" class="btn btn-primary configWeek">Thu</button>
-            <button type="button" class="btn btn-primary configWeek">Fri</button>
-            <button type="button" class="btn btn-primary configWeek">Sat</button>
+        <label class="float-left" for="slotSize">Slot Size</label>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    <i class="fa-solid fa-calendar-day"></i>
+                </div>
+            </div>
+            <input id="slotSize" name="slotSize" type="number" min="5" max="30" value="SLOT-SIZE" class="form-control">
+            <div class="input-group-append">
+                <div class="input-group-text">minutes</div>
+            </div>
         </div>
     </div>
     <div class="form-group">
-        <div>
+        <label class="float-left" for="hiddenDays">Days to Hide</label>
+        <div class="input-group">
+            <div id="hiddenDays" name="hiddenDays" class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-primary configWeek">Sun</button>
+                <button type="button" class="btn btn-primary configWeek">Mon</button>
+                <button type="button" class="btn btn-primary configWeek">Tue</button>
+                <button type="button" class="btn btn-primary configWeek">Wed</button>
+                <button type="button" class="btn btn-primary configWeek">Thu</button>
+                <button type="button" class="btn btn-primary configWeek">Fri</button>
+                <button type="button" class="btn btn-primary configWeek">Sat</button>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="expandRowsGroup">
             <div class="custom-control custom-checkbox custom-control-inline">
-                <input name="checkbox" id="expandRows" type="checkbox" checked="CHECKED" class="custom-control-input"
+                <input name="expandRows" id="expandRows" type="checkbox" checked="CHECKED" class="custom-control-input"
                     value="1">
-                <label for="expandRows" class="custom-control-label">Size time slots to fit calendar</label>
+                <label for="expandRows" class="custom-control-label">Try to size time slots to fit calendar</label>
             </div>
         </div>
     </div>

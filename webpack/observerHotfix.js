@@ -1,3 +1,6 @@
+// Currently only fixing one icon issue that can't be easily
+// resolved the correct way
+
 let calendarObs = new MutationObserver((mutations) => {
     let broken = document.querySelector("span.fc-icon-fa-gear")
     if (!broken) return
