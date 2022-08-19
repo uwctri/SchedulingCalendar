@@ -200,4 +200,5 @@ const calendar = new Calendar(document.getElementById("calendar"), {
     ]
 })
 
+document.getElementById("content").classList.remove("d-none")
 calendar.render()
