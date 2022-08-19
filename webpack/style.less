@@ -2,7 +2,10 @@
     height: min-content;
 }
 
-#content {}
+#content {
+    --redcap-btn-color: #337ab7;
+    --redcap-btn-border: #2e6da4;
+}
 
 #calendar {
     max-width: 1200px;
@@ -25,6 +28,29 @@
 
     .fc-timegrid-slot-label {
         font-weight: bold;
+    }
+
+}
+
+#footerbar {
+
+    @import (less) "./node_modules/choices.js/public/assets/styles/base.css";
+    @import (less) "./node_modules/choices.js/public/assets/styles/choices.css";
+
+    margin-top: 1rem;
+
+    .choices__input {
+        box-shadow: none;
+
+        &::placeholder {
+            color: inherit !important;
+        }
+    }
+
+    .choices__list--multiple .choices__item {
+        background-color: var(--redcap-btn-color);
+        border: 1px solid var(--redcap-btn-border);
+        border-radius: 5px;
     }
 
 }

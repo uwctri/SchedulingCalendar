@@ -3,7 +3,6 @@ import Swal from 'sweetalert2'
 import html from './html/userConfig.html'
 
 const sameSite = { sameSite: 'strict' }
-const redcapBtnColor = "#337ab7"
 const defaultStart = "05:00"
 const defaultEnd = "18:00"
 const defaultSlotSize = "30"
@@ -36,12 +35,13 @@ let UserConfig = {
         const { start, end, hiddenDays, slotSize, expandRows } = UserConfig.get()
 
         // Modify the html with current values
-        let newHtml = html.replace("START-TIME", start).replace("END-TIME", end).replace("SLOT-SIZE", slotSize).replace("CHECKED", expandRows ? "checked" : "")
+        const newHtml = html.replace("START-TIME", start).replace("END-TIME", end).replace("SLOT-SIZE", slotSize).replace("CHECKED", expandRows ? "checked" : "")
+        const btnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
 
         Swal.fire({
             title: "User Configuration",
             html: newHtml,
-            confirmButtonColor: redcapBtnColor,
+            confirmButtonColor: btnColor,
             confirmButtonText: "Save",
             customClass: {
                 container: 'userConfigModal'
