@@ -27,7 +27,7 @@ let UserConfig = {
             end: Cookies.get("configEnd") || defaultEnd,
             hiddenDays: Cookies.get("configDays") || defaultHiddenDays,
             slotSize: Cookies.get("slotSize") || defaultSlotSize,
-            expandRows: typeof expandRows !== "boolean" ? defaultExpandRows : expandRows
+            expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows
         }
     },
 
@@ -55,7 +55,7 @@ let UserConfig = {
             Cookies.set("configStart", document.getElementById("configStart").value, sameSite)
             Cookies.set("configEnd", document.getElementById("configEnd").value, sameSite)
             Cookies.set("slotSize", document.getElementById("slotSize").value, sameSite)
-            Cookies.set("expandRows", document.getElementById("expandRows").value == "1", sameSite)
+            Cookies.set("expandRows", document.getElementById("expandRows").checked, sameSite)
             const els = document.getElementsByClassName("configWeek")
             let saveDays = []
             Array.from(els).forEach((el, index) => {
