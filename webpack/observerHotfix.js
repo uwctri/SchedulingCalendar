@@ -2,14 +2,21 @@
 // resolved the correct way
 
 let calendarObs = new MutationObserver((mutations) => {
-    let broken = document.querySelector("span.fc-icon-fa-gear")
-    if (!broken) return
-    if (!broken.parentNode.querySelector(".fa-gear")) {
+    let brokenGear = document.querySelector("span.fc-icon-fa-gear")
+    let brokenSearch = document.querySelector("span.fc-icon-fa-magnifying-glass")
+    if (!brokenGear && !brokenSearch) return
+    if (!brokenGear.parentNode.querySelector(".fa-gear")) {
         let el = document.createElement("i")
         el.classList = "fa-solid fa-gear"
-        broken.parentNode.replaceChild(el, broken)
+        brokenGear.parentNode.replaceChild(el, brokenGear)
     }
-    broken.remove()
+    if (!brokenSearch.parentNode.querySelector(".fa-magnifying-glass")) {
+        let el = document.createElement("i")
+        el.classList = "fa-solid fa-magnifying-glass"
+        brokenSearch.parentNode.replaceChild(el, brokenSearch)
+    }
+    brokenSearch.remove()
+    brokenGear.remove()
 })
 
 calendarObs.observe(document.getElementById("calendar"), {

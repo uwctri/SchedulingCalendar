@@ -13,9 +13,9 @@ const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = Use
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 
 // Build out the top toolbars 
-let topRightToolbar = ["singleMonth", "singleWeek", "singleDay"]
+let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
 if (pageURL.type != "edit") {
-    topRightToolbar = ["agenda"].concat(topRightToolbar)
+    topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
 }
 const topLeftToolbar = ["prev,next", "today", "config"]
 
@@ -99,12 +99,16 @@ const calendar = new Calendar(document.getElementById("calendar"), {
         config: {
             icon: "fa-gear",
             click: UserConfig.open
-        }
+        },
+        search: {
+            icon: "fa-magnifying-glass",
+            click: () => alert("Searching Clicked") //TODO
+        },
     },
     headerToolbar: {
         left: topLeftToolbar.join(" "),
         center: "title",
-        right: topRightToolbar.join(",")
+        right: topRightToolbar.join(" ")
     },
     slotDuration: `00:${slotSize}:00`,
     navLinks: true,

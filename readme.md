@@ -1,4 +1,10 @@
 
+## High Priority
+
+* Move the search bar to the top of the calendar
+* Hide the search bar by default, show it if the user clicks on a search icon
+* When searching, put the bar where the title is currently, move the title to the right side? Or just hide it.
+
 ## Don't forget Features
 
 * Popup for scheduling an event
