@@ -11,6 +11,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Popup for scheduling an event
+* Filter the scheduling drop down for Event in a way similar to the side bar
 * Right side subject summary
 * Need a good fast way to add availability
 * Remove all future data for withdrawn subject
