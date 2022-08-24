@@ -9,6 +9,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ## Don't forget Features
 
+* Setting to default the scheduled location to a static value or subject's assigned location
 * Popup for scheduling an event
 * Right side subject summary
 * Need a good fast way to add availability
