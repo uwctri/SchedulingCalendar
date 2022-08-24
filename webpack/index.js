@@ -6,7 +6,7 @@ import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
 import Choices from "choices.js"
 import UserConfig from "./userConfig"
-import "./observerHotfix"
+import "./iconObserver"
 import "./style.less"
 
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
