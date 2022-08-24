@@ -18,11 +18,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Export calendar (via an API too)
 * Whole settings page
 
-## Low Priority
-
-* Print an agenda for a subject
-* Re-add Sentry?
-
 ## SOT settings
 
 * Add a new study
