@@ -1,11 +1,11 @@
 <?php
 $module->initializeJavascriptModuleObject();
 $module->tt_transferToJavascriptModuleObject();
+$module->initCalendar();
 ?>
 <script>
     let php = <?= json_encode($module->loadSettings()); ?>;
     php.em = <?= $module->getJavascriptModuleObjectName(); ?>;
-    php.debug = <?= $module->initCalendar(); ?>;
 </script>
 <script src="<?= $module->getUrl('calendar.js'); ?>" defer></script>
 

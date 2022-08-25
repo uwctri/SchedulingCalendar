@@ -27,7 +27,7 @@ class Scheduling extends AbstractExternalModule
         if ($_GET["type"] == $type) {
             return $link;
         }
-        return $link; // TODO
+        return $link; // TODO redcap bug?
     }
 
     public function loadSettings()
@@ -48,8 +48,8 @@ class Scheduling extends AbstractExternalModule
         // Validate the current data dictionary
         $csv_file = $this->getUrl("sot.csv");
         $csv = file_get_contents($csv_file);
-        $current_dd = REDCap::getDataDictionary('csv');
-        if ($current_dd == $csv) {
+        $current_dd = str_replace(["\"", "\r"], "", REDCap::getDataDictionary('csv'));
+        if ($current_dd == str_replace(["\"", "\r"], "", $csv)) {
             return;
         }
 
@@ -58,7 +58,7 @@ class Scheduling extends AbstractExternalModule
         db_query("SET AUTOCOMMIT=0");
         db_query("BEGIN");
 
-        // Create a data dictionary snapshot of the *current* metadata and store the file in the edocs table
+        //Create a data dictionary snapshot of the *current* metadata and store the file in the edocs table
         MetaData::createDataDictionarySnapshot();
 
         $sql_errors = MetaData::save_metadata($dd_array);
@@ -73,8 +73,6 @@ class Scheduling extends AbstractExternalModule
             // Set back to previous value
             db_query("SET AUTOCOMMIT=1");
         }
-
-        return json_encode($dd_array);
     }
 
     /*
@@ -99,7 +97,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Check method and page type to take action
-        if ($params["method"] == "fetch") {
+        if ($params["action"] == "fetch") {
             // TODO
             return json_encode([
                 [
@@ -110,7 +108,7 @@ class Scheduling extends AbstractExternalModule
             ]);
         }
 
-        if ($params["method"] == "save") {
+        if ($params["action"] == "save") {
             // TODO perform the save
             if ($this->getProjectSetting('fire-det')) {
                 $this->fireDataEntryTrigger($params);

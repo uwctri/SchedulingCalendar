@@ -216,9 +216,10 @@ const calendar = new Calendar(document.getElementById("calendar"), {
             extraParams: () => {
                 return {
                     redcap_csrf_token: php.csrf,
-                    method: "fetch",
+                    action: "fetch",
                     page: pageURL.type,
                     providers: [], // We should filter by provider as its easy due to structure
+                    // Probably request either availability or events
                 }
             }
         }
