@@ -47,10 +47,14 @@
     },
     "project-settings": [
         {
-            "key": "calendar-descriptive",
-            "name": "<b>This module is configured by a link on the sidebar called 'Calendar Setup'.</b><br><i>The actual config is stored in a hidden external module variable</i>",
-            "tt_name": "module_config",
-            "type": "descriptive"
+            "key": "is-sot",
+            "name": "<b>Project is Source of Truth for Provider Availability:</b><br>This is the project where end-users will<br> enter their availability",
+            "type": "checkbox"
+        },
+        {
+            "key": "fire-det",
+            "name": "<b>Trigger DET :</b><br>Send a POST to the Data Entry Trigger on calendar save",
+            "type": "checkbox"
         }
     ],
     "system-settings": [],

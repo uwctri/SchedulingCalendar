@@ -1,5 +1,4 @@
-Work in progress project. The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availaiblity. It is a re-write of an internal-only EM that we hope to make available via the repo. 
-
+Work in progress project. The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availaiblity. It is a re-write of an internal-only EM that we hope to make available via the repo.
 
 ## High Priority
 
@@ -26,3 +25,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * ICS export config
 * Calendar Admin
 * Unschedulable Users
+
+## Availability Format
+
+"2022-07-05 07:45":{"study":"code","loc":"CTRIcode","length":"120"}

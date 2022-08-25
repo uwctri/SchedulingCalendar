@@ -48,6 +48,27 @@ const calendarFilter = new Choices("#calendar-filter", {
                 ]
             },
             {
+                label: "Events",
+                choices: [
+                    {
+                        value: "eventa",
+                        label: 'Event A',
+                        customProperties: {
+                            description: 'Custom description about child six',
+                            random: 'Another random custom property',
+                        }
+                    },
+                    {
+                        value: "eventb",
+                        label: 'Event B',
+                        customProperties: {
+                            description: 'Custom description about child six',
+                            random: 'Another random custom property',
+                        }
+                    },
+                ]
+            },
+            {
                 label: "Providers",
                 choices: [
                     {
@@ -195,9 +216,9 @@ const calendar = new Calendar(document.getElementById("calendar"), {
             extraParams: () => {
                 return {
                     redcap_csrf_token: php.csrf,
-                    method: "eventFetch",
+                    method: "fetch",
                     page: pageURL.type,
-                    providers: [],
+                    providers: [], // We should filter by provider as its easy due to structure
                 }
             }
         }
