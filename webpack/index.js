@@ -18,6 +18,14 @@ if (pageURL.type != "edit") {
 }
 const topLeftToolbar = ["prev,next", "today", "config"]
 
+// Setup quick search hotkey
+document.addEventListener("keyup", (event) => {
+    if (event.key == "s" && !SearchBar.isVisible()) {
+        document.getElementsByClassName("fc-search-button")[0].click()
+        SearchBar.focus()
+    }
+})
+
 // Init the calendar
 const calendar = new Calendar(document.getElementById("calendar"), {
     plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],

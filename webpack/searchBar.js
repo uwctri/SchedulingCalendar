@@ -85,7 +85,7 @@ class SearchBar {
     static build() {
 
         let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
-        centerEl.id = "topCenterBar"
+        centerEl.id = "topCenterBar" // used by CSS
 
         // Build out the select el and insert it
         let searchBarEl = document.createElement("select")
@@ -123,21 +123,29 @@ class SearchBar {
     }
 
     static show() {
-        document.getElementById("search-bar").parentElement.parentElement.classList.remove("d-none")
+        document.getElementById(SearchBar.searchID).parentElement.parentElement.classList.remove("d-none")
         document.getElementsByClassName(SearchBar.titleClassName)[0].classList.add("d-none")
     }
 
     static hide() {
-        document.getElementById("search-bar").parentElement.parentElement.classList.add("d-none")
+        document.getElementById(SearchBar.searchID).parentElement.parentElement.classList.add("d-none")
         document.getElementsByClassName(SearchBar.titleClassName)[0].classList.remove("d-none")
     }
 
     static toggle() {
-        if (document.getElementsByClassName(SearchBar.titleClassName)[0].classList.contains("d-none")) {
+        if (SearchBar.isVisible()) {
             SearchBar.hide()
         } else {
             SearchBar.show()
         }
+    }
+
+    static isVisible() {
+        return document.getElementsByClassName(SearchBar.titleClassName)[0].classList.contains("d-none")
+    }
+
+    static focus() {
+        document.querySelector(`.${SearchBar.centerClassName} input`).focus()
     }
 
 }
