@@ -78,9 +78,23 @@ const testSubjects = [
 
 class SearchBar {
 
-    constructor(selector) {
-        this.selector = selector
-        this.bar = new Choices(selector, {
+    static centerClassName = "fc-toolbar-chunk"
+    static titleClassName = "fc-toolbar-title"
+    static searchID = "search-bar"
+
+    static build() {
+
+        let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
+        centerEl.id = "topCenterBar"
+
+        // Build out the select el and insert it
+        let searchBarEl = document.createElement("select")
+        searchBarEl.id = SearchBar.searchID
+        searchBarEl.setAttribute("multiple", "")
+        centerEl.appendChild(searchBarEl)
+
+        // Init the picker object
+        let choices = new Choices(searchBarEl, {
             removeItems: true,
             removeItemButton: true,
             placeholderValue: "Search or Filter by Provider, Subject, Location, or Event",
@@ -104,15 +118,26 @@ class SearchBar {
                     }
                 ]
         })
-        this.el = document.querySelector(this.selector).parentElement.parentElement
+
+        SearchBar.hide()
     }
 
-    show() {
-        this.el.classList.remove("d-none")
+    static show() {
+        document.getElementById("search-bar").parentElement.parentElement.classList.remove("d-none")
+        document.getElementsByClassName(SearchBar.titleClassName)[0].classList.add("d-none")
     }
 
-    hide() {
-        this.el.classList.add("d-none")
+    static hide() {
+        document.getElementById("search-bar").parentElement.parentElement.classList.add("d-none")
+        document.getElementsByClassName(SearchBar.titleClassName)[0].classList.remove("d-none")
+    }
+
+    static toggle() {
+        if (document.getElementsByClassName(SearchBar.titleClassName)[0].classList.contains("d-none")) {
+            SearchBar.hide()
+        } else {
+            SearchBar.show()
+        }
     }
 
 }

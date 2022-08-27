@@ -13,8 +13,5 @@ $module->initCalendar();
 <div id="content" class="w-100 pr-4 d-none">
     <div id="calendarColumn">
         <div id="calendar"></div>
-        <div id="footerbar">
-            <select id="calendar-filter" multiple></select>
-        </div>
     </div>
 </div>

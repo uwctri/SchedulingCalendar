@@ -9,10 +9,9 @@ import SearchBar from "./searchBar"
 import "./iconObserver"
 import "./style.less"
 
-// Load user config, searchbar, and FC toolbar
+// Load user config and FC toolbar
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
-const searchBar = new SearchBar("#calendar-filter");
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
 if (pageURL.type != "edit") {
     topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
@@ -29,7 +28,7 @@ const calendar = new Calendar(document.getElementById("calendar"), {
         },
         search: {
             icon: "fa-magnifying-glass",
-            click: () => alert("Searching Clicked") //TODO
+            click: SearchBar.toggle
         },
     },
     headerToolbar: {
@@ -134,3 +133,4 @@ const calendar = new Calendar(document.getElementById("calendar"), {
 
 document.getElementById("content").classList.remove("d-none")
 calendar.render()
+SearchBar.build()
