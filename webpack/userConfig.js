@@ -17,10 +17,10 @@ document.addEventListener("click", (event) => {
     event.target.classList.toggle("btn-danger")
 })
 
-let UserConfig = {
+class UserConfig {
 
-    get: () => {
-        let expandRows = Cookies.get("expandRows")
+    static get() {
+        const expandRows = Cookies.get("expandRows")
         return {
             start: Cookies.get("configStart") || defaultStart,
             end: Cookies.get("configEnd") || defaultEnd,
@@ -28,9 +28,9 @@ let UserConfig = {
             slotSize: Cookies.get("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows
         }
-    },
+    }
 
-    open: () => {
+    static open() {
 
         const { start, end, hiddenDays, slotSize, expandRows } = UserConfig.get()
 

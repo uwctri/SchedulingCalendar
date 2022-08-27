@@ -4,114 +4,20 @@ import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
-import Choices from "choices.js"
 import UserConfig from "./userConfig"
+import SearchBar from "./searchBar"
 import "./iconObserver"
 import "./style.less"
 
-const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
+// Load user config, searchbar, and FC toolbar
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
-
-// Build out the top toolbars 
+const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
+const searchBar = new SearchBar("#calendar-filter");
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
 if (pageURL.type != "edit") {
     topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
 }
 const topLeftToolbar = ["prev,next", "today", "config"]
-
-// Bottom toolbars are outside of Full Calendar
-const calendarFilter = new Choices("#calendar-filter", {
-    removeItems: true,
-    removeItemButton: true,
-    placeholderValue: "Search or Filter by Provider, Subject, Location, or Event",
-    choices:
-        [
-            {
-                label: "Locations",
-                choices: [
-                    {
-                        value: "loca",
-                        label: 'Location A',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    },
-                    {
-                        value: "locb",
-                        label: 'Location B',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    },
-                ]
-            },
-            {
-                label: "Events",
-                choices: [
-                    {
-                        value: "eventa",
-                        label: 'Event A',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    },
-                    {
-                        value: "eventb",
-                        label: 'Event B',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    },
-                ]
-            },
-            {
-                label: "Providers",
-                choices: [
-                    {
-                        value: "prova",
-                        label: 'Provider A',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    },
-                    {
-                        value: "provb",
-                        label: 'Provider B',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    }
-                ]
-            },
-            {
-                label: "Subjects",
-                choices: [
-                    {
-                        value: "subjecta",
-                        label: 'Subject A',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    },
-                    {
-                        value: "subjectb",
-                        label: 'Subject B',
-                        customProperties: {
-                            description: 'Custom description about child six',
-                            random: 'Another random custom property',
-                        }
-                    }
-                ]
-            }
-        ]
-})
 
 // Init the calendar
 const calendar = new Calendar(document.getElementById("calendar"), {
