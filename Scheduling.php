@@ -30,6 +30,13 @@ class Scheduling extends AbstractExternalModule
         return $link; // TODO redcap bug?
     }
 
+    public function redcap_every_page_top()
+    {
+        if ($this->isPage("ExternalModules/manager/project.php")) {
+            echo "<script src='{$this->getUrl('config.js')}'> </script>";
+        }
+    }
+
     public function loadSettings()
     {
         return [

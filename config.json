@@ -12,7 +12,9 @@
             "institution": "UW Madison - Center for Tobacco Research and Intervention"
         }
     ],
-    "permissions": [],
+    "permissions": [
+        "redcap_every_page_top"
+    ],
     "framework-version": 10,
     "no-auth-pages": [
         "api"
@@ -47,14 +49,73 @@
     },
     "project-settings": [
         {
+            "key": "study-list",
+            "name": "<b>Study List:</b><br>List of studies that can be scheduled",
+            "type": "textarea",
+            "hidden": true
+        },
+        {
             "key": "is-sot",
-            "name": "<b>Project is Source of Truth for Provider Availability:</b><br>This is the project where end-users will<br> enter their availability",
+            "name": "<b>Project is Source of Truth for Provider Availability:</b><br>This is the project where end-users will enter their availability",
             "type": "checkbox"
         },
         {
             "key": "fire-det",
-            "name": "<b>Trigger DET :</b><br>Send a POST to the Data Entry Trigger on calendar save",
+            "name": "<b>Trigger DET:</b><br>Send a POST to the Data Entry Trigger on calendar save",
             "type": "checkbox"
+        },
+        {
+            "key": "calendar-admin-list",
+            "name": "<b>Calendar Admins</b><br>May edit any user's calendar",
+            "type": "sub_settings",
+            "repeatable": false,
+            "sub_settings": [
+                {
+                    "key": "calendar-admin",
+                    "name": "<b>User</b>",
+                    "type": "user-list",
+                    "repeatable": true
+                }
+            ]
+        },
+        {
+            "key": "unschedulable-list",
+            "name": "<b>Unschedulable</b><br>Users that have availability, but shouldn't be listed in this project",
+            "type": "sub_settings",
+            "repeatable": false,
+            "sub_settings": [
+                {
+                    "key": "unschedulable",
+                    "name": "<b>User</b>",
+                    "type": "user-list",
+                    "repeatable": true
+                }
+            ]
+        },
+        {
+            "key": "descriptive-source-of-truth",
+            "name": "<b>Source of Truth Settings</b>",
+            "type": "sub_settings",
+            "repeatable": false,
+            "sub_settings": []
+        },
+        {
+            "key": "locations-json",
+            "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
+            "type": "textarea",
+            "debug": "hello world!"
+        },
+        {
+            "key": "descriptive-data-collection",
+            "name": "<b>Data Collection Project Settings</b>",
+            "type": "sub_settings",
+            "repeatable": false,
+            "sub_settings": []
+        },
+        {
+            "key": "source-of-truth",
+            "name": "<b>Source of Truth</b>",
+            "type": "project-id"
         }
     ],
     "system-settings": [],
