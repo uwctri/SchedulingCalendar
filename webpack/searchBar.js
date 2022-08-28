@@ -81,6 +81,8 @@ class SearchBar {
     static centerClassName = "fc-toolbar-chunk"
     static titleClassName = "fc-toolbar-title"
     static searchID = "search-bar"
+    static placeholder = "Search or Filter by Provider, Subject, Location, or Event"
+    static choicesSelector = ".choices__inner .choices__list"
 
     static build() {
 
@@ -97,7 +99,7 @@ class SearchBar {
         let choices = new Choices(searchBarEl, {
             removeItems: true,
             removeItemButton: true,
-            placeholderValue: "Search or Filter by Provider, Subject, Location, or Event",
+            placeholderValue: SearchBar.placeholder,
             choices:
                 [
                     {
@@ -120,6 +122,19 @@ class SearchBar {
         })
 
         SearchBar.hide()
+
+        // Watch for changes in dropdown and remove placeholder text
+        const choicesEl = document.querySelector(SearchBar.choicesSelector)
+        new MutationObserver((mutations) => {
+            const count = choicesEl.childElementCount
+            const text = count > 0 ? "" : SearchBar.placeholder
+            const el = document.querySelector(`.${SearchBar.centerClassName} input`)
+            el.placeholder = text
+            el.style.width = `${text.length}ch`
+        }).observe(choicesEl, {
+            childList: true
+        })
+
     }
 
     static show() {
