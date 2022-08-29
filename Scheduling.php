@@ -17,22 +17,18 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_module_link_check_display($project_id, $link)
     {
-        $sot = $this->getProjectSetting('is-sot');
-        $type = $link["type"];
-        $link["url"] = $link["url"] . "&type=" . $type;
-        if (($sot && $type != "project") || (!$sot && $type == "project")) {
-            return $link;
+        if ($this->getProjectSetting('is-sot')) {
+            return null;
         }
-
-        if ($_GET["type"] == $type) {
-            return $link;
-        }
-        return $link; // TODO redcap bug?
+        return $link["url"] . "&type=" . $link["type"];
     }
 
     public function redcap_every_page_top()
     {
         if ($this->isPage("ExternalModules/manager/project.php")) {
+            if ($this->getProjectSetting('is-sot')) {
+                $this->initSotProject();
+            }
             echo "<script src='{$this->getUrl('config.js')}'> </script>";
         }
     }
@@ -45,10 +41,9 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
-    public function initCalendar()
+    public function initSotProject()
     {
-        $sot = $this->getProjectSetting("is-sot");
-        if (!$sot) {
+        if (!$this->getProjectSetting("is-sot")) {
             return;
         }
 

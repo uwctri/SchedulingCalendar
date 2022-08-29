@@ -1,7 +1,6 @@
 <?php
 $module->initializeJavascriptModuleObject();
 $module->tt_transferToJavascriptModuleObject();
-$module->initCalendar();
 ?>
 <script>
     let php = <?= json_encode($module->loadSettings()); ?>;
