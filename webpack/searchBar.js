@@ -89,6 +89,11 @@ class SearchBar {
         let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
 
+        // Add 50px to search bar on edit page
+        if (Object.fromEntries(new URLSearchParams(location.search))["type"] == "edit") {
+            document.getElementById("content").style.setProperty("--calendar-searchbar-width", "50px");
+        }
+
         // Build out the select el and insert it
         let searchBarEl = document.createElement("select")
         searchBarEl.id = SearchBar.searchID
