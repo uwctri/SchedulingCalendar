@@ -6,6 +6,7 @@ import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
 import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
+import { CRUD, Resource } from "./enums"
 import "./iconObserver"
 import "./style.less"
 
@@ -129,7 +130,8 @@ const calendar = new Calendar(document.getElementById("calendar"), {
             extraParams: () => {
                 return {
                     redcap_csrf_token: php.csrf,
-                    action: "fetch",
+                    crud: CRUD.Read,
+                    resource: Resource.Availability,
                     page: pageURL.type,
                     providers: [], // We should filter by provider as its easy due to structure
                     // Probably request either availability or events

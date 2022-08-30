@@ -1,4 +1,5 @@
 import Choices from "choices.js"
+import API from "./api"
 
 const testLocations = [
     {
@@ -84,7 +85,7 @@ class SearchBar {
     static placeholder = "Search or Filter by Provider, Subject, Location, or Event"
     static choicesSelector = ".choices__inner .choices__list"
 
-    static build() {
+    static async build() {
 
         let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
@@ -98,7 +99,11 @@ class SearchBar {
         let searchBarEl = document.createElement("select")
         searchBarEl.id = SearchBar.searchID
         searchBarEl.setAttribute("multiple", "")
+        searchBarEl.style.display = "none"
         centerEl.appendChild(searchBarEl)
+
+        // Fetch data for the dropdown
+        const providers = await API.providers()
 
         // Init the picker object
         let choices = new Choices(searchBarEl, {
@@ -117,7 +122,7 @@ class SearchBar {
                     },
                     {
                         label: "Providers",
-                        choices: testProviders
+                        choices: Object.values(providers)
                     },
                     {
                         label: "Subjects",
@@ -127,6 +132,7 @@ class SearchBar {
         })
 
         SearchBar.hide()
+        searchBarEl.style.display = ""
 
         // Watch for changes in dropdown and remove placeholder text
         const choicesEl = document.querySelector(SearchBar.choicesSelector)

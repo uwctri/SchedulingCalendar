@@ -98,31 +98,64 @@ class Scheduling extends AbstractExternalModule
             RestUtility::sendResponse(400, "The requested module is currently disabled on this project.");
         }
 
-        // Check method and page type to take action
-        if ($params["action"] == "fetch") {
-            // TODO
-            return json_encode([
-                [
-                    "title" => "test thing",
-                    "start" => date("Y-m-d") . "T11:00",
-                    "end" =>  date("Y-m-d") . "T13:00"
-                ]
-            ]);
-        }
-
-        if ($params["action"] == "save") {
-            // TODO perform the save
-            if ($this->getProjectSetting('fire-det')) {
-                $this->fireDataEntryTrigger($params);
+        // check CRUD, Topic, and maybe Page to take action
+        if ($params["resource"] == "appointment" || $params["resource"] == "availability") {
+            // TODO - almost everything
+            if ($params["crud"] == "read") {
+                return json_encode([
+                    [
+                        "title" => "test thing",
+                        "start" => date("Y-m-d") . "T11:00",
+                        "end" =>  date("Y-m-d") . "T13:00"
+                    ]
+                ]);
             }
         }
+
+        if ($params["resource"] == "provider") {
+            if ($params["crud"] == "read") {
+                return $this->getProviders();
+            } else {
+                RestUtility::sendResponse(400, "Provider resource is read only.");
+            }
+        }
+
+        // TODO Lots of stuff
+
+        // Fire DET at the end
+        if ($this->getProjectSetting('fire-det') && in_array($params["action"], ["create", "update", "delete"])) {
+            $this->fireDataEntryTrigger($params);
+        }
+
+        RestUtility::sendResponse(400, "Not supported");
+    }
+
+    private function getProviders()
+    {
+        $sot = $this->getProjectSetting("source-of-truth");
+        $sotProviders = REDCap::getData($sot, "array", Null, ["record_id", "name"]);
+        $localProviders = REDCap::getUsers();
+        $providers = [];
+        foreach ($localProviders as $local) {
+            if (array_key_exists($local, $sotProviders)) {
+                $name = reset($sotProviders[$local])["name"];
+                $providers[$local] = [
+                    "value" => $local,
+                    "label" => $name ?? $local,
+                    "customProperties" => [
+                        "username" => $local,
+                        "name" => $name
+                    ]
+                ];
+            }
+        }
+        return json_encode($providers);
     }
 
     private function fireDataEntryTrigger($saveParams)
     {
         // Chunks of this function are lifted from the DataEntry class
         global $data_entry_trigger_url, $data_entry_trigger_enabled;
-        $redcap_version = REDCAP_VERSION;
         $longitudinal = REDCap::isLongitudinal();
 
         // Check if enabled
@@ -133,7 +166,7 @@ class Scheduling extends AbstractExternalModule
         // Build HTTP Post request parameters to send
         $params = array(
             'redcap_url' => APP_PATH_WEBROOT_FULL,
-            'project_url' => APP_PATH_WEBROOT_FULL . "redcap_v{$redcap_version}/index.php?pid=" . PROJECT_ID,
+            'project_url' => APP_PATH_WEBROOT_FULL . "redcap_v" . REDCAP_VERSION . "/index.php?pid=" . PROJECT_ID,
             'project_id' => PROJECT_ID, 'username' => USERID
         );
 
