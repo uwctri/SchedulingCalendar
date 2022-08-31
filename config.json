@@ -146,13 +146,8 @@
             ]
         },
         {
-            "key": "withdraw-event",
-            "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
-            "type": "event-list"
-        },
-        {
             "key": "withdraw-field",
-            "name": "",
+            "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
             "type": "field-list"
         }
     ],

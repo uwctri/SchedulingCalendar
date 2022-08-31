@@ -182,6 +182,7 @@ class Scheduling extends AbstractExternalModule
         $isSot = $this->getProjectSetting("is-sot");
         $nameField = $this->getProjectSetting("name-field");
         $locationField = $this->getProjectSetting("location-field");
+        $withdrawField = $this->getProjectSetting("withdraw-field");
         $result = [];
 
         if (!empty($provider)) {
@@ -217,10 +218,12 @@ class Scheduling extends AbstractExternalModule
         }
 
         if (!$isSot && empty($provider)) {
-            $data = $this->getSingleEventFields([$nameField, $locationField]);
+            $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField]);
             foreach ($data as $record_id => $recordData) {
                 $name = $recordData[$nameField];
                 $loc = $recordData[$locationField];
+                $withdraw = $recordData[$withdrawField];
+                if ($withdraw) continue;
                 $result[$record_id] = [
                     "value" => $record_id,
                     "label" => $name ?? $record_id,
@@ -238,6 +241,9 @@ class Scheduling extends AbstractExternalModule
 
     private function getLocations()
     {
+        $isSot = $this->getProjectSetting("is-sot");
+        $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
+        $locations = $this->getProjectSetting($sot, "locations-json");
     }
 
     private function fireDataEntryTrigger($saveParams)

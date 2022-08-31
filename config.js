@@ -35,11 +35,6 @@ $(document).ready(() => {
                 $jsonEl.find("input").addClass("mt-1")
             }
 
-            // Combine the Withdraw Event/Field dropdowns
-            $("tr[field=withdraw-event] td").css('padding-bottom', '0')
-            $("tr[field=withdraw-field] td").css('border', 'none').css('padding-top', '0')
-            $("tr[field=withdraw-field] label").text("")
-
             // Trim off some junk spans (and colons) from lists and headers
             for (const name of ["calendar-admin", "unschedulable"]) {
                 $(`tr[field=${name}-list] span`).remove()
