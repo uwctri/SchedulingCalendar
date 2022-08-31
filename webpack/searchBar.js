@@ -104,6 +104,7 @@ class SearchBar {
 
         // Fetch data for the dropdown
         const providers = await API.providers()
+        const subjects = await API.subjects()
 
         // Init the picker object
         let choices = new Choices(searchBarEl, {
@@ -126,7 +127,7 @@ class SearchBar {
                     },
                     {
                         label: "Subjects",
-                        choices: testSubjects
+                        choices: Object.values(subjects)
                     }
                 ]
         })

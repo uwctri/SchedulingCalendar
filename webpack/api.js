@@ -1,11 +1,27 @@
+import { CRUD, Resource } from "./enums"
+
 class API {
 
     static async providers() {
 
         const data = {
             "redcap_csrf_token": php.csrf,
-            "crud": "read",
-            "resource": "provider",
+            "crud": CRUD.Read,
+            "resource": Resource.Provider,
+        }
+
+        const result = await API.post(data)
+        return result
+
+    }
+
+    static async subjects(provider = "") {
+
+        const data = {
+            "redcap_csrf_token": php.csrf,
+            "crud": CRUD.Read,
+            "resource": Resource.Subject,
+            "provider": provider,
         }
 
         const result = await API.post(data)
@@ -36,11 +52,13 @@ class API {
     }
 
     static toFormData(obj) {
+
         const data = new FormData()
         for (const [key, value] of Object.entries(obj)) {
             data.append(key, value)
         }
         return data
+
     }
 
 }

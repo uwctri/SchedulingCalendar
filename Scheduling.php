@@ -26,9 +26,7 @@ class Scheduling extends AbstractExternalModule
     public function redcap_every_page_top()
     {
         if ($this->isPage("ExternalModules/manager/project.php")) {
-            if ($this->getProjectSetting('is-sot')) {
-                $this->initSotProject();
-            }
+            $this->initSotProject();
             echo "<script src='{$this->getUrl('config.js')}'> </script>";
         }
     }
@@ -120,6 +118,22 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
+        if ($params["resource"] == "subject") {
+            if ($params["crud"] == "read") {
+                return $this->getSubjects($params["provider"]);
+            } else {
+                RestUtility::sendResponse(400, "Subject resource is read only.");
+            }
+        }
+
+        if ($params["resource"] == "location") {
+            if ($params["crud"] == "read") {
+                return $this->getLocations();
+            } else {
+                RestUtility::sendResponse(400, "Location resource is read only.");
+            }
+        }
+
         // TODO Lots of stuff
 
         // Fire DET at the end
@@ -130,12 +144,17 @@ class Scheduling extends AbstractExternalModule
         RestUtility::sendResponse(400, "Not supported");
     }
 
+    /*
+    Get all providers that exist in both Project and SOT.
+    */
     private function getProviders()
     {
-        $sot = $this->getProjectSetting("source-of-truth");
+        $isSot = $this->getProjectSetting("is-sot");
+        $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
         $sotProviders = REDCap::getData($sot, "array", Null, ["record_id", "name"]);
         $localProviders = REDCap::getUsers();
         $providers = [];
+
         foreach ($localProviders as $local) {
             if (array_key_exists($local, $sotProviders)) {
                 $name = reset($sotProviders[$local])["name"];
@@ -149,7 +168,76 @@ class Scheduling extends AbstractExternalModule
                 ];
             }
         }
+
         return json_encode($providers);
+    }
+
+    /*
+    Get all subjects that existin the current project or 
+    all subjects that have an appointment with the given 
+    provider (for My Calendar page)
+    */
+    private function getSubjects($provider = Null)
+    {
+        $isSot = $this->getProjectSetting("is-sot");
+        $nameField = $this->getProjectSetting("name-field");
+        $locationField = $this->getProjectSetting("location-field");
+        $result = [];
+
+        if (!empty($provider)) {
+            $sot = $this->getProjectSetting("source-of-truth");
+            $sotData = reset(REDCap::getData($sot, "array", $provider, ["scheduled"])[$provider]);
+            $pullData = [];
+            foreach ($sotData as $instance => $monthData) {
+                $monthData = json_decode($monthData["scheduled"] ?? [], true);
+                foreach ($monthData as $time => $schData) {
+                    if ($schData["provider"] == $provider) {
+                        $record_id = $schData["subject"];
+                        $pid = $schData["pid"];
+                        $pullData[$pid][] = $record_id;
+                    }
+                }
+            }
+            foreach ($pullData as $pid => $records) {
+                $nameField = $this->getProjectSetting("name-field");
+                $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
+                foreach ($projectData as $record_id => $record_data) {
+                    $name = $record_data[$nameField];
+                    $result["$pid:$record_id"] = [
+                        "value" => $record_id,
+                        "label" => $name ?? $record_id,
+                        "customProperties" => [
+                            "location" => null,
+                            "name" => $name,
+                            "record_id" => $record_id
+                        ]
+                    ];
+                }
+            }
+        }
+
+        if (!$isSot && empty($provider)) {
+            $data = $this->getSingleEventFields([$nameField, $locationField]);
+            foreach ($data as $record_id => $recordData) {
+                $name = $recordData[$nameField];
+                $loc = $recordData[$locationField];
+                $result[$record_id] = [
+                    "value" => $record_id,
+                    "label" => $name ?? $record_id,
+                    "customProperties" => [
+                        "location" => $loc,
+                        "name" => $name,
+                        "record_id" => $record_id
+                    ]
+                ];
+            }
+        }
+
+        return json_encode($result);
+    }
+
+    private function getLocations()
+    {
     }
 
     private function fireDataEntryTrigger($saveParams)
@@ -188,6 +276,30 @@ class Scheduling extends AbstractExternalModule
         $response = http_post($pre_url . $data_entry_trigger_url, $params, $timeout);
         // Return boolean for success
         return !!$response;
+    }
+
+    private function getSingleEventFields($fields, $records = Null, $project_id = Null)
+    {
+        if ($project_id == Null) {
+            $project_id = $_GET["pid"] ?? PROJECT_ID;
+        }
+        $fieldClause = "\"" . implode("\",\"", $fields) . "\"";
+        $recordClause = !empty($records) ? "AND record IN \"" . implode("\",\"", $records) . "\"" : "AND";
+        $sql = "SELECT record, field_name, `value` 
+        FROM redcap_data 
+        WHERE project_id = $project_id AND field_name IN ($fieldClause) $recordClause event_id IN (
+            SELECT event_id 
+            FROM redcap_events_forms 
+            WHERE form_name IN (
+                SELECT form_name 
+                FROM redcap_metadata 
+                WHERE project_id = $project_id AND field_name IN ($fieldClause)));";
+        $data = db_query($sql);
+        $results = [];
+        while ($row = db_fetch_assoc($data)) {
+            $results[$row["record"]][$row["field_name"]] = $row["value"];
+        }
+        return $results;
     }
 
     /*

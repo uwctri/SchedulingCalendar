@@ -35,15 +35,21 @@ $(document).ready(() => {
                 $jsonEl.find("input").addClass("mt-1")
             }
 
+            // Combine the Withdraw Event/Field dropdowns
+            $("tr[field=withdraw-event] td").css('padding-bottom', '0')
+            $("tr[field=withdraw-field] td").css('border', 'none').css('padding-top', '0')
+            $("tr[field=withdraw-field] label").text("")
+
             // Trim off some junk spans (and colons) from lists and headers
-            ["calendar-admin", "unschedulable"].forEach((name) => {
+            for (const name of ["calendar-admin", "unschedulable"]) {
                 $(`tr[field=${name}-list] span`).remove()
                 $(`tr[field=${name}] span`).each((_, el) => $(el).text(`${$(el).text().split(".")[1]}. `))
-            });
-            ["data-collection", "source-of-truth"].forEach((name) => {
+            }
+
+            for (const name of ["data-collection", "source-of-truth"]) {
                 $(`tr[field=descriptive-${name}]`).find("td:first, td:last, span").remove()
                 $(`tr[field=descriptive-${name}] td`).attr("colspan", "3")
-            });
+            }
         }
     })
 })

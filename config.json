@@ -56,7 +56,7 @@
         },
         {
             "key": "is-sot",
-            "name": "<b>Project is Source of Truth for Provider Availability:</b><br>This is the project where end-users will enter their availability",
+            "name": "<b>Project is Source of Truth for Calendar:</b><br><b>WARNING: </b>Flagging a project as the SOT will change the data dictionary. A snapshot will be taken",
             "type": "checkbox"
         },
         {
@@ -102,8 +102,7 @@
         {
             "key": "locations-json",
             "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
-            "type": "textarea",
-            "debug": "hello world!"
+            "type": "textarea"
         },
         {
             "key": "descriptive-data-collection",
@@ -116,6 +115,45 @@
             "key": "source-of-truth",
             "name": "<b>Source of Truth</b>",
             "type": "project-id"
+        },
+        {
+            "key": "name-field",
+            "name": "<b>Name Field:</b><br>Variable to index, search, and display as the subject's name",
+            "type": "field-list"
+        },
+        {
+            "key": "location-field",
+            "name": "<b>Location Field:</b><br>Subject's default location (i.e. home clinic). Should use the same coded value used in the location JSON of the SOT project.",
+            "type": "field-list"
+        },
+        {
+            "key": "location-default",
+            "name": "<b>Default Location:</b><br>Force the above location to be used in scheduling popup. Default is to recomend.",
+            "type": "radio",
+            "choices": [
+                {
+                    "value": "blank",
+                    "name": "Blank"
+                },
+                {
+                    "value": "phone",
+                    "name": "Phone Call"
+                },
+                {
+                    "value": "clinic",
+                    "name": "Default Location"
+                }
+            ]
+        },
+        {
+            "key": "withdraw-event",
+            "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
+            "type": "event-list"
+        },
+        {
+            "key": "withdraw-field",
+            "name": "",
+            "type": "field-list"
         }
     ],
     "system-settings": [],
