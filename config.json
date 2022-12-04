@@ -15,7 +15,7 @@
     "permissions": [
         "redcap_every_page_top"
     ],
-    "framework-version": 10,
+    "framework-version": 11,
     "no-auth-pages": [
         "api"
     ],
@@ -153,6 +153,6 @@
     ],
     "system-settings": [],
     "compatibility": {
-        "redcap-version-min": "12.5.1"
+        "redcap-version-min": "13.0.2"
     }
 }

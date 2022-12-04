@@ -1,8 +1,6 @@
-import Cookies from 'js-cookie'
 import Swal from 'sweetalert2'
 import html from './html/userConfig.html'
 
-const sameSite = { sameSite: 'strict' }
 const defaultStart = "05:00"
 const defaultEnd = "18:00"
 const defaultSlotSize = "30"
@@ -20,12 +18,12 @@ document.addEventListener("click", (event) => {
 class UserConfig {
 
     static get() {
-        const expandRows = Cookies.get("expandRows")
+        const expandRows = localStorage.getItem("expandRows")
         return {
-            start: Cookies.get("configStart") || defaultStart,
-            end: Cookies.get("configEnd") || defaultEnd,
-            hiddenDays: Cookies.get("configDays") || defaultHiddenDays,
-            slotSize: Cookies.get("slotSize") || defaultSlotSize,
+            start: localStorage.getItem("configStart") || defaultStart,
+            end: localStorage.getItem("configEnd") || defaultEnd,
+            hiddenDays: localStorage.getItem("configDays") || defaultHiddenDays,
+            slotSize: localStorage.getItem("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows
         }
     }
@@ -51,18 +49,18 @@ class UserConfig {
             // Bail if save wasn't clicked
             if (!result.isConfirmed) return
 
-            // Save everything back to cookies
-            Cookies.set("configStart", document.getElementById("configStart").value, sameSite)
-            Cookies.set("configEnd", document.getElementById("configEnd").value, sameSite)
-            Cookies.set("slotSize", document.getElementById("slotSize").value, sameSite)
-            Cookies.set("expandRows", document.getElementById("expandRows").checked, sameSite)
+            // Save everything back to local storage
+            localStorage.setItem("configStart", document.getElementById("configStart").value)
+            localStorage.setItem("configEnd", document.getElementById("configEnd").value)
+            localStorage.setItem("slotSize", document.getElementById("slotSize").value)
+            localStorage.setItem("expandRows", document.getElementById("expandRows").checked)
             const els = document.getElementsByClassName("configWeek")
             let saveDays = []
             Array.from(els).forEach((el, index) => {
                 if (!el.classList.contains("btn-danger")) return
                 saveDays.push(index)
             })
-            Cookies.set("configDays", saveDays, sameSite)
+            localStorage.setItem("configDays", saveDays)
 
             // Refresh
             location.reload()

@@ -1,5 +1,7 @@
 $(document).ready(() => {
 
+    const prefix = "scheduling_and_availability";
+
     const sotCheckBox = () => {
         $(".modal tr").show()
         const isSot = $("input[name=is-sot]").is(":checked")
@@ -12,7 +14,7 @@ $(document).ready(() => {
 
         // Making sure we are overriding this modules"s modal only.
         let el = event.target
-        if ($(el).data("module") !== "scheduling_and_availability") return
+        if ($(el).data("module") !== prefix) return
 
         if (typeof ExternalModules.Settings.prototype.resetConfigInstancesOld === "undefined")
             ExternalModules.Settings.prototype.resetConfigInstancesOld = ExternalModules.Settings.prototype.resetConfigInstances

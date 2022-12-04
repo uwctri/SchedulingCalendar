@@ -3,7 +3,6 @@
 namespace UWMadison\Scheduling;
 
 use ExternalModules\AbstractExternalModule;
-use ExternalModules\ExternalModules;
 use REDCap;
 use RestUtility;
 use Project;
@@ -12,9 +11,6 @@ use MetaData;
 
 class Scheduling extends AbstractExternalModule
 {
-    /*
-    Redcap Hook
-    */
     public function redcap_module_link_check_display($project_id, $link)
     {
         if ($this->getProjectSetting('is-sot')) {
@@ -89,11 +85,6 @@ class Scheduling extends AbstractExternalModule
         // API calls need to have a new project instance created
         if (!isset($Proj)) {
             $Proj = new Project($project_id);
-        }
-
-        // Only really needed for API, but just check for everyone
-        if (!$this->isModuleEnabledForProject($project_id)) {
-            RestUtility::sendResponse(400, "The requested module is currently disabled on this project.");
         }
 
         // check CRUD, Topic, and maybe Page to take action
@@ -173,7 +164,7 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
-    Get all subjects that existin the current project or 
+    Get all subjects that exist in the current project or 
     all subjects that have an appointment with the given 
     provider (for My Calendar page)
     */
@@ -244,6 +235,7 @@ class Scheduling extends AbstractExternalModule
         $isSot = $this->getProjectSetting("is-sot");
         $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
         $locations = $this->getProjectSetting($sot, "locations-json");
+        $locations = json_decode($locations, true) ?? [];
     }
 
     private function fireDataEntryTrigger($saveParams)
@@ -306,13 +298,5 @@ class Scheduling extends AbstractExternalModule
             $results[$row["record"]][$row["field_name"]] = $row["value"];
         }
         return $results;
-    }
-
-    /*
-    Check if module is enabled on project
-    */
-    private function isModuleEnabledForProject($project_id)
-    {
-        return ExternalModules::getProjectSetting($this->PREFIX, $project_id, ExternalModules::KEY_ENABLED);
     }
 }
