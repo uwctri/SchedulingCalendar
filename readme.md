@@ -1,5 +1,9 @@
 Work in progress project. The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availaiblity. It is a re-write of an internal-only EM that we hope to make available via the repo.
 
+## Issues
+
+* We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs
+
 ## Don't forget Features
 
 * Setting to default the scheduled location to a static value or subject's assigned location
@@ -8,7 +12,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Right side subject summary
 * Need a good fast way to add availability
 * Remove all future data for withdrawn subject
-* Return to page that sent you
 * Export calendar (via an API too)
 * Whole settings page
 

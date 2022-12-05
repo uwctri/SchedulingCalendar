@@ -14,14 +14,18 @@ import "./style.less"
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
+const topLeftToolbar = ["prev,next", "today", "config"]
+let bottomRightToolbar = [];
 if (!pageURL.type) {
     location.href = `${location.href}&type=edit`
 }
 if (pageURL.type != "edit") {
     topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
 }
+if (pageURL.refer) {
+    bottomRightToolbar = ["refer"]
+}
 document.getElementsByClassName(`type-${pageURL.type}`)[0].classList.add('active')
-const topLeftToolbar = ["prev,next", "today", "config"]
 
 // Setup quick search hotkey
 document.addEventListener("keyup", (event) => {
@@ -43,11 +47,18 @@ const calendar = new Calendar(document.getElementById("calendar"), {
             icon: "fa-magnifying-glass",
             click: SearchBar.toggle
         },
+        refer: {
+            text: "Return to workflow",
+            click: () => location.href = pageURL.refer
+        }
     },
     headerToolbar: {
         left: topLeftToolbar.join(" "),
         center: "title",
         right: topRightToolbar.join(" ")
+    },
+    footerToolbar: {
+        right: bottomRightToolbar.join(" ")
     },
     slotDuration: `00:${slotSize}:00`,
     navLinks: true,

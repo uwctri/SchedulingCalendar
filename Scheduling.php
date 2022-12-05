@@ -78,6 +78,7 @@ class Scheduling extends AbstractExternalModule
         $request = RestUtility::processRequest($tokenRequired);
         $params = $request->getRequestVars();
         $project_id = $params["projectid"] ?? $_GET["pid"];
+        $err_msg = "Not supported";
 
         // API calls need to have a new project instance created
         if (!isset($Proj)) {
@@ -85,51 +86,52 @@ class Scheduling extends AbstractExternalModule
         }
 
         // check CRUD, Topic, and maybe Page to take action
-        if ($params["resource"] == "appointment" || $params["resource"] == "availability") {
+        if (in_array($params["resource"], ["appointment", "availability"])) {
             // TODO - almost everything
             if ($params["crud"] == "read") {
-                return json_encode([
+                $result = [
                     [
                         "title" => "test thing",
                         "start" => date("Y-m-d") . "T11:00",
                         "end" =>  date("Y-m-d") . "T13:00"
                     ]
-                ]);
+                ];
             }
         }
 
         if ($params["resource"] == "provider") {
             if ($params["crud"] == "read") {
-                return $this->getProviders();
+                $result = $this->getProviders();
             } else {
-                RestUtility::sendResponse(400, "Provider resource is read only.");
+                $err_msg = "Provider resource is read only.";
             }
         }
 
         if ($params["resource"] == "subject") {
             if ($params["crud"] == "read") {
-                return $this->getSubjects($params["provider"]);
+                $result = $this->getSubjects($params["provider"]);
             } else {
-                RestUtility::sendResponse(400, "Subject resource is read only.");
+                $err_msg = "Subject resource is read only.";
             }
         }
 
         if ($params["resource"] == "location") {
             if ($params["crud"] == "read") {
-                return $this->getLocations();
+                $result = $this->getLocations();
             } else {
-                RestUtility::sendResponse(400, "Location resource is read only.");
+                $err_msg = "Location resource is read only.";
             }
         }
 
-        // TODO Lots of stuff
-
-        // Fire DET at the end
-        if ($this->getProjectSetting('fire-det') && in_array($params["action"], ["create", "update", "delete"])) {
-            $this->fireDataEntryTrigger($params);
+        if ($result) {
+            // Fire DET at the end
+            if ($this->getProjectSetting('fire-det') && in_array($params["action"], ["create", "update", "delete"])) {
+                $this->fireDataEntryTrigger($params);
+            }
+            return json_encode($result);
         }
 
-        RestUtility::sendResponse(400, "Not supported");
+        RestUtility::sendResponse(400, $err_msg);
     }
 
     /*
@@ -157,7 +159,7 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
-        return json_encode($providers);
+        return $providers;
     }
 
     /*
@@ -224,15 +226,16 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
-        return json_encode($result);
+        return $result;
     }
 
     private function getLocations()
     {
         $isSot = $this->getProjectSetting("is-sot");
         $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
-        $locations = $this->getProjectSetting($sot, "locations-json");
+        $locations = $this->getProjectSetting("locations-json", $sot);
         $locations = json_decode($locations, true) ?? [];
+        return $locations;
     }
 
     private function fireDataEntryTrigger($saveParams)
