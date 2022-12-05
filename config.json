@@ -25,24 +25,9 @@
     "links": {
         "project": [
             {
-                "name": "Edit Availability",
+                "name": "Scheduling & Availability",
                 "icon": "fa fa-calendar",
                 "url": "index.php",
-                "type": "edit",
-                "show-header-and-footer": true
-            },
-            {
-                "name": "My Calendar",
-                "icon": "fa fa-calendar",
-                "url": "index.php",
-                "type": "my",
-                "show-header-and-footer": true
-            },
-            {
-                "name": "Project Calendar",
-                "icon": "fa fa-calendar",
-                "url": "index.php",
-                "type": "project",
                 "show-header-and-footer": true
             }
         ]
@@ -141,7 +126,7 @@
                 },
                 {
                     "value": "clinic",
-                    "name": "Default Location"
+                    "name": "Assigned Clinic"
                 }
             ]
         },

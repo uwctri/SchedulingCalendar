@@ -14,9 +14,13 @@ import "./style.less"
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
+if (!pageURL.type) {
+    location.href = `${location.href}&type=edit`
+}
 if (pageURL.type != "edit") {
     topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
 }
+document.getElementsByClassName(`type-${pageURL.type}`)[0].classList.add('active')
 const topLeftToolbar = ["prev,next", "today", "config"]
 
 // Setup quick search hotkey
@@ -131,7 +135,7 @@ const calendar = new Calendar(document.getElementById("calendar"), {
                 return {
                     redcap_csrf_token: php.csrf,
                     crud: CRUD.Read,
-                    resource: Resource.Availability,
+                    resource: Resource.Availability, // TODO
                     page: pageURL.type,
                     providers: [], // We should filter by provider as its easy due to structure
                     // Probably request either availability or events
@@ -142,5 +146,6 @@ const calendar = new Calendar(document.getElementById("calendar"), {
 })
 
 document.getElementById("content").classList.remove("d-none")
+document.getElementById("pageMenu").classList.remove("d-none")
 calendar.render()
 SearchBar.build()

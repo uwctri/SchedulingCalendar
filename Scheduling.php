@@ -13,10 +13,7 @@ class Scheduling extends AbstractExternalModule
 {
     public function redcap_module_link_check_display($project_id, $link)
     {
-        if ($this->getProjectSetting('is-sot')) {
-            return null;
-        }
-        return $link["url"] . "&type=" . $link["type"];
+        return $this->getProjectSetting('is-sot') ? null : $link;
     }
 
     public function redcap_every_page_top()
