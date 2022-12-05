@@ -5,7 +5,6 @@ class API {
     static async providers() {
 
         const data = {
-            "redcap_csrf_token": php.csrf,
             "crud": CRUD.Read,
             "resource": Resource.Provider,
         }
@@ -18,7 +17,6 @@ class API {
     static async subjects(provider = "") {
 
         const data = {
-            "redcap_csrf_token": php.csrf,
             "crud": CRUD.Read,
             "resource": Resource.Subject,
             "provider": provider,
@@ -29,11 +27,24 @@ class API {
 
     }
 
+    static async locations() {
+
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.Location
+        }
+
+        const result = await API.post(data)
+        return result
+
+    }
+
     static async post(data) {
 
         let result = {}
+        data["redcap_csrf_token"] = csrf;
 
-        await fetch(php.router, {
+        await fetch(router, {
             method: 'POST',
             body: API.toFormData(data)
         }).then((response) => {

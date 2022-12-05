@@ -4,8 +4,9 @@ $module->tt_transferToJavascriptModuleObject();
 $index = $module->getUrl('index.php');
 ?>
 <script>
-    let php = <?= json_encode($module->loadSettings()); ?>;
-    php.em = <?= $module->getJavascriptModuleObjectName(); ?>;
+    const csrf = "<?= $module->getCSRFToken(); ?>"
+    const router = "<?= $module->getUrl('router.php'); ?>"
+    const project_code = "<?= $module->getProjectSetting('project-coode'); ?>"
 </script>
 <script src="<?= $module->getUrl('calendar.js'); ?>" defer></script>
 

@@ -24,14 +24,6 @@ class Scheduling extends AbstractExternalModule
         }
     }
 
-    public function loadSettings()
-    {
-        return [
-            "csrf" => $this->getCSRFToken(),
-            "router" => $this->getUrl('router.php')
-        ];
-    }
-
     public function initSotProject()
     {
         if (!$this->getProjectSetting("is-sot")) {
@@ -76,57 +68,54 @@ class Scheduling extends AbstractExternalModule
         global $Proj;
 
         $request = RestUtility::processRequest($tokenRequired);
-        $params = $request->getRequestVars();
-        $project_id = $params["projectid"] ?? $_GET["pid"];
+        $payload = $request->getRequestVars();
+        $project_id = $payload["projectid"] ?? $_GET["pid"];
         $err_msg = "Not supported";
+        $result = null;
 
         // API calls need to have a new project instance created
         if (!isset($Proj)) {
             $Proj = new Project($project_id);
         }
 
-        // check CRUD, Topic, and maybe Page to take action
-        if (in_array($params["resource"], ["appointment", "availability"])) {
-            // TODO - almost everything
-            if ($params["crud"] == "read") {
-                $result = [
-                    [
-                        "title" => "test thing",
-                        "start" => date("Y-m-d") . "T11:00",
-                        "end" =>  date("Y-m-d") . "T13:00"
-                    ]
-                ];
-            }
-        }
+        $funcs = [
+            "availability" => [
+                "create" => "setAvailability",
+                "read" => "getAvailability",
+                "update" => "",
+                "delete" => ""
+            ],
+            "appointment" => [
+                "create" => "setAppointments",
+                "read" => "getAppointments",
+                "update" => "",
+                "delete" => ""
+            ],
+            "provider" => [
+                "read" => "getProviders",
+                "default" => "Provider resource is read only."
+            ],
+            "subject" => [
+                "read" => "getSubjects",
+                "default" => "Subject resource is read only."
+            ],
+            "location" => [
+                "read" => "getLocations",
+                "default" => "Location resource is read only."
+            ]
+        ];
 
-        if ($params["resource"] == "provider") {
-            if ($params["crud"] == "read") {
-                $result = $this->getProviders();
-            } else {
-                $err_msg = "Provider resource is read only.";
-            }
-        }
-
-        if ($params["resource"] == "subject") {
-            if ($params["crud"] == "read") {
-                $result = $this->getSubjects($params["provider"]);
-            } else {
-                $err_msg = "Subject resource is read only.";
-            }
-        }
-
-        if ($params["resource"] == "location") {
-            if ($params["crud"] == "read") {
-                $result = $this->getLocations();
-            } else {
-                $err_msg = "Location resource is read only.";
-            }
+        $task = $funcs[$payload["resource"]][$payload["crud"]];
+        if (!empty($task)) {
+            $result = $this->$task($payload);
+        } else {
+            $err_msg = $funcs[$payload["resource"]]["default"] ?? $err_msg;
         }
 
         if ($result) {
             // Fire DET at the end
-            if ($this->getProjectSetting('fire-det') && in_array($params["action"], ["create", "update", "delete"])) {
-                $this->fireDataEntryTrigger($params);
+            if ($this->getProjectSetting('fire-det') && in_array($payload["action"], ["create", "update", "delete"])) {
+                $this->fireDataEntryTrigger($payload);
             }
             return json_encode($result);
         }
@@ -137,7 +126,7 @@ class Scheduling extends AbstractExternalModule
     /*
     Get all providers that exist in both Project and SOT.
     */
-    private function getProviders()
+    private function getProviders($payload = Null)
     {
         $isSot = $this->getProjectSetting("is-sot");
         $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
@@ -167,8 +156,9 @@ class Scheduling extends AbstractExternalModule
     all subjects that have an appointment with the given 
     provider (for My Calendar page)
     */
-    private function getSubjects($provider = Null)
+    private function getSubjects($payload = Null)
     {
+        $provider = !empty($payload) ? $payload["provider"] : Null;
         $isSot = $this->getProjectSetting("is-sot");
         $nameField = $this->getProjectSetting("name-field");
         $locationField = $this->getProjectSetting("location-field");
@@ -229,13 +219,49 @@ class Scheduling extends AbstractExternalModule
         return $result;
     }
 
-    private function getLocations()
+    private function getLocations($payload = Null)
     {
         $isSot = $this->getProjectSetting("is-sot");
         $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
         $locations = $this->getProjectSetting("locations-json", $sot);
         $locations = json_decode($locations, true) ?? [];
         return $locations;
+    }
+
+    private function getAvailability($payload = Null)
+    {
+        return [[
+            "title" => "test thing",
+            "start" => date("Y-m-d") . "T11:00",
+            "end" =>  date("Y-m-d") . "T13:00"
+        ]];
+    }
+
+    private function setAvailability($payload = Null)
+    {
+        return [[
+            "title" => "test thing",
+            "start" => date("Y-m-d") . "T11:00",
+            "end" =>  date("Y-m-d") . "T13:00"
+        ]];
+    }
+
+    private function getAppointments($payload = Null)
+    {
+        return [[
+            "title" => "test thing",
+            "start" => date("Y-m-d") . "T11:00",
+            "end" =>  date("Y-m-d") . "T13:00"
+        ]];
+    }
+
+    private function setAppointments($payload = Null)
+    {
+        return [[
+            "title" => "test thing",
+            "start" => date("Y-m-d") . "T11:00",
+            "end" =>  date("Y-m-d") . "T13:00"
+        ]];
     }
 
     private function fireDataEntryTrigger($saveParams)

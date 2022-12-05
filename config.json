@@ -102,6 +102,11 @@
             "type": "project-id"
         },
         {
+            "key": "project-code",
+            "name": "<b>Project Code:</b><br>Identifer for this project's availability",
+            "type": "text"
+        },
+        {
             "key": "name-field",
             "name": "<b>Name Field:</b><br>Variable to index, search, and display as the subject's name",
             "type": "field-list"

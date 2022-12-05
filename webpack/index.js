@@ -140,11 +140,11 @@ const calendar = new Calendar(document.getElementById("calendar"), {
     },
     eventSources: [
         {
-            url: php.router,
+            url: router,
             method: "POST",
             extraParams: () => {
                 return {
-                    redcap_csrf_token: php.csrf,
+                    redcap_csrf_token: csrf,
                     crud: CRUD.Read,
                     resource: Resource.Availability, // TODO
                     page: pageURL.type,

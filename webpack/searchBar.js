@@ -1,25 +1,6 @@
 import Choices from "choices.js"
 import API from "./api"
 
-const testLocations = [
-    {
-        value: "loca",
-        label: 'Location A',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    },
-    {
-        value: "locb",
-        label: 'Location B',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    },
-]
-
 const testEvents = [
     {
         value: "eventa",
@@ -37,44 +18,6 @@ const testEvents = [
             random: 'Another random custom property',
         }
     },
-]
-
-const testProviders = [
-    {
-        value: "prova",
-        label: 'Provider A',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    },
-    {
-        value: "provb",
-        label: 'Provider B',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    }
-]
-
-const testSubjects = [
-    {
-        value: "subjecta",
-        label: 'Subject A',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    },
-    {
-        value: "subjectb",
-        label: 'Subject B',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    }
 ]
 
 class SearchBar {
@@ -105,6 +48,8 @@ class SearchBar {
         // Fetch data for the dropdown
         const providers = await API.providers()
         const subjects = await API.subjects()
+        const locations = await API.locations()
+        console.log(SearchBar.formatLocations(locations))
 
         // Init the picker object
         let choices = new Choices(searchBarEl, {
@@ -115,7 +60,7 @@ class SearchBar {
                 [
                     {
                         label: "Locations",
-                        choices: testLocations
+                        choices: SearchBar.formatLocations(locations)
                     },
                     {
                         label: "Events",
@@ -173,6 +118,25 @@ class SearchBar {
 
     static focus() {
         document.querySelector(`.${SearchBar.centerClassName} input`).focus()
+    }
+
+    static formatLocations(rawLocations) {
+        let locs = []
+        for (const id in rawLocations) {
+            let data = rawLocations[id]
+            // TODO for the edit Avail cal we should show all active locs that the user has access to
+            // TODO for the my calednar only show ... something
+            if (data.active && (!data.projects || !data.projects.length || data.projects.includes(project_code))) {
+                locs.push({
+                    value: id,
+                    label: data["name"]
+                })
+            }
+            if (data.sites) {
+                locs = locs.concat(SearchBar.formatLocations(data.sites))
+            }
+        }
+        return locs
     }
 
 }
