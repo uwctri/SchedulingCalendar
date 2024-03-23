@@ -55,7 +55,7 @@ class API {
         }).then((data) => {
             result = data
         }).catch((error) => {
-            console.warn('Something went wrong in API.js', error)
+            console.warn('Something went wrong in API.js', error, data)
         });
 
         return result

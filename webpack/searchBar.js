@@ -49,10 +49,10 @@ class SearchBar {
         const providers = await API.providers()
         const subjects = await API.subjects()
         const locations = await API.locations()
-        console.log(SearchBar.formatLocations(locations))
 
         // Init the picker object
         let choices = new Choices(searchBarEl, {
+            allowHTML: false,
             removeItems: true,
             removeItemButton: true,
             placeholderValue: SearchBar.placeholder,

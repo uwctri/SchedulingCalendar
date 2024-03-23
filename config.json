@@ -12,10 +12,7 @@
             "institution": "UW Madison - Center for Tobacco Research and Intervention"
         }
     ],
-    "permissions": [
-        "redcap_every_page_top"
-    ],
-    "framework-version": 11,
+    "framework-version": 12,
     "no-auth-pages": [
         "api"
     ],
@@ -33,12 +30,6 @@
         ]
     },
     "project-settings": [
-        {
-            "key": "study-list",
-            "name": "<b>Study List:</b><br>List of studies that can be scheduled",
-            "type": "textarea",
-            "hidden": true
-        },
         {
             "key": "is-sot",
             "name": "<b>Project is Source of Truth for Calendar:</b><br><b>WARNING: </b>Flagging a project as the SOT will change the data dictionary. A snapshot will be taken",
@@ -78,47 +69,18 @@
             ]
         },
         {
-            "key": "descriptive-source-of-truth",
-            "name": "<b>Source of Truth Settings</b>",
-            "type": "sub_settings",
-            "repeatable": false,
-            "sub_settings": []
-        },
-        {
-            "key": "locations-json",
-            "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
-            "type": "textarea"
-        },
-        {
-            "key": "descriptive-data-collection",
-            "name": "<b>Data Collection Project Settings</b>",
-            "type": "sub_settings",
-            "repeatable": false,
-            "sub_settings": []
-        },
-        {
-            "key": "source-of-truth",
-            "name": "<b>Source of Truth</b>",
-            "type": "project-id"
-        },
-        {
-            "key": "project-code",
-            "name": "<b>Project Code:</b><br>Identifer for this project's availability",
-            "type": "text"
-        },
-        {
             "key": "name-field",
             "name": "<b>Name Field:</b><br>Variable to index, search, and display as the subject's name",
             "type": "field-list"
         },
         {
             "key": "location-field",
-            "name": "<b>Location Field:</b><br>Subject's default location (i.e. home clinic). Should use the same coded value used in the location JSON of the SOT project.",
+            "name": "<b>Location Field:</b><br>Subject's default location (i.e. home clinic). Should use the same coded value used in the location JSON",
             "type": "field-list"
         },
         {
             "key": "location-default",
-            "name": "<b>Default Location:</b><br>Force the above location to be used in scheduling popup. Default is to recomend.",
+            "name": "<b>Default Location:</b>",
             "type": "radio",
             "choices": [
                 {
@@ -141,7 +103,13 @@
             "type": "field-list"
         }
     ],
-    "system-settings": [],
+    "system-settings": [
+        {
+            "key": "locations-json",
+            "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
+            "type": "textarea"
+        }
+    ],
     "compatibility": {
         "redcap-version-min": "13.0.2"
     }

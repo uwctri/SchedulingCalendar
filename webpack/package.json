@@ -1,7 +1,6 @@
 {
   "name": "webpack",
   "version": "1.0.0",
-  "description": "",
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -29,5 +28,7 @@
     "choices.js": "^10.1.0",
     "luxon": "^2.5.2",
     "sweetalert2": "^11.4.20"
-  }
+  },
+  "main": "index.js",
+  "description": ""
 }

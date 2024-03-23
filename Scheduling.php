@@ -11,52 +11,25 @@ use MetaData;
 
 class Scheduling extends AbstractExternalModule
 {
-    public function redcap_module_link_check_display($project_id, $link)
+    public function redcap_module_system_enable()
     {
-        return $this->getProjectSetting('is-sot') ? null : $link;
+        db_query("CREATE TABLE IF NOT EXISTS `em_scheduling_calendar` (
+            `id` INT AUTO_INCREMENT,
+            `project_id` INT,
+            `user` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+            `record` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci,
+            `location` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
+            `time_start` timestamp NOT NULL,
+            `time_end` timestamp NOT NULL,
+            `metadata` JSON,
+            PRIMARY KEY (`id`)
+        );");
     }
 
-    public function redcap_every_page_top()
+    public function redcap_every_page_top($project_id)
     {
-        if ($this->isPage("ExternalModules/manager/project.php")) {
-            $this->initSotProject();
+        if ($this->isPage("ExternalModules/manager/project.php") && $project_id) {
             echo "<script src='{$this->getUrl('config.js')}'> </script>";
-        }
-    }
-
-    public function initSotProject()
-    {
-        if (!$this->getProjectSetting("is-sot")) {
-            return;
-        }
-
-        // Validate the current data dictionary
-        $csv_file = $this->getUrl("sot.csv");
-        $csv = file_get_contents($csv_file);
-        $current_dd = str_replace(["\"", "\r"], "", REDCap::getDataDictionary('csv'));
-        if ($current_dd == str_replace(["\"", "\r"], "", $csv)) {
-            return;
-        }
-
-        // Prep to correct the dd
-        $dd_array = Design::excel_to_array($csv_file, ",");
-        db_query("SET AUTOCOMMIT=0");
-        db_query("BEGIN");
-
-        //Create a data dictionary snapshot of the *current* metadata and store the file in the edocs table
-        MetaData::createDataDictionarySnapshot();
-
-        $sql_errors = MetaData::save_metadata($dd_array);
-        if (count($sql_errors) > 0) {
-            // ERRORS OCCURRED, so undo any changes made
-            db_query("ROLLBACK");
-            // Set back to previous value
-            db_query("SET AUTOCOMMIT=1");
-        } else {
-            // COMMIT CHANGES
-            db_query("COMMIT");
-            // Set back to previous value
-            db_query("SET AUTOCOMMIT=1");
         }
     }
 
@@ -112,36 +85,42 @@ class Scheduling extends AbstractExternalModule
             $err_msg = $funcs[$payload["resource"]]["default"] ?? $err_msg;
         }
 
-        if ($result) {
-            // Fire DET at the end
-            if ($this->getProjectSetting('fire-det') && in_array($payload["action"], ["create", "update", "delete"])) {
-                $this->fireDataEntryTrigger($payload);
-            }
-            return json_encode($result);
+        // Fire DET at the end
+        if ($this->getProjectSetting('fire-det') && in_array($payload["action"], ["create", "update", "delete"])) {
+            $this->fireDataEntryTrigger($payload);
         }
-
-        RestUtility::sendResponse(400, $err_msg);
+        return json_encode($result);
     }
 
     /*
-    Get all providers that exist in both Project and SOT.
+    Get all providers that exist in the project or any other
     */
     private function getProviders($payload = Null)
     {
-        $isSot = $this->getProjectSetting("is-sot");
-        $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
-        $sotProviders = REDCap::getData($sot, "array", Null, ["record_id", "name"]);
-        $localProviders = REDCap::getUsers();
-        $providers = [];
+        // Get users that have been used the EM
+        $sql = $this->query("SELECT DISTINCT user FROM redcap.em_scheduling_calendar", []);
+        $globalProviders = [];
+        while ($row = db_fetch_assoc($sql)) {
+            $globalProviders[] = $row["user"];
+        }
 
-        foreach ($localProviders as $local) {
-            if (array_key_exists($local, $sotProviders)) {
-                $name = reset($sotProviders[$local])["name"];
-                $providers[$local] = [
-                    "value" => $local,
-                    "label" => $name ?? $local,
+        // Get all local users
+        $localProviders = REDCap::getUsers();
+
+        // Get all user info for the RC instance
+        $allUsers = $this->getAllUsers();
+
+        // Loop over all usernames and reformat them
+        $unformatted = array_merge($globalProviders, $localProviders);
+        $providers = [];
+        foreach ($unformatted as $username) {
+            if (array_key_exists($username, $allUsers)) {
+                $name = $allUsers[$username] ?? "";
+                $providers[$username] = [
+                    "value" => $username,
+                    "label" => $name ?? $username,
                     "customProperties" => [
-                        "username" => $local,
+                        "username" => $username,
                         "name" => $name
                     ]
                 ];
@@ -149,6 +128,20 @@ class Scheduling extends AbstractExternalModule
         }
 
         return $providers;
+    }
+
+
+    /*
+    Get all users in the redcap instance
+    */
+    private function getAllUsers()
+    {
+        $users = [];
+        $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", []);
+        while ($row = db_fetch_assoc($sql)) {
+            $users[$row["username"]] = $row["displayname"];
+        }
+        return $users;
     }
 
     /*
@@ -159,36 +152,29 @@ class Scheduling extends AbstractExternalModule
     private function getSubjects($payload = Null)
     {
         $provider = !empty($payload) ? $payload["provider"] : Null;
-        $isSot = $this->getProjectSetting("is-sot");
         $nameField = $this->getProjectSetting("name-field");
         $locationField = $this->getProjectSetting("location-field");
         $withdrawField = $this->getProjectSetting("withdraw-field");
         $result = [];
 
         if (!empty($provider)) {
-            $sot = $this->getProjectSetting("source-of-truth");
-            $sotData = reset(REDCap::getData($sot, "array", $provider, ["scheduled"])[$provider]);
-            $pullData = [];
-            foreach ($sotData as $instance => $monthData) {
-                $monthData = json_decode($monthData["scheduled"] ?? [], true);
-                foreach ($monthData as $time => $schData) {
-                    if ($schData["provider"] == $provider) {
-                        $record_id = $schData["subject"];
-                        $pid = $schData["pid"];
-                        $pullData[$pid][] = $record_id;
-                    }
-                }
+            $sql = $this->query("SELECT * FROM redcap.em_scheduling_calendar WHERE user = '?'", [$provider]);
+
+            $data = [];
+            while ($row = db_fetch_assoc($sql)) {
+                $data[$row["project_id"]][$row["record"]] = $row["location"];
             }
-            foreach ($pullData as $pid => $records) {
-                $nameField = $this->getProjectSetting("name-field");
+            foreach ($data as $pid => $records) {
+                $nameField = $this->getProjectSetting($pid, "name-field");
                 $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
                 foreach ($projectData as $record_id => $record_data) {
+                    $loc = $records[$record_id];
                     $name = $record_data[$nameField];
                     $result["$pid:$record_id"] = [
                         "value" => $record_id,
                         "label" => $name ?? $record_id,
                         "customProperties" => [
-                            "location" => null,
+                            "location" => $loc,
                             "name" => $name,
                             "record_id" => $record_id
                         ]
@@ -197,7 +183,7 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
-        if (!$isSot && empty($provider)) {
+        if (empty($provider)) {
             $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField]);
             foreach ($data as $record_id => $recordData) {
                 $name = $recordData[$nameField];
@@ -221,9 +207,7 @@ class Scheduling extends AbstractExternalModule
 
     private function getLocations($payload = Null)
     {
-        $isSot = $this->getProjectSetting("is-sot");
-        $sot = $isSot ? Null : $this->getProjectSetting("source-of-truth");
-        $locations = $this->getProjectSetting("locations-json", $sot);
+        $locations = $this->getSystemSetting("locations-json");
         $locations = json_decode($locations, true) ?? [];
         return $locations;
     }
@@ -308,6 +292,7 @@ class Scheduling extends AbstractExternalModule
             $project_id = $_GET["pid"] ?? PROJECT_ID;
         }
         $fieldClause = "\"" . implode("\",\"", $fields) . "\"";
+        $records = empty($records) ? $records : array_keys($records);
         $recordClause = !empty($records) ? "AND record IN \"" . implode("\",\"", $records) . "\"" : "AND";
         $sql = "SELECT record, field_name, `value` 
         FROM redcap_data 
