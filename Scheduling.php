@@ -6,8 +6,6 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 use Project;
-use Design;
-use MetaData;
 
 class Scheduling extends AbstractExternalModule
 {
@@ -217,7 +215,8 @@ class Scheduling extends AbstractExternalModule
         return [[
             "title" => "test thing",
             "start" => date("Y-m-d") . "T11:00",
-            "end" =>  date("Y-m-d") . "T13:00"
+            "end" =>  date("Y-m-d") . "T13:00",
+            "location" => "test location"
         ]];
     }
 

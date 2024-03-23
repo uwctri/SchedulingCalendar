@@ -13,7 +13,7 @@
 #content {
     --redcap-btn-color: #337ab7;
     --redcap-btn-border: #2e6da4;
-    --calendar-searchbar-width: 0px;
+    --calendar-searchbar-width: 600px;
     min-width: 1200px;
 }
 
@@ -55,7 +55,7 @@
     @import (less) "./node_modules/choices.js/public/assets/styles/choices.css";
 
     .choices {
-        width: calc(700px + var(--calendar-searchbar-width));
+        width: var(--calendar-searchbar-width);
         margin: 0;
     }
 

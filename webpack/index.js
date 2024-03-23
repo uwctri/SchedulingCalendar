@@ -29,7 +29,7 @@ document.getElementsByClassName(`type-${pageURL.type}`)[0].classList.add('active
 
 // Setup quick search hotkey
 document.addEventListener("keyup", (event) => {
-    if (event.key == "s" && !SearchBar.isVisible()) {
+    if (event.key == "s" && !SearchBar.isVisible() && SearchBar.isReady()) {
         document.getElementsByClassName("fc-search-button")[0].click()
         SearchBar.focus()
     }

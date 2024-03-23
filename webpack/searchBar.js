@@ -27,16 +27,12 @@ class SearchBar {
     static searchID = "search-bar"
     static placeholder = "Search or Filter by Provider, Subject, Location, or Event"
     static choicesSelector = ".choices__inner .choices__list"
+    static ready = false;
 
     static async build() {
 
         let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
-
-        // Add 50px to search bar on edit page
-        if (Object.fromEntries(new URLSearchParams(location.search))["type"] == "edit") {
-            document.getElementById("content").style.setProperty("--calendar-searchbar-width", "50px");
-        }
 
         // Build out the select el and insert it
         let searchBarEl = document.createElement("select")
@@ -92,6 +88,7 @@ class SearchBar {
             childList: true
         })
 
+        SearchBar.ready = true
     }
 
     static show() {
@@ -105,6 +102,7 @@ class SearchBar {
     }
 
     static toggle() {
+        if (!SearchBar.ready) return
         if (SearchBar.isVisible()) {
             SearchBar.hide()
         } else {
@@ -114,6 +112,10 @@ class SearchBar {
 
     static isVisible() {
         return document.getElementsByClassName(SearchBar.titleClassName)[0].classList.contains("d-none")
+    }
+
+    static isReady() {
+        return SearchBar.ready
     }
 
     static focus() {
@@ -140,7 +142,5 @@ class SearchBar {
     }
 
 }
-
-
 
 export default SearchBar
