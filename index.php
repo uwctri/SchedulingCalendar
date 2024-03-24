@@ -21,5 +21,6 @@ $index = $module->getUrl('index.php');
 <div id="content" class="w-100 pr-4 d-none">
     <div id="calendarColumn">
         <div id="calendar"></div>
+        <div id="loader"></div>
     </div>
 </div>

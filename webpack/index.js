@@ -104,6 +104,13 @@ const calendar = new Calendar(document.getElementById("calendar"), {
     unselect: function (jsEvent, view) {
         // TODO close any open forms
     },
+    loading: (isLoading) => {
+        if (isLoading) {
+            document.getElementById("loader").classList.remove("d-none")
+        } else {
+            document.getElementById("loader").classList.add("d-none")
+        }
+    },
     unselectAuto: false,
     views: {
         singleMonth: {

@@ -14,11 +14,11 @@
     --redcap-btn-color: #337ab7;
     --redcap-btn-border: #2e6da4;
     --calendar-searchbar-width: 600px;
-    min-width: 1200px;
+    width: 1200px;
 }
 
 #calendarColumn {
-    max-width: 1200px;
+    width: 1200px;
 }
 
 #calendar {
@@ -105,5 +105,28 @@
         &:focus {
             box-shadow: none;
         }
+    }
+}
+
+#loader {
+    border: 6px solid var(--fc-more-link-bg-color);
+    border-radius: 50%;
+    border-top: 6px solid var(--fc-button-border-color);
+    width: 18px;
+    height: 18px;
+    animation: spin 1s linear infinite;
+    z-index: 100;
+    float: right;
+    margin-top: -3.5em;
+    margin-right: .75em;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
     }
 }

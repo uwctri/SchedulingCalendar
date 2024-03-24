@@ -19,10 +19,14 @@ class UserConfig {
 
     static get() {
         const expandRows = localStorage.getItem("expandRows")
+        let hiddenDays = localStorage.getItem("configDays").split(',').filter(x => x)
+        hiddenDays = hiddenDays ? hiddenDays.map(x => parseInt(x)) : defaultHiddenDays
+        const showAllDays = localStorage.getItem("showAllDays") == "true"
+        hiddenDays = showAllDays ? [] : hiddenDays
         return {
             start: localStorage.getItem("configStart") || defaultStart,
             end: localStorage.getItem("configEnd") || defaultEnd,
-            hiddenDays: localStorage.getItem("configDays") || defaultHiddenDays,
+            hiddenDays: hiddenDays || defaultHiddenDays,
             slotSize: localStorage.getItem("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows
         }
@@ -61,6 +65,7 @@ class UserConfig {
                 saveDays.push(index)
             })
             localStorage.setItem("configDays", saveDays)
+            localStorage.setItem("showAllDays", saveDays.length == 0)
 
             // Refresh
             location.reload()
