@@ -8,6 +8,7 @@ import html_availability from "./html/availability_popup.html"
 
 class PopOver {
 
+    static _setup = false;
     static closeBtn = `<span class="close" id="PopClose" style="line-height:.7;cursor:pointer">&times;</span>`
     static timeMask12 = {
         mask: "hh:mm aa",
@@ -47,6 +48,18 @@ class PopOver {
         }
     }
 
+    static setup() {
+        if (PopOver._setup) return
+        document.addEventListener("click", (e) => {
+            if (e.target.id !== "aPopAddBtn")
+                return
+            console.log("Add Button Clicked")
+            // TODO check for valid input
+            // TODO send to API
+        })
+        PopOver._setup = true
+    }
+
     static openAvailability(info) {
         let title = `Adding New Availability ${PopOver.closeBtn}`
         PopOver.openPopover(title, html_availability, info.jsEvent.target)
@@ -59,6 +72,7 @@ class PopOver {
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
         const endMask = IMask(endTime, PopOver.timeMask12)
 
+        // Build out the group codes
         API.availabilityCodes().then(data => {
             const select = document.getElementById("aPopGroup")
             for (const k in data) {
@@ -70,11 +84,8 @@ class PopOver {
         })
 
         // TODO Build options for Location (filter them)
-        // TODO Some providers are unschedulable
 
-        API.providers().then(data => {
-            // TODO Build options for calendar admins (all providers)
-        })
+        // Build out the providers
         if (!user.isCalendarAdmin) {
             const select = document.getElementById("aPopProvider")
             let option = document.createElement("option")
@@ -82,12 +93,22 @@ class PopOver {
             option.text = user.name
             option.selected = true
             select.add(option)
+        } else {
+            API.providers().then(data => {
+                // TODO Some providers are unschedulable
+                const select = document.getElementById("aPopProvider")
+                for (const k in data) {
+                    let option = document.createElement("option")
+                    option.value = data[k].value
+                    option.text = data[k].label
+                    select.add(option)
+                }
+            })
         }
-
-        // TODO Setup Click event for add button
     }
 
     static openPopover(title, content, target) {
+        PopOver.setup()
         PopOver.close()
         jQuery(target).popover({
             title: title,
