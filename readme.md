@@ -13,12 +13,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Need a good fast way to add availability
 * Remove all future data for withdrawn subject
 * Export calendar (via an API too)
-* Whole settings page
-
-## SOT settings
-
 * Add a new study
-* Location tree
 * ICS export config
 * Calendar Admin
 * Unschedulable Users

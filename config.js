@@ -1,11 +1,12 @@
 $(document).ready(() => {
 
-    const prefix = "scheduling_and_availability";
+    const prefix = "scheduling_calendar";
 
     $("#external-modules-configure-modal").on("show.bs.modal", (event) => {
 
         // Making sure we are overriding this modules"s modal only.
         let el = event.target
+        console.log($(el).data("module"))
         if ($(el).data("module") !== prefix) return
 
         if (typeof ExternalModules.Settings.prototype.resetConfigInstancesOld === "undefined")

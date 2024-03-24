@@ -138,6 +138,10 @@ const calendar = new Calendar(document.getElementById("calendar"), {
             buttonText: "agenda"
         }
     },
+    eventContent: (info) => {
+        let title = info.timeText + "<br>" + info.event.title
+        return { html: title };
+    },
     eventSources: [
         {
             url: router,
@@ -148,8 +152,10 @@ const calendar = new Calendar(document.getElementById("calendar"), {
                     crud: CRUD.Read,
                     resource: Resource.Availability, // TODO
                     page: pageURL.type,
-                    providers: [], // We should filter by provider as its easy due to structure
-                    // Probably request either availability or events
+                    providers: [],
+                    locations: [],
+                    subjects: [],
+                    events: [],
                 }
             }
         }

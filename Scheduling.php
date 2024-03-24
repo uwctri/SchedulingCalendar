@@ -14,6 +14,8 @@ class Scheduling extends AbstractExternalModule
         db_query("CREATE TABLE IF NOT EXISTS `em_scheduling_calendar` (
             `id` INT AUTO_INCREMENT,
             `project_id` INT,
+            `event_id` INT,
+            `availability_code` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci,
             `user` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
             `record` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci,
             `location` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
@@ -48,6 +50,11 @@ class Scheduling extends AbstractExternalModule
         if (!isset($Proj)) {
             $Proj = new Project($project_id);
         }
+
+        // Grab start/end from GET for full calendar
+        $payload["start"] = $_GET["start"] ?? $payload["start"];
+        $payload["end"] = $_GET["end"] ?? $payload["end"];
+        $payload["pid"] = $project_id;
 
         $funcs = [
             "availability" => [
@@ -205,19 +212,75 @@ class Scheduling extends AbstractExternalModule
 
     private function getLocations($payload = Null)
     {
+        return $this->getLocationStructure();
+    }
+
+    private function getLocationStructure($flatten = false)
+    {
         $locations = $this->getSystemSetting("locations-json");
         $locations = json_decode($locations, true) ?? [];
+        if ($flatten) {
+            $flat_locations = [];
+            foreach ($locations as $code => $data) {
+                $sites = $data["sites"];
+                unset($data["sites"]);
+                $flat_locations[$code] = $data;
+                foreach ($sites as $site_code => $site) {
+                    $flat_locations[$site_code] = $site;
+                }
+            }
+            return $flat_locations;
+        }
         return $locations;
     }
 
     private function getAvailability($payload = Null)
     {
-        return [[
-            "title" => "test thing",
-            "start" => date("Y-m-d") . "T11:00",
-            "end" =>  date("Y-m-d") . "T13:00",
-            "location" => "test location"
-        ]];
+        // TODO for editing availability we would ignore the codes and just get all availability
+        // TODO for editing availability we will want to show the code in the title
+
+
+        $availability = [];
+        $providers = $payload["providers"];
+        $locations = $payload["locations"];
+        // Filtering by event_id and record aren't a thing for Availability
+        $codes = explode(',', $this->getProjectSetting("availability-codes"));
+        if (empty($codes)) {
+            return $availability;
+        }
+
+        $allUsers = $this->getAllUsers();
+        $allLocations = $this->getLocationStructure(true);
+
+        $query = $this->createQuery();
+        $query->add("SELECT record, event_id, availability_code, user, location, time_start, time_end, metadata FROM em_scheduling_calendar");
+        $query->add("WHERE");
+        $query->addInClause("availability_code", $codes);
+
+        if (!empty($providers)) {
+            $query->add("AND")->addInClause("user", $providers);
+        }
+
+        if (!empty($locations)) {
+            $query->add("AND")->addInClause("location", $locations);
+        }
+
+        $result = $query->execute();
+        while ($row = $result->fetch_assoc()) {
+            $provider = $allUsers[$row["user"]] ?? $row["user"];
+            $location = $allLocations[$row["location"]]["name"] ?? $row["location"];
+            $availability[] = [
+                "title" => "$provider<br>$location",
+                "start" => str_replace(' ', 'T', $row["time_start"]),
+                "end" => str_replace(' ', 'T', $row["time_end"]),
+                "location" => $row["location"],
+                "user" => $row["user"],
+                "availability_code" => $row["availability_code"],
+                "metadata" => json_decode($row["metadata"], true) ?? []
+            ];
+        }
+
+        return $availability;
     }
 
     private function setAvailability($payload = Null)
