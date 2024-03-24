@@ -20,7 +20,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ## Running locally
 
-If you don't have NPM install nodist and use it to setup the latest npm version
+If you don't have NPM install NVM and use it to setup the latest npm version
 
 ```
 nvm install 21.7.0

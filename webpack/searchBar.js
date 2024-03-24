@@ -155,24 +155,31 @@ class SearchBar {
         return locs
     }
 
-    static getPicked() {
-        return SearchBar.choices.getValue()
+    static getPicked(valueOnly = false, filterType = null) {
+        let picked = SearchBar.choices.getValue()
+        if (filterType) {
+            picked = picked.filter(item => item.customProperties.type == filterType)
+        }
+        if (valueOnly) {
+            picked = picked.map(x => x.value)
+        }
+        return picked
     }
 
-    static getPickedProviders() {
-        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "provider")
+    static getPickedProviders(valueOnly = false) {
+        return SearchBar.getPicked(valueOnly, "provider")
     }
 
-    static getPickedSubjects() {
-        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "subject")
+    static getPickedSubjects(valueOnly = false) {
+        return SearchBar.getPicked(valueOnly, "subject")
     }
 
-    static getPickedLocations() {
-        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "location")
+    static getPickedLocations(valueOnly = false) {
+        return SearchBar.getPicked(valueOnly, "location")
     }
 
-    static getPickedEvents() {
-        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "event")
+    static getPickedEvents(valueOnly = false) {
+        return SearchBar.getPicked(valueOnly, "event")
     }
 
 }

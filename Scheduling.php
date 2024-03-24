@@ -238,11 +238,11 @@ class Scheduling extends AbstractExternalModule
     {
         // TODO for editing availability we would ignore the codes and just get all availability
         // TODO for editing availability we will want to show the code in the title
-
-
         $availability = [];
         $providers = $payload["providers"];
         $locations = $payload["locations"];
+        $start = str_replace("T", " ", $payload["start"]);
+        $end = str_replace("T", " ", $payload["end"]);
         // Filtering by event_id and record aren't a thing for Availability
         $codes = explode(',', $this->getProjectSetting("availability-codes"));
         if (empty($codes)) {
@@ -264,6 +264,8 @@ class Scheduling extends AbstractExternalModule
         if (!empty($locations)) {
             $query->add("AND")->addInClause("location", $locations);
         }
+
+        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
 
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
