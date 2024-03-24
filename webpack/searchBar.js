@@ -1,7 +1,7 @@
 import Choices from "choices.js"
 import API from "./api"
 
-const testEvents = [
+let testEvents = [
     {
         value: "eventa",
         label: 'Event A',
@@ -27,10 +27,17 @@ class SearchBar {
     static searchID = "search-bar"
     static placeholder = "Search or Filter by Provider, Subject, Location, or Event"
     static choicesSelector = ".choices__inner .choices__list"
+    static choices = null;
     static ready = false;
 
     static async build() {
 
+        const addCustomProperty = (data, key, value) => {
+            for (const id in data) {
+                data[id].customProperties = data[id].customProperties || {}
+                data[id].customProperties[key] = value
+            }
+        }
         let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
 
@@ -42,12 +49,17 @@ class SearchBar {
         centerEl.appendChild(searchBarEl)
 
         // Fetch data for the dropdown
-        const providers = await API.providers()
-        const subjects = await API.subjects()
-        const locations = await API.locations()
+        let providers = await API.providers()
+        addCustomProperty(providers, "type", "provider")
+        let subjects = await API.subjects()
+        addCustomProperty(subjects, "type", "subject")
+        let locations = await API.locations()
+        addCustomProperty(locations, "type", "location")
+
+        addCustomProperty(testEvents, "type", "event")
 
         // Init the picker object
-        let choices = new Choices(searchBarEl, {
+        SearchBar.choices = new Choices(searchBarEl, {
             allowHTML: false,
             removeItems: true,
             removeItemButton: true,
@@ -103,6 +115,7 @@ class SearchBar {
 
     static toggle() {
         if (!SearchBar.ready) return
+        console.log(SearchBar.getPicked())
         if (SearchBar.isVisible()) {
             SearchBar.hide()
         } else {
@@ -131,7 +144,8 @@ class SearchBar {
             if (data.active && (!data.projects || !data.projects.length || data.projects.includes(project_code))) {
                 locs.push({
                     value: id,
-                    label: data["name"]
+                    label: data["name"],
+                    ...data
                 })
             }
             if (data.sites) {
@@ -139,6 +153,26 @@ class SearchBar {
             }
         }
         return locs
+    }
+
+    static getPicked() {
+        return SearchBar.choices.getValue()
+    }
+
+    static getPickedProviders() {
+        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "provider")
+    }
+
+    static getPickedSubjects() {
+        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "subject")
+    }
+
+    static getPickedLocations() {
+        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "location")
+    }
+
+    static getPickedEvents() {
+        return SearchBar.choices.getValue().filter(item => item.customProperties.type == "event")
     }
 
 }
