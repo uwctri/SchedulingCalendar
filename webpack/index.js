@@ -6,6 +6,7 @@ import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
 import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
+import PopOver from "./popover"
 import { CRUD, Resource } from "./enums"
 import "./iconObserver"
 import "./style.less"
@@ -17,7 +18,7 @@ let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
 const topLeftToolbar = ["prev,next", "today", "config"]
 let bottomRightToolbar = [];
 if (!pageURL.type) {
-    location.href = `${location.href}&type=edit`
+    location.href = `${location.href}&type=edit` // TODO default to schedule
 }
 if (pageURL.type != "edit") {
     topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
@@ -62,13 +63,13 @@ const calendar = new Calendar(document.getElementById("calendar"), {
     },
     slotDuration: `00:${slotSize}:00`,
     navLinks: true,
-    editable: true,
+    editable: false,
     dayMaxEvents: true,
     initialView: "singleWeek",
     slotMinTime: startTime,
     slotMaxTime: endTime,
     expandRows: expandRows,
-    selectable: true,
+    selectable: pageURL.type != "my",
     dateClick: (dateClickInfo) => {
         if (dateClickInfo.view.type == "singleMonth") {
             calendar.changeView("singleWeek")
@@ -76,28 +77,16 @@ const calendar = new Calendar(document.getElementById("calendar"), {
         }
     },
     select: (selectionInfo) => {
-        // TODO close any open forms
+        if (pageURL.type == "edit" && ["singleWeek", "singleDay"].includes(calendar.view.type)) {
+            PopOver.openAvailability(selectionInfo)
+        }
     },
     selectAllow: (selectionInfo) => {
-
         // Prevent from selecting multiple days
         if (calendar.view.type == "singleMonth") {
             const start = DateTime.fromISO(selectionInfo.endStr)
             const end = DateTime.fromISO(selectionInfo.startStr)
-            if (start.diff(end, "days").toObject().days > 1) {
-                return false
-            }
-        }
-
-        // TODO can we allow selction as non-continuous square of time?
-        // TODO why does SELECT also unselct stuff? Crap.
-        if (calendar.view.type == "singleWeek" && pageURL.type === "edit") {
-            calendar.unselect()
-            let start = DateTime.fromISO(selectionInfo.startStr)
-            let end = DateTime.fromISO(selectionInfo.endStr)
-            for (let day = start.day; day <= end.day; day++) {
-                calendar.select(start.set({ day: day }).toISO(), end.set({ day: day }).toISO())
-            }
+            return start.diff(end, "days").toObject().days <= 1
         }
         return true
     },
@@ -146,7 +135,7 @@ const calendar = new Calendar(document.getElementById("calendar"), {
         }
     },
     eventContent: (info) => {
-        let title = info.timeText + "<br>" + info.event.title
+        const title = `${info.timeText}<br>${info.event.title}`
         return { html: title };
     },
     eventSources: [

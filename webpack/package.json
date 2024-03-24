@@ -26,6 +26,7 @@
     "@fullcalendar/list": "^6.1.11",
     "@fullcalendar/timegrid": "^6.1.11",
     "choices.js": "^10.2.0",
+    "imask": "^7.5.0",
     "luxon": "^3.4.4",
     "sweetalert2": "^11.10.7"
   },
