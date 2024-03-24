@@ -3,6 +3,7 @@
 
 import { DateTime } from "luxon"
 import IMask from "imask";
+import API from "./api"
 import html_availability from "./html/availability_popup.html"
 
 class PopOver {
@@ -52,14 +53,37 @@ class PopOver {
 
         const startTime = document.getElementById("aPopStartTime")
         startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
-        const startMask = IMask(startTime, PopOver.timeMask12);
+        const startMask = IMask(startTime, PopOver.timeMask12)
 
         const endTime = document.getElementById("aPopEndTime")
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
-        const endMask = IMask(endTime, PopOver.timeMask12);
+        const endMask = IMask(endTime, PopOver.timeMask12)
 
-        // TODO Build option for the 3 drop downs
-        // TODO Select current user as provider
+        API.availabilityCodes().then(data => {
+            const select = document.getElementById("aPopGroup")
+            for (const k in data) {
+                let option = document.createElement("option")
+                option.value = data[k].value
+                option.text = data[k].label
+                select.add(option)
+            }
+        })
+
+        // TODO Build options for Location (filter them)
+        // TODO Some providers are unschedulable
+
+        API.providers().then(data => {
+            // TODO Build options for calendar admins (all providers)
+        })
+        if (!user.isCalendarAdmin) {
+            const select = document.getElementById("aPopProvider")
+            let option = document.createElement("option")
+            option.value = user.username
+            option.text = user.name
+            option.selected = true
+            select.add(option)
+        }
+
         // TODO Setup Click event for add button
     }
 

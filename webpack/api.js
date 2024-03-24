@@ -2,6 +2,25 @@ import { CRUD, Resource } from "./enums"
 
 class API {
 
+    static _availabilityCodes = null;
+    static _providers = null;
+    static _locations = null;
+
+    static async availabilityCodes() {
+
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.AvailabilityCode
+        }
+
+        if (API._availabilityCodes) return API._availabilityCodes
+
+        const result = await API.post(data)
+        API._availabilityCodes = result
+        return result
+    }
+
+
     static async providers() {
 
         const data = {
@@ -9,9 +28,11 @@ class API {
             "resource": Resource.Provider,
         }
 
-        const result = await API.post(data)
-        return result
+        if (API._providers) return API._providers
 
+        const result = await API.post(data)
+        API._providers = result
+        return result
     }
 
     static async subjects(provider = "") {
@@ -24,7 +45,6 @@ class API {
 
         const result = await API.post(data)
         return result
-
     }
 
     static async locations() {
@@ -34,9 +54,11 @@ class API {
             "resource": Resource.Location
         }
 
-        const result = await API.post(data)
-        return result
+        if (API._locations) return API._locations
 
+        const result = await API.post(data)
+        API._locations = result
+        return result
     }
 
     static async post(data) {
@@ -59,7 +81,6 @@ class API {
         });
 
         return result
-
     }
 
     static toFormData(obj) {
@@ -69,7 +90,6 @@ class API {
             data.append(key, value)
         }
         return data
-
     }
 
 }

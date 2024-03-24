@@ -6,7 +6,7 @@ $index = $module->getUrl('index.php');
 <script>
     const csrf = "<?= $module->getCSRFToken(); ?>"
     const router = "<?= $module->getUrl('router.php'); ?>"
-    const project_code = "<?= $module->getProjectSetting('project-coode'); ?>"
+    const user = <?= json_encode($module->currentUser()); ?>
 </script>
 <script src="<?= $module->getUrl('calendar.js'); ?>" defer></script>
 

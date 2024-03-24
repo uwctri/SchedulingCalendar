@@ -57,6 +57,10 @@ class Scheduling extends AbstractExternalModule
         $payload["pid"] = $project_id;
 
         $funcs = [
+            "availabilitycode" => [
+                "read" => "getAvailabilityCodes",
+                "default" => "Availability Code resource is read only"
+            ],
             "availability" => [
                 "create" => "setAvailability",
                 "read" => "getAvailability",
@@ -95,6 +99,20 @@ class Scheduling extends AbstractExternalModule
             $this->fireDataEntryTrigger($payload);
         }
         return json_encode($result);
+    }
+
+    public function currentUser()
+    {
+        $admins = $this->getProjectSetting("calendar-admin")[0];
+        $user = $this->getUser();
+        $username = $user->getUsername();
+        return [
+            "username" => $username,
+            "email" => $user->getEmail(),
+            "name" => $GLOBALS['user_firstname'] . ' ' . $GLOBALS['user_lastname'],
+            "isCalendarAdmin" => in_array($username, $admins),
+            "isSuperUser" => $user->isSuperUser()
+        ];
     }
 
     /*
@@ -232,6 +250,20 @@ class Scheduling extends AbstractExternalModule
             return $flat_locations;
         }
         return $locations;
+    }
+
+    private function getAvailabilityCodes($payload = Null)
+    {
+        $displayNames = $this->getSystemSetting("group-name");
+        $codedValues = $this->getSystemSetting("group-code");
+        $result = array_combine($codedValues, $displayNames);
+        foreach ($result as $code => $name) {
+            $result[$code] = [
+                "value" => $code,
+                "label" => $name
+            ];
+        }
+        return $result;
     }
 
     private function getAvailability($payload = Null)

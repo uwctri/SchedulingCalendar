@@ -17,10 +17,10 @@ $(document).ready(() => {
             $(".modal thead").remove()
 
             // Trim off some junk spans (and colons) from lists and headers
-            for (const name of ["calendar-admin", "unschedulable"]) {
-                $(`tr[field=${name}-list] span`).remove()
-                $(`tr[field=${name}] span`).each((_, el) => $(el).text(`${$(el).text().split(".")[1]}. `))
-            }
+            // for (const name of ["calendar-admin", "unschedulable"]) {
+            //     $(`tr[field=${name}-list] span`).remove()
+            //     $(`tr[field=${name}] span`).each((_, el) => $(el).text(`${$(el).text().split(".")[1]}. `))
+            // }
         }
     })
 })
