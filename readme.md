@@ -22,15 +22,15 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 If you don't have NPM install nodist and use it to setup the latest npm version
 
-`
+```
 nvm install 21.7.0
 nvm use 21.7.0
-`
+```
 
 Setup the build
 
-`
+```
 cd webpack
 npm install
 npm run build
-`
+```
