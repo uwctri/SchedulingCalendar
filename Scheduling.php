@@ -11,7 +11,7 @@ class Scheduling extends AbstractExternalModule
 {
     public function redcap_module_system_enable()
     {
-        db_query("CREATE TABLE IF NOT EXISTS `em_scheduling_calendar` (
+        db_query("CREATE TABLE IF NOT EXISTS em_scheduling_calendar (
             `id` INT AUTO_INCREMENT,
             `project_id` INT,
             `event_id` INT,
@@ -123,7 +123,8 @@ class Scheduling extends AbstractExternalModule
     private function getProviders($payload = Null)
     {
         // Get users that have been used the EM
-        $sql = $this->query("SELECT DISTINCT user FROM redcap.em_scheduling_calendar", []);
+        $noParams = [];
+        $sql = $this->query("SELECT DISTINCT user FROM em_scheduling_calendar", $noParams);
         $globalProviders = [];
         while ($row = db_fetch_assoc($sql)) {
             $globalProviders[] = $row["user"];
@@ -162,7 +163,8 @@ class Scheduling extends AbstractExternalModule
     private function getAllUsers()
     {
         $users = [];
-        $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", []);
+        $noParams = [];
+        $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", $noParams);
         while ($row = db_fetch_assoc($sql)) {
             $users[$row["username"]] = $row["displayname"];
         }
@@ -183,7 +185,7 @@ class Scheduling extends AbstractExternalModule
         $result = [];
 
         if (!empty($provider)) {
-            $sql = $this->query("SELECT * FROM redcap.em_scheduling_calendar WHERE user = '?'", [$provider]);
+            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?'", $provider);
 
             $data = [];
             while ($row = db_fetch_assoc($sql)) {
@@ -287,7 +289,7 @@ class Scheduling extends AbstractExternalModule
         $allLocations = $this->getLocationStructure(true);
 
         $query = $this->createQuery();
-        $query->add("SELECT record, event_id, availability_code, user, location, time_start, time_end, metadata FROM em_scheduling_calendar");
+        $query->add("SELECT id, record, event_id, availability_code, user, location, time_start, time_end, metadata FROM em_scheduling_calendar");
         $query->add("WHERE");
         $query->addInClause("availability_code", $codes);
 
@@ -301,12 +303,15 @@ class Scheduling extends AbstractExternalModule
 
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
 
+        $codes = $this->getAvailabilityCodes();
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
             $provider = $allUsers[$row["user"]] ?? $row["user"];
             $location = $allLocations[$row["location"]]["name"] ?? $row["location"];
+            $codeName = $codes[$row["availability_code"]]["label"] ?? $row["availability_code"];
             $availability[] = [
-                "title" => "$provider<br>$location",
+                "internal_id" => $row["id"],
+                "title" => "$codeName<br>$provider<br>$location",
                 "start" => str_replace(' ', 'T', $row["time_start"]),
                 "end" => str_replace(' ', 'T', $row["time_end"]),
                 "location" => $row["location"],
@@ -328,10 +333,66 @@ class Scheduling extends AbstractExternalModule
         $user = $payload["provider"];
         $location = $payload["location"];
 
-        $this->query(
-            "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)",
-            [$project_id, $code, $user, $location, $start, $end]
-        );
+        $start_of_day = substr($start, 0, 10) . " 00:00";
+        $end_of_day = substr($end, 0, 10) . " 23:59";
+        $existing = $this->getAvailability([
+            "providers" => $user,
+            "locations" => $location,
+            "start" => $start_of_day,
+            "end" => $end_of_day
+        ]);
+
+        $resolved = false;
+        if (!empty($existing)) {
+            foreach ($existing as $appt) {
+                if ($resolved) break;
+                $id = $appt["internal_id"];
+                $apptStart = str_replace("T", " ", $appt["start"]);
+                $apptEnd = str_replace("T", " ", $appt["end"]);
+                if ($apptStart <= $start && $apptEnd >= $end) {
+                    // Skip creation, its a duplicate
+                    $resolved = true;
+                }
+                if ($apptStart <= $start && $end > $apptEnd) {
+                    // Extend the end of the existing appointment
+                    $resolved = true;
+                    $this->modifyAvailabiltiy($id, null, $end);
+                }
+                if ($start < $apptStart && $apptEnd >= $end) {
+                    // Extend the start of the existing appointment (to earlier in the day)
+                    $resolved = true;
+                    $this->modifyAvailabiltiy($id, $start, null);
+                }
+                if ($start < $apptStart && $end > $apptEnd) {
+                    // Extend the start and end of the existing appointment
+                    $resolved = true;
+                    $this->modifyAvailabiltiy($id, $start, $end);
+                }
+            }
+        }
+
+        if (!$resolved) {
+            $this->query(
+                "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)",
+                [$project_id, $code, $user, $location, $start, $end]
+            );
+        }
+        return $existing;
+    }
+
+    private function modifyAvailabiltiy($id, $newStart = null, $newEnd = null)
+    {
+        $query = $this->createQuery();
+        $query->add("UPDATE em_scheduling_calendar SET");
+        $conditions = [];
+        if ($newStart != null)
+            $conditions[] = "time_start = ?";
+        if ($newEnd != null)
+            $conditions[] = "time_end = ?";
+        $params = array_filter([$newStart, $newEnd]);
+        $query->add(implode(',', $conditions), $params);
+        $query->add("WHERE id = ?", [$id]);
+        $query->execute();
         return [];
     }
 

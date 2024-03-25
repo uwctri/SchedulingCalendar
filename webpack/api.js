@@ -87,6 +87,7 @@ class API {
             return Promise.reject(response)
         }).then((data) => {
             result = data
+            console.log(data)
         }).catch((error) => {
             console.warn('Something went wrong in API.js', error, data)
         });
