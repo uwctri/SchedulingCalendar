@@ -1,5 +1,6 @@
 import Swal from 'sweetalert2'
 import html from './html/userConfig.html'
+import PopOver from "./popover"
 
 const defaultStart = "05:00"
 const defaultEnd = "18:00"
@@ -40,6 +41,7 @@ class UserConfig {
         const newHtml = html.replace("START-TIME", start).replace("END-TIME", end).replace("SLOT-SIZE", slotSize).replace("CHECKED", expandRows ? "checked" : "")
         const btnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
 
+        PopOver.close()
         Swal.fire({
             title: "User Configuration",
             html: newHtml,

@@ -10,6 +10,7 @@ class PopOver {
 
     static _date = null;
     static _setup = false;
+    static _open = false;
     static closeBtn = `<span class="close" id="PopClose">&times;</span>`
     static timeMask12 = {
         mask: "hh:mm aa",
@@ -82,7 +83,8 @@ class PopOver {
         let els = document.querySelectorAll(".popover input, .popover select")
         let valid = true
         for (const el of els) {
-            if (el.value === "") {
+            const tmp = el.value.replaceAll(/[:_ ]/g, '')
+            if (el.value === "" || tmp === "") {
                 el.classList.add(el.tagName == "SELECT" ? "is-invalid" : "is-invalid-noicon")
                 valid = false
             }
@@ -110,6 +112,7 @@ class PopOver {
 
         // Build out the group codes
         API.availabilityCodes().then(data => {
+            if (!PopOver.isOpen()) return
             const select = document.getElementById("aPopGroup")
             for (const k in data) {
                 let option = document.createElement("option")
@@ -121,6 +124,7 @@ class PopOver {
 
         // Build out locations
         API.locations().then(locations => {
+            if (!PopOver.isOpen()) return
             // TODO Some locations should be filtered out
             const select = document.getElementById("aPopLocation")
             const loopOver = (obj) => {
@@ -148,6 +152,7 @@ class PopOver {
             select.add(option)
         } else {
             API.providers().then(providers => {
+                if (!PopOver.isOpen()) return
                 // TODO Some providers are unschedulable
                 const select = document.getElementById("aPopProvider")
                 for (const k in providers) {
@@ -163,6 +168,7 @@ class PopOver {
     static openPopover(title, content, target) {
         PopOver.setup()
         PopOver.close()
+        PopOver._open = true
         jQuery(target).popover({
             title: title,
             content: content,
@@ -173,7 +179,12 @@ class PopOver {
         document.getElementById("PopClose").addEventListener("click", PopOver.close)
     }
 
+    static isOpen() {
+        return PopOver._open
+    }
+
     static close() {
+        PopOver._open = false
         document.querySelectorAll(".popover").forEach(e => e.remove())
     }
 
