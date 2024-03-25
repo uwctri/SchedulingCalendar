@@ -25,11 +25,11 @@
 
     a {
         text-decoration: none;
-    }
 
-    a:hover {
-        outline: none;
-        cursor: pointer;
+        a:hover {
+            outline: none;
+            cursor: pointer;
+        }
     }
 
     .fc-col-header-cell-cushion,
@@ -144,6 +144,20 @@
         text-align: center;
         font-size: 15px;
         font-weight: bold;
+    }
+}
+
+#PopClose {
+    line-height: 0.6em;
+    cursor: pointer;
+}
+
+.is-invalid-noicon {
+    border-color: var(--bs-form-invalid-border-color);
+
+    &:focus {
+        border-color: var(--bs-form-invalid-border-color);
+        box-shadow: 0 0 0 .25rem rgba(var(--bs-danger-rgb), .25);
     }
 }
 

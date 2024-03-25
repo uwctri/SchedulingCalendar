@@ -8,8 +8,9 @@ import html_availability from "./html/availability_popup.html"
 
 class PopOver {
 
+    static _date = null;
     static _setup = false;
-    static closeBtn = `<span class="close" id="PopClose" style="line-height:.7;cursor:pointer">&times;</span>`
+    static closeBtn = `<span class="close" id="PopClose">&times;</span>`
     static timeMask12 = {
         mask: "hh:mm aa",
         lazy: false,
@@ -53,16 +54,51 @@ class PopOver {
         document.addEventListener("click", (e) => {
             if (e.target.id !== "aPopAddBtn")
                 return
-            console.log("Add Button Clicked")
-            // TODO check for valid input
-            // TODO send to API
+            if (!PopOver.validate())
+                return
+
+            let start = DateTime.fromFormat(document.getElementById("aPopStartTime").value, "hh:mm a").toISOTime()
+            start = PopOver._date.toISODate() + "T" + start
+            let end = DateTime.fromFormat(document.getElementById("aPopEndTime").value, "hh:mm a").toISOTime()
+            end = PopOver._date.toISODate() + "T" + end
+
+            API.setAvailability({
+                "provider": document.getElementById("aPopProvider").value,
+                "location": document.getElementById("aPopLocation").value,
+                "group": document.getElementById("aPopGroup").value,
+                "start": start,
+                "end": end,
+            }).then(data => {
+                // TODO maybe show a saving animation before closing?
+                calendar.refetchEvents()
+            })
+            PopOver.close()
         })
         PopOver._setup = true
+    }
+
+    static validate() {
+        PopOver.clearValidation()
+        let els = document.querySelectorAll(".popover input, .popover select")
+        let valid = true
+        for (const el of els) {
+            if (el.value === "") {
+                el.classList.add(el.tagName == "SELECT" ? "is-invalid" : "is-invalid-noicon")
+                valid = false
+            }
+        }
+        return valid
+    }
+
+    static clearValidation() {
+        document.querySelectorAll(".popover .is-invalid").forEach(e => e.classList.remove("is-invalid"))
+        document.querySelectorAll(".popover .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
     }
 
     static openAvailability(info) {
         let title = `Adding New Availability ${PopOver.closeBtn}`
         PopOver.openPopover(title, html_availability, info.jsEvent.target)
+        PopOver._date = DateTime.fromISO(info.startStr)
 
         const startTime = document.getElementById("aPopStartTime")
         startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
@@ -83,7 +119,24 @@ class PopOver {
             }
         })
 
-        // TODO Build options for Location (filter them)
+        // Build out locations
+        API.locations().then(locations => {
+            // TODO Some locations should be filtered out
+            const select = document.getElementById("aPopLocation")
+            const loopOver = (obj) => {
+                for (const code in obj) {
+                    if (obj[code].sites)
+                        loopOver(obj[code].sites)
+                    if (!obj[code].active)
+                        continue
+                    let option = document.createElement("option")
+                    option.value = code
+                    option.text = obj[code].name
+                    select.add(option)
+                }
+            }
+            loopOver(locations)
+        })
 
         // Build out the providers
         if (!user.isCalendarAdmin) {
@@ -94,13 +147,13 @@ class PopOver {
             option.selected = true
             select.add(option)
         } else {
-            API.providers().then(data => {
+            API.providers().then(providers => {
                 // TODO Some providers are unschedulable
                 const select = document.getElementById("aPopProvider")
-                for (const k in data) {
+                for (const k in providers) {
                     let option = document.createElement("option")
-                    option.value = data[k].value
-                    option.text = data[k].label
+                    option.value = providers[k].value
+                    option.text = providers[k].label
                     select.add(option)
                 }
             })

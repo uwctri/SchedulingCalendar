@@ -61,6 +61,17 @@ class API {
         return result
     }
 
+    static async setAvailability(payload) {
+
+        const data = {
+            "crud": CRUD.Create,
+            "resource": Resource.Availability,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
     static async post(data) {
 
         let result = {}

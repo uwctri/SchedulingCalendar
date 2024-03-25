@@ -4,6 +4,7 @@ $module->tt_transferToJavascriptModuleObject();
 $index = $module->getUrl('index.php');
 ?>
 <script>
+    let calendar;
     const csrf = "<?= $module->getCSRFToken(); ?>"
     const router = "<?= $module->getUrl('router.php'); ?>"
     const user = <?= json_encode($module->currentUser()); ?>

@@ -37,7 +37,7 @@ document.addEventListener("keyup", (event) => {
 })
 
 // Init the calendar
-const calendar = new Calendar(document.getElementById("calendar"), {
+calendar = new Calendar(document.getElementById("calendar"), {
     plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
     customButtons: {
         config: {

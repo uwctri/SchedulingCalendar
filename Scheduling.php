@@ -40,6 +40,7 @@ class Scheduling extends AbstractExternalModule
     {
         global $Proj;
 
+        // TODO we aren't ever returning errors right now
         $request = RestUtility::processRequest($tokenRequired);
         $payload = $request->getRequestVars();
         $project_id = $payload["projectid"] ?? $_GET["pid"];
@@ -89,6 +90,7 @@ class Scheduling extends AbstractExternalModule
 
         $task = $funcs[$payload["resource"]][$payload["crud"]];
         if (!empty($task)) {
+            $err_msg = "";
             $result = $this->$task($payload);
         } else {
             $err_msg = $funcs[$payload["resource"]]["default"] ?? $err_msg;
@@ -319,11 +321,18 @@ class Scheduling extends AbstractExternalModule
 
     private function setAvailability($payload = Null)
     {
-        return [[
-            "title" => "test thing",
-            "start" => date("Y-m-d") . "T11:00",
-            "end" =>  date("Y-m-d") . "T13:00"
-        ]];
+        $project_id = $payload["pid"];
+        $code = $payload["group"];
+        $start = str_replace("T", " ", $payload["start"]);
+        $end = str_replace("T", " ", $payload["end"]);
+        $user = $payload["provider"];
+        $location = $payload["location"];
+
+        $this->query(
+            "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)",
+            [$project_id, $code, $user, $location, $start, $end]
+        );
+        return [];
     }
 
     private function getAppointments($payload = Null)
