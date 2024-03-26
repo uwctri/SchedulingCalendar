@@ -8,6 +8,7 @@ import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
 import PopOver from "./popover"
 import Loading from "./loading"
+import ContextMenu from "./contextmenu"
 import { CRUD, Resource } from "./enums"
 import "./iconObserver"
 import "./style.less"
@@ -93,12 +94,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
     },
     eventDidMount: (arg) => {
         if (["singleMonth", "singleWeek"].includes(calendar.view.type) && pageURL.type == "edit") {
-            const eventId = arg.event.id
-            arg.el.addEventListener("contextmenu", (jsEvent) => {
-                jsEvent.preventDefault()
-                console.log("contextMenu", eventId)
-                // TODO
-            })
+            ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
         }
     },
     unselect: function (jsEvent, view) {

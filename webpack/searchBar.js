@@ -20,13 +20,14 @@ let testEvents = [
     },
 ]
 
+const centerClassName = "fc-toolbar-chunk"
+const titleClassName = "fc-toolbar-title"
+const searchID = "search-bar"
+const placeholder = "Search or Filter by Provider, Subject, Location, or Event"
+const choicesSelector = ".choices__inner .choices__list"
+
 class SearchBar {
 
-    static centerClassName = "fc-toolbar-chunk"
-    static titleClassName = "fc-toolbar-title"
-    static searchID = "search-bar"
-    static placeholder = "Search or Filter by Provider, Subject, Location, or Event"
-    static choicesSelector = ".choices__inner .choices__list"
     static choices = null;
     static ready = false;
 
@@ -38,12 +39,12 @@ class SearchBar {
                 data[id].customProperties[key] = value
             }
         }
-        let centerEl = document.getElementsByClassName(SearchBar.centerClassName)[1]
+        let centerEl = document.getElementsByClassName(centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
 
         // Build out the select el and insert it
         let searchBarEl = document.createElement("select")
-        searchBarEl.id = SearchBar.searchID
+        searchBarEl.id = searchID
         searchBarEl.setAttribute("multiple", "")
         searchBarEl.style.display = "none"
         centerEl.appendChild(searchBarEl)
@@ -63,7 +64,7 @@ class SearchBar {
             allowHTML: false,
             removeItems: true,
             removeItemButton: true,
-            placeholderValue: SearchBar.placeholder,
+            placeholderValue: placeholder,
             choices:
                 [
                     {
@@ -89,11 +90,11 @@ class SearchBar {
         searchBarEl.style.display = ""
 
         // Watch for changes in dropdown and remove placeholder text
-        const choicesEl = document.querySelector(SearchBar.choicesSelector)
+        const choicesEl = document.querySelector(choicesSelector)
         new MutationObserver((mutations) => {
             const count = choicesEl.childElementCount
-            const text = count > 0 ? "" : SearchBar.placeholder
-            const el = document.querySelector(`.${SearchBar.centerClassName} input`)
+            const text = count > 0 ? "" : placeholder
+            const el = document.querySelector(`.${centerClassName} input`)
             el.placeholder = text
             el.style.width = `${text.length}ch`
         }).observe(choicesEl, {
@@ -104,13 +105,13 @@ class SearchBar {
     }
 
     static show() {
-        document.getElementById(SearchBar.searchID).parentElement.parentElement.classList.remove("d-none")
-        document.getElementsByClassName(SearchBar.titleClassName)[0].classList.add("d-none")
+        document.getElementById(searchID).parentElement.parentElement.classList.remove("d-none")
+        document.getElementsByClassName(titleClassName)[0].classList.add("d-none")
     }
 
     static hide() {
-        document.getElementById(SearchBar.searchID).parentElement.parentElement.classList.add("d-none")
-        document.getElementsByClassName(SearchBar.titleClassName)[0].classList.remove("d-none")
+        document.getElementById(searchID).parentElement.parentElement.classList.add("d-none")
+        document.getElementsByClassName(titleClassName)[0].classList.remove("d-none")
     }
 
     static toggle() {
@@ -124,7 +125,7 @@ class SearchBar {
     }
 
     static isVisible() {
-        return document.getElementsByClassName(SearchBar.titleClassName)[0].classList.contains("d-none")
+        return document.getElementsByClassName(titleClassName)[0].classList.contains("d-none")
     }
 
     static isReady() {
@@ -132,7 +133,7 @@ class SearchBar {
     }
 
     static focus() {
-        document.querySelector(`.${SearchBar.centerClassName} input`).focus()
+        document.querySelector(`.${centerClassName} input`).focus()
     }
 
     static formatLocations(rawLocations) {

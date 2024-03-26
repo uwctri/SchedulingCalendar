@@ -4,7 +4,6 @@
 import { DateTime } from "luxon"
 import IMask from "imask";
 import API from "./api"
-import Loading from "./loading"
 import html_availability from "./html/availability_popup.html"
 
 class PopOver {
