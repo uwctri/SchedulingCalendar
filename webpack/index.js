@@ -31,14 +31,6 @@ if (pageURL.refer) {
 }
 document.getElementsByClassName(`type-${pageURL.type}`)[0].classList.add('active')
 
-// Setup quick search hotkey
-document.addEventListener("keyup", (event) => {
-    if (event.key == "s" && !SearchBar.isVisible() && SearchBar.isReady()) {
-        document.getElementsByClassName("fc-search-button")[0].click()
-        SearchBar.focus()
-    }
-})
-
 // Init the calendar
 calendar = new Calendar(document.getElementById("calendar"), {
     plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],

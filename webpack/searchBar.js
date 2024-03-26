@@ -33,12 +33,20 @@ class SearchBar {
 
     static async build() {
 
+        const keyEvent = (event) => {
+            if (event.key != "s" || SearchBar.isVisible() || !SearchBar.isReady())
+                return;
+            document.getElementsByClassName("fc-search-button")[0].click()
+            SearchBar.focus()
+        }
+
         const addCustomProperty = (data, key, value) => {
             for (const id in data) {
                 data[id].customProperties = data[id].customProperties || {}
                 data[id].customProperties[key] = value
             }
         }
+
         let centerEl = document.getElementsByClassName(centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
 
@@ -101,6 +109,7 @@ class SearchBar {
             childList: true
         })
 
+        document.addEventListener("keyup", keyEvent)
         SearchBar.ready = true
     }
 
