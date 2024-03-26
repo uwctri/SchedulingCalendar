@@ -7,6 +7,7 @@ import { DateTime } from "luxon"
 import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
 import PopOver from "./popover"
+import Loading from "./loading"
 import { CRUD, Resource } from "./enums"
 import "./iconObserver"
 import "./style.less"
@@ -94,11 +95,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
         // TODO close any open forms
     },
     loading: (isLoading) => {
-        if (isLoading) {
-            document.getElementById("loader").classList.remove("d-none")
-        } else {
-            document.getElementById("loader").classList.add("d-none")
-        }
+        Loading[isLoading ? "show" : "hide"]()
     },
     unselectAuto: false,
     views: {

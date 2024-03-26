@@ -9,8 +9,13 @@ use Project;
 
 class Scheduling extends AbstractExternalModule
 {
+
+    /*
+    Create the core scheduling and availability table on module enable
+    */
     public function redcap_module_system_enable()
     {
+        // 
         db_query("CREATE TABLE IF NOT EXISTS em_scheduling_calendar (
             `id` INT AUTO_INCREMENT,
             `project_id` INT,
@@ -26,6 +31,9 @@ class Scheduling extends AbstractExternalModule
         );");
     }
 
+    /*
+    Load some config JS on the settings page
+    */
     public function redcap_every_page_top($project_id)
     {
         if ($this->isPage("ExternalModules/manager/project.php") && $project_id) {
@@ -103,6 +111,9 @@ class Scheduling extends AbstractExternalModule
         return json_encode($result);
     }
 
+    /*
+    Get info on the current user
+    */
     public function currentUser()
     {
         $admins = $this->getProjectSetting("calendar-admin")[0];
@@ -345,10 +356,17 @@ class Scheduling extends AbstractExternalModule
         $resolved = false;
         if (!empty($existing)) {
             foreach ($existing as $appt) {
-                if ($resolved) break;
+                if ($resolved)
+                    break;
+
+                // If the availability code is different, skip
+                if ($appt["availability_code"] != $code)
+                    continue;
+
                 $id = $appt["internal_id"];
                 $apptStart = str_replace("T", " ", $appt["start"]);
                 $apptEnd = str_replace("T", " ", $appt["end"]);
+
                 if (($apptStart <= $start) && ($apptEnd >= $end)) {
                     // Skip creation, its a duplicate
                     $resolved = true;
@@ -377,7 +395,13 @@ class Scheduling extends AbstractExternalModule
                 [$project_id, $code, $user, $location, $start, $end]
             );
         }
-        return $existing;
+        return [];
+    }
+
+    private function cleanupAvailabiltiy($dateStr, $provider, $location)
+    {
+        $start_of_day = $dateStr . " 00:00";
+        $end_of_day = $dateStr . " 23:59";
     }
 
     private function modifyAvailabiltiy($id, $newStart = null, $newEnd = null)

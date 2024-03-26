@@ -1,4 +1,5 @@
 import { CRUD, Resource } from "./enums"
+import Loading from "./loading";
 
 class API {
 
@@ -75,18 +76,20 @@ class API {
     static async post(data) {
 
         let result = {}
-        data["redcap_csrf_token"] = csrf;
+        data["redcap_csrf_token"] = csrf
 
+        Loading.show()
         await fetch(router, {
             method: 'POST',
             body: API.toFormData(data)
         }).then((response) => {
             if (response.ok) {
-                return response.json();
+                return response.json()
             }
             return Promise.reject(response)
         }).then((data) => {
             result = data
+            Loading.hide()
             console.log(data)
         }).catch((error) => {
             console.warn('Something went wrong in API.js', error, data)
