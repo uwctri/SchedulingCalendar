@@ -3,6 +3,7 @@ import Loading from "./loading";
 
 class API {
 
+    static _time_fields = ["start_time", "end_time", "start", "end"];
     static _availabilityCodes = null;
     static _providers = null;
     static _locations = null;
@@ -62,6 +63,17 @@ class API {
         return result
     }
 
+    static async getAvailability(payload) {
+
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.Availability,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
     static async setAvailability(payload) {
 
         const data = {
@@ -73,10 +85,29 @@ class API {
         return await API.post(data)
     }
 
+    static async deleteAvailability(payload) {
+
+        const data = {
+            "crud": CRUD.Delete,
+            "resource": Resource.Availability,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
     static async post(data) {
 
         let result = {}
         data["redcap_csrf_token"] = csrf
+
+        // Format times to be compatible with Postgress Timestamps
+        // Trash the microseconds and swap T for space
+        for (const [key, value] of Object.entries(data)) {
+            if (API._time_fields.includes(key)) {
+                data[key] = value.split('.')[0].replace("T", " ")
+            }
+        }
 
         Loading.show()
         await fetch(router, {

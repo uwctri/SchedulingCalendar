@@ -1,3 +1,6 @@
+// Lifted from a codepen ...
+// https://codepen.io/beforesemicolon/pen/abNYjKo
+
 // attachContextMenu(btn, [
 //     {
 //         label: "Open Link", action(o) { console.log(o) },
@@ -17,13 +20,18 @@
 //     }
 // ])
 
+import API from './api.js'
 class ContextMenu {
 
     static availabilityMenu = [{
         label: "Delete Availability",
         action(o) {
-            console.log(o)
-            // TODO grab an id from the target
+            o.target.remove()
+            API.deleteAvailability({
+                "id": o.target.getAttribute('data-internal-id')
+            }).then((data) => {
+                calendar.refetchEvents()
+            })
         },
     }]
 
@@ -39,14 +47,14 @@ class ContextMenu {
             }
         }
 
-        const attachOption = (target, opt, jsEvent) => {
+        const attachOption = (target, opt, el) => {
             const item = document.createElement('li')
             item.className = 'context-menu-item'
             item.innerHTML = `<span>${opt.label}</span>`
             item.addEventListener('click', e => {
                 e.stopPropagation()
                 if (!opt.subMenu || opt.subMenu.length === 0) {
-                    opt.target = jsEvent.target
+                    opt.target = el
                     opt.action(opt)
                     hideMenu(true)
                 }
@@ -62,11 +70,11 @@ class ContextMenu {
             }
         }
 
-        const showMenu = (jsEvent, menuOptions) => {
+        const showMenu = (el, jsEvent, menuOptions) => {
             jsEvent.preventDefault()
             contextMenu.className = 'context-menu'
             contextMenu.innerHTML = ''
-            menuOptions.forEach(opt => attachOption(contextMenu, opt, jsEvent))
+            menuOptions.forEach(opt => attachOption(contextMenu, opt, el))
             document.body.appendChild(contextMenu)
 
             const { innerWidth, innerHeight } = window
@@ -97,7 +105,7 @@ class ContextMenu {
             window.addEventListener('resize', hideOnResize)
         }
 
-        el.addEventListener('contextmenu', (jsEvent) => showMenu(jsEvent, options))
+        el.addEventListener('contextmenu', (jsEvent) => showMenu(el, jsEvent, options))
     }
 }
 

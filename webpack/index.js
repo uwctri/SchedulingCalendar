@@ -9,11 +9,12 @@ import SearchBar from "./searchBar"
 import PopOver from "./popover"
 import Loading from "./loading"
 import ContextMenu from "./contextmenu"
-import { CRUD, Resource } from "./enums"
+import API from "./api"
 import "./iconObserver"
 import "./style.less"
 
 // Load user config and FC toolbar
+const coreEventFields = ["start", "end", "title"];
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
@@ -93,6 +94,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
         return true
     },
     eventDidMount: (arg) => {
+        arg.el.setAttribute('data-internal-id', arg.event.extendedProps.internal_id)
         if (["singleMonth", "singleWeek"].includes(calendar.view.type) && pageURL.type == "edit") {
             ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
         }
@@ -141,24 +143,31 @@ calendar = new Calendar(document.getElementById("calendar"), {
         const title = `${info.timeText}<br>${info.event.title}`
         return { html: title };
     },
-    eventSources: [
-        {
-            url: router,
-            method: "POST",
-            extraParams: () => {
-                return {
-                    redcap_csrf_token: csrf,
-                    crud: CRUD.Read,
-                    resource: Resource.Availability, // TODO
-                    page: pageURL.type,
-                    providers: [],
-                    locations: [],
-                    subjects: [],
-                    events: [],
-                }
-            }
+    events: (info, successCallback, failureCallback) => {
+        const params = {
+            start: info.start.toISOString(),
+            end: info.end.toISOString(),
+            page: pageURL.type,
+            providers: [],
+            locations: [],
+            subjects: [],
+            events: [],
         }
-    ]
+        API.getAvailability(params).then((data) => {
+            // Copy all non-standard fields to extendedProps
+            data.forEach((event) => {
+                for (const [key, value] of Object.entries(event)) {
+                    if (!coreEventFields.includes(key)) {
+                        event.extendedProps = event.extendedProps || {}
+                        event.extendedProps[key] = value
+                    }
+                }
+            })
+            successCallback(data)
+        }).catch((error) => {
+            failureCallback(error)
+        })
+    }
 })
 
 document.getElementById("content").classList.remove("d-none")

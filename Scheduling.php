@@ -74,7 +74,7 @@ class Scheduling extends AbstractExternalModule
                 "create" => "setAvailability",
                 "read" => "getAvailability",
                 "update" => "",
-                "delete" => ""
+                "delete" => "deleteEntry"
             ],
             "appointment" => [
                 "create" => "setAppointments",
@@ -288,8 +288,8 @@ class Scheduling extends AbstractExternalModule
         $availability = [];
         $providers = $payload["providers"];
         $locations = $payload["locations"];
-        $start = str_replace("T", " ", $payload["start"]);
-        $end = str_replace("T", " ", $payload["end"]);
+        $start = $payload["start"];
+        $end = $payload["end"];
         // Filtering by event_id and record aren't a thing for Availability
         $codes = explode(',', $this->getProjectSetting("availability-codes"));
         if (empty($codes)) {
@@ -323,8 +323,8 @@ class Scheduling extends AbstractExternalModule
             $availability[] = [
                 "internal_id" => $row["id"],
                 "title" => "$codeName<br>$provider<br>$location",
-                "start" => str_replace(' ', 'T', $row["time_start"]),
-                "end" => str_replace(' ', 'T', $row["time_end"]),
+                "start" => $row["time_start"],
+                "end" => $row["time_end"],
                 "location" => $row["location"],
                 "user" => $row["user"],
                 "availability_code" => $row["availability_code"],
@@ -339,8 +339,8 @@ class Scheduling extends AbstractExternalModule
     {
         $project_id = $payload["pid"];
         $code = $payload["group"];
-        $start = str_replace("T", " ", $payload["start"]);
-        $end = str_replace("T", " ", $payload["end"]);
+        $start = $payload["start"];
+        $end = $payload["end"];
         $provider = $payload["provider"];
         $location = $payload["location"];
         $dateStr = substr($start, 0, 10);
@@ -394,16 +394,16 @@ class Scheduling extends AbstractExternalModule
             return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '2'];
         }
 
-        $start = str_replace("T", " ", explode('.', $working["start"])[0]);
-        $end = str_replace("T", " ", explode('.', $working["end"])[0]);
+        $start = $working["start"];
+        $end = $working["end"];
         $resolved = false;
         foreach ($existing as $appt) {
             if ($resolved)
                 break;
 
             $id = $appt["internal_id"];
-            $apptStart = str_replace("T", " ", $appt["start"]);
-            $apptEnd = str_replace("T", " ", $appt["end"]);
+            $apptStart = $appt["start"];
+            $apptEnd = $appt["end"];
 
             if (($apptStart <= $start) && ($apptEnd >= $end)) {
                 // Skip creation, its a duplicate
@@ -443,7 +443,11 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteEntry($id)
     {
+        if (is_array($id)) {
+            $id = $id["internal_id"] ?? $id["id"];
+        }
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
+        return [];
     }
 
     private function modifyAvailabiltiy($id, $newStart = null, $newEnd = null)
