@@ -379,15 +379,15 @@ class Scheduling extends AbstractExternalModule
             });
         }
 
-        // Working is only passed in when we are working with existing availability
-        // If its not passed then we have nothing to delete
-        $performDelete = true;
+        // Working is only passed in when we are working with availability that
+        // has not been saved yet
+        $performDelete = false;
         if ($working == null) {
             // Nothing to merge
             if (count($existing) < 2)
                 return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '1'];
 
-            $performDelete = false;
+            $performDelete = true;
             $working = array_pop($existing);
         } elseif (count($existing) == 0) {
             // Nothing to merge
