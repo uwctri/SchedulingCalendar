@@ -349,21 +349,21 @@ class Scheduling extends AbstractExternalModule
                 $id = $appt["internal_id"];
                 $apptStart = str_replace("T", " ", $appt["start"]);
                 $apptEnd = str_replace("T", " ", $appt["end"]);
-                if ($apptStart <= $start && $apptEnd >= $end) {
+                if (($apptStart <= $start) && ($apptEnd >= $end)) {
                     // Skip creation, its a duplicate
                     $resolved = true;
                 }
-                if ($apptStart <= $start && $end > $apptEnd) {
+                if (($apptStart <= $start) && ($end > $apptEnd) && ($start <= $apptEnd)) {
                     // Extend the end of the existing appointment
                     $resolved = true;
                     $this->modifyAvailabiltiy($id, null, $end);
                 }
-                if ($start < $apptStart && $apptEnd >= $end) {
+                if (($start < $apptStart) && ($apptEnd >= $end) && ($end >= $apptStart)) {
                     // Extend the start of the existing appointment (to earlier in the day)
                     $resolved = true;
                     $this->modifyAvailabiltiy($id, $start, null);
                 }
-                if ($start < $apptStart && $end > $apptEnd) {
+                if (($start < $apptStart) && ($end > $apptEnd)) {
                     // Extend the start and end of the existing appointment
                     $resolved = true;
                     $this->modifyAvailabiltiy($id, $start, $end);
