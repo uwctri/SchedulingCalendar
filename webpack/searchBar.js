@@ -32,12 +32,22 @@ class SearchBar {
     static ready = false;
 
     static async build() {
+        const choicesEl = document.querySelector(choicesSelector)
 
         const keyEvent = (event) => {
             if (event.key != "s" || SearchBar.isVisible() || !SearchBar.isReady())
                 return;
             document.getElementsByClassName("fc-search-button")[0].click()
             SearchBar.focus()
+        }
+
+        const changeEvent = (event) => {
+            calendar.refetchEvents()
+            const count = choicesEl.childElementCount
+            const text = count > 0 ? "" : placeholder
+            const el = document.querySelector(`.${centerClassName} input`)
+            el.placeholder = text
+            el.style.width = `${text.length}ch`
         }
 
         const addCustomProperty = (data, key, value) => {
@@ -96,19 +106,7 @@ class SearchBar {
 
         SearchBar.hide()
         searchBarEl.style.display = ""
-
-        // Watch for changes in dropdown and remove placeholder text
-        const choicesEl = document.querySelector(choicesSelector)
-        new MutationObserver((mutations) => {
-            const count = choicesEl.childElementCount
-            const text = count > 0 ? "" : placeholder
-            const el = document.querySelector(`.${centerClassName} input`)
-            el.placeholder = text
-            el.style.width = `${text.length}ch`
-        }).observe(choicesEl, {
-            childList: true
-        })
-
+        searchBarEl.addEventListener('change', changeEvent)
         document.addEventListener("keyup", keyEvent)
         SearchBar.ready = true
     }
@@ -166,6 +164,7 @@ class SearchBar {
     }
 
     static getPicked(valueOnly = false, filterType = null) {
+        if (SearchBar.choices == null) return []
         let picked = SearchBar.choices.getValue()
         if (filterType) {
             picked = picked.filter(item => item.customProperties.type == filterType)

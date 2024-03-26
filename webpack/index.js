@@ -140,10 +140,10 @@ calendar = new Calendar(document.getElementById("calendar"), {
             start: info.start.toISOString(),
             end: info.end.toISOString(),
             page: pageURL.type,
-            providers: [],
-            locations: [],
-            subjects: [],
-            events: [],
+            providers: SearchBar.getPickedProviders(true),
+            locations: SearchBar.getPickedLocations(true),
+            subjects: [], // Not used in Availability
+            events: [],// Not used in Availability
         }
         API.getAvailability(params).then((data) => {
             // Copy all non-standard fields to extendedProps
