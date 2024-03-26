@@ -341,67 +341,109 @@ class Scheduling extends AbstractExternalModule
         $code = $payload["group"];
         $start = str_replace("T", " ", $payload["start"]);
         $end = str_replace("T", " ", $payload["end"]);
-        $user = $payload["provider"];
+        $provider = $payload["provider"];
         $location = $payload["location"];
+        $dateStr = substr($start, 0, 10);
 
-        $start_of_day = substr($start, 0, 10) . " 00:00";
-        $end_of_day = substr($end, 0, 10) . " 23:59";
-        $existing = $this->getAvailability([
-            "providers" => $user,
-            "locations" => $location,
-            "start" => $start_of_day,
-            "end" => $end_of_day
+        $mergeOccured = $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code, null, [
+            "start" => $start,
+            "end" => $end
         ]);
 
-        $resolved = false;
-        if (!empty($existing)) {
-            foreach ($existing as $appt) {
-                if ($resolved)
-                    break;
-
-                // If the availability code is different, skip
-                if ($appt["availability_code"] != $code)
-                    continue;
-
-                $id = $appt["internal_id"];
-                $apptStart = str_replace("T", " ", $appt["start"]);
-                $apptEnd = str_replace("T", " ", $appt["end"]);
-
-                if (($apptStart <= $start) && ($apptEnd >= $end)) {
-                    // Skip creation, its a duplicate
-                    $resolved = true;
-                }
-                if (($apptStart <= $start) && ($end > $apptEnd) && ($start <= $apptEnd)) {
-                    // Extend the end of the existing appointment
-                    $resolved = true;
-                    $this->modifyAvailabiltiy($id, null, $end);
-                }
-                if (($start < $apptStart) && ($apptEnd >= $end) && ($end >= $apptStart)) {
-                    // Extend the start of the existing appointment (to earlier in the day)
-                    $resolved = true;
-                    $this->modifyAvailabiltiy($id, $start, null);
-                }
-                if (($start < $apptStart) && ($end > $apptEnd)) {
-                    // Extend the start and end of the existing appointment
-                    $resolved = true;
-                    $this->modifyAvailabiltiy($id, $start, $end);
-                }
-            }
-        }
-
-        if (!$resolved) {
+        if (!$mergeOccured['bool']) {
             $this->query(
                 "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)",
-                [$project_id, $code, $user, $location, $start, $end]
+                [$project_id, $code, $provider, $location, $start, $end]
             );
         }
-        return [];
+        return [$mergeOccured];
     }
 
-    private function cleanupAvailabiltiy($dateStr, $provider, $location)
+    private function cleanupAvailabiltiy($dateStr, $provider, $location, $code, $existing = null, $working = null)
     {
         $start_of_day = $dateStr . " 00:00";
         $end_of_day = $dateStr . " 23:59";
+
+        // If this is the first call get the existing availability
+        if ($existing == null) {
+            $existing = $this->getAvailability([
+                "providers" => $provider,
+                "locations" => $location,
+                "start" => $start_of_day,
+                "end" => $end_of_day
+            ]);
+
+            // Filter to those with correct code
+            $existing = array_filter($existing, function ($x) use ($code) {
+                return $x["availability_code"] == $code;
+            });
+        }
+
+        // Working is only passed in when we are working with existing availability
+        // If its not passed then we have nothing to delete
+        $performDelete = true;
+        if ($working == null) {
+            // Nothing to merge
+            if (count($existing) < 2)
+                return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '1'];
+
+            $performDelete = false;
+            $working = array_pop($existing);
+        } elseif (count($existing) == 0) {
+            // Nothing to merge
+            return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '2'];
+        }
+
+        $start = str_replace("T", " ", explode('.', $working["start"])[0]);
+        $end = str_replace("T", " ", explode('.', $working["end"])[0]);
+        $resolved = false;
+        foreach ($existing as $appt) {
+            if ($resolved)
+                break;
+
+            $id = $appt["internal_id"];
+            $apptStart = str_replace("T", " ", $appt["start"]);
+            $apptEnd = str_replace("T", " ", $appt["end"]);
+
+            if (($apptStart <= $start) && ($apptEnd >= $end)) {
+                // Skip creation, its a duplicate
+                $resolved = true;
+            }
+            if (($apptStart <= $start) && ($end > $apptEnd) && ($start <= $apptEnd)) {
+                // Extend the end of the existing appointment
+                $resolved = true;
+                $this->modifyAvailabiltiy($id, null, $end);
+            }
+            if (($start < $apptStart) && ($apptEnd >= $end) && ($end >= $apptStart)) {
+                // Extend the start of the existing appointment (to earlier in the day)
+                $resolved = true;
+                $this->modifyAvailabiltiy($id, $start, null);
+            }
+            if (($start < $apptStart) && ($end > $apptEnd)) {
+                // Extend the start and end of the existing appointment
+                $resolved = true;
+                $this->modifyAvailabiltiy($id, $start, $end);
+            }
+        }
+
+        // Some merge occured, delete the working availability
+        if ($resolved && $performDelete) {
+            $this->deleteEntry($working["internal_id"]);
+        }
+
+        // Merge occured, attempt again
+        if ($resolved) {
+            $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code);
+            return ['bool' => true, 'existing' => $existing, 'working' => $working, 'msg' => '4'];
+        }
+
+        // Nothing was merged
+        return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '3'];
+    }
+
+    private function deleteEntry($id)
+    {
+        $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
     }
 
     private function modifyAvailabiltiy($id, $newStart = null, $newEnd = null)

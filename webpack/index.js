@@ -84,12 +84,22 @@ calendar = new Calendar(document.getElementById("calendar"), {
     },
     selectAllow: (selectionInfo) => {
         // Prevent from selecting multiple days
-        if (calendar.view.type == "singleMonth") {
+        if (["singleMonth", "singleWeek"].includes(calendar.view.type)) {
             const start = DateTime.fromISO(selectionInfo.endStr)
             const end = DateTime.fromISO(selectionInfo.startStr)
             return start.diff(end, "days").toObject().days <= 1
         }
         return true
+    },
+    eventDidMount: (arg) => {
+        if (["singleMonth", "singleWeek"].includes(calendar.view.type) && pageURL.type == "edit") {
+            const eventId = arg.event.id
+            arg.el.addEventListener("contextmenu", (jsEvent) => {
+                jsEvent.preventDefault()
+                console.log("contextMenu", eventId)
+                // TODO
+            })
+        }
     },
     unselect: function (jsEvent, view) {
         // TODO close any open forms
