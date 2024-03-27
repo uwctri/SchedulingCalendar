@@ -157,14 +157,21 @@ calendar = new Calendar(document.getElementById("calendar"), {
     eventContent: (info) => {
         // TODO we need to determine if its an appointment or availability
         const props = info.event.extendedProps
+        const type = props.is_availability ? "availability" : "appointment"
         let title = {
-            "edit":
-                `${info.timeText}<br>${props.availability_code_display}<br>${props.user_display}<br>${props.location_display}`,
-            "my":
-                `${info.timeText}<br>${props.availability_code_display}<br>${props.location_display}`,
-            "schedule":
-                `${props.user_display}<br>${props.location_display}`,
-        }[pageURL.type]
+            "availability": {
+                "edit":
+                    `${info.timeText}<br>${props.availability_code_display}<br>${props.user_display}<br>${props.location_display}`,
+                "schedule":
+                    `${props.user_display}<br>${props.location_display}`,
+            },
+            "appointment": {
+                "my":
+                    `${info.timeText}<br>Subject's Display Name<br>Event Display Name<br>${props.location_display}`, // TODO
+                "schedule":
+                    `${info.timeText}<br>Subject's Display Name<br>Event Display Name<br>${props.location_display}`, // TODO
+            },
+        }[type][pageURL.type]
 
         return { html: title };
     },

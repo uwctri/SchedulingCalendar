@@ -335,7 +335,9 @@ class Scheduling extends AbstractExternalModule
                 "user_display" => $provider,
                 "availability_code" => $row["availability_code"],
                 "availability_code_display" => $codeName,
-                "metadata" => json_decode($row["metadata"], true) ?? []
+                "metadata" => json_decode($row["metadata"], true) ?? [],
+                "is_availability" => true,
+                "is_appointment" => false
             ];
         }
 
