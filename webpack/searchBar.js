@@ -29,7 +29,7 @@ const choicesSelector = ".choices__inner .choices__list"
 class SearchBar {
 
     static choices = null;
-    static ready = false;
+    static _ready = false;
 
     static async build() {
         const choicesEl = document.querySelector(choicesSelector)
@@ -108,7 +108,7 @@ class SearchBar {
         searchBarEl.style.display = ""
         searchBarEl.addEventListener('change', changeEvent)
         document.addEventListener("keyup", keyEvent)
-        SearchBar.ready = true
+        SearchBar._ready = true
     }
 
     static show() {
@@ -122,7 +122,7 @@ class SearchBar {
     }
 
     static toggle() {
-        if (!SearchBar.ready) return
+        if (!SearchBar._ready) return
         console.log(SearchBar.getPicked())
         if (SearchBar.isVisible()) {
             SearchBar.hide()
@@ -136,7 +136,7 @@ class SearchBar {
     }
 
     static isReady() {
-        return SearchBar.ready
+        return SearchBar._ready
     }
 
     static focus() {

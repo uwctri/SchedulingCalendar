@@ -1,7 +1,7 @@
 // Resolve issues related to redcap and Fullcalendar clashing 
 // when FC loads Font Awesome
 
-let iconObs = new MutationObserver((mutations) => {
+new MutationObserver((mutations) => {
     let brokenGear = document.querySelector("span.fc-icon-fa-gear")
     let brokenSearch = document.querySelector("span.fc-icon-fa-magnifying-glass")
     if (!brokenGear && !brokenSearch) return
@@ -17,9 +17,7 @@ let iconObs = new MutationObserver((mutations) => {
     }
     brokenSearch.remove()
     brokenGear.remove()
-})
-
-iconObs.observe(document.getElementById("calendar"), {
+}).observe(document.getElementById("calendar"), {
     attributes: true,
     childList: true,
     subtree: true,

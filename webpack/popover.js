@@ -6,12 +6,13 @@ import IMask from "imask";
 import API from "./api"
 import html_availability from "./html/availability_popup.html"
 
+const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 class PopOver {
 
     static _date = null;
     static _setup = false;
     static _open = false;
-    static closeBtn = `<span class="close" id="PopClose">&times;</span>`
+
     static timeMask12 = {
         mask: "hh:mm aa",
         lazy: false,
@@ -98,7 +99,7 @@ class PopOver {
     }
 
     static openAvailability(info) {
-        let title = `Adding New Availability ${PopOver.closeBtn}`
+        let title = `Adding New Availability ${closeBtn}`
         PopOver.openPopover(title, html_availability, info.jsEvent.target)
         PopOver._date = DateTime.fromISO(info.startStr)
 
