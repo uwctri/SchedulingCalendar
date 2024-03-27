@@ -35,11 +35,15 @@ class ContextMenu {
         },
     }]
 
+    static closeAll() {
+        document.querySelectorAll('.context-menu').forEach(menu => menu.remove())
+    }
+
     static attachContextMenu(el, options) {
         const contextMenu = document.createElement('ul')
         const hideOnResize = () => hideMenu(true)
 
-        function hideMenu(e) {
+        const hideMenu = (e) => {
             if (e === true || !contextMenu.contains(e.target)) {
                 contextMenu.remove()
                 document.removeEventListener('click', hideMenu)
@@ -72,6 +76,7 @@ class ContextMenu {
 
         const showMenu = (el, jsEvent, menuOptions) => {
             jsEvent.preventDefault()
+            ContextMenu.closeAll()
             contextMenu.className = 'context-menu'
             contextMenu.innerHTML = ''
             menuOptions.forEach(opt => attachOption(contextMenu, opt, el))
