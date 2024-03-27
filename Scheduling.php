@@ -116,7 +116,7 @@ class Scheduling extends AbstractExternalModule
     */
     public function currentUser()
     {
-        $admins = $this->getProjectSetting("calendar-admin")[0];
+        $admins = $this->getProjectSetting("calendar-admin");
         $user = $this->getUser();
         $username = $user->getUsername();
         return [
@@ -189,14 +189,18 @@ class Scheduling extends AbstractExternalModule
     */
     private function getSubjects($payload = Null)
     {
-        $provider = !empty($payload) ? $payload["provider"] : Null;
+        $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
         $locationField = $this->getProjectSetting("location-field");
         $withdrawField = $this->getProjectSetting("withdraw-field");
         $result = [];
 
-        if (!empty($provider)) {
-            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?'", $provider);
+        if (empty($nameField)) {
+            return [];
+        }
+
+        if (!empty($providers)) {
+            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?'", $providers);
 
             $data = [];
             while ($row = db_fetch_assoc($sql)) {
@@ -221,7 +225,7 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
-        if (empty($provider)) {
+        if (empty($providers)) {
             $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField]);
             foreach ($data as $record_id => $recordData) {
                 $name = $recordData[$nameField];
@@ -527,22 +531,15 @@ class Scheduling extends AbstractExternalModule
         if ($project_id == Null) {
             $project_id = $_GET["pid"] ?? PROJECT_ID;
         }
-        $fieldClause = "\"" . implode("\",\"", $fields) . "\"";
-        $records = empty($records) ? $records : array_keys($records);
-        $recordClause = !empty($records) ? "AND record IN \"" . implode("\",\"", $records) . "\"" : "AND";
-        $sql = "SELECT record, field_name, `value` 
-        FROM redcap_data 
-        WHERE project_id = $project_id AND field_name IN ($fieldClause) $recordClause event_id IN (
-            SELECT event_id 
-            FROM redcap_events_forms 
-            WHERE form_name IN (
-                SELECT form_name 
-                FROM redcap_metadata 
-                WHERE project_id = $project_id AND field_name IN ($fieldClause)));";
-        $data = db_query($sql);
+        $fields = array_filter($fields);
+        $data = REDCap::getData($project_id, 'array', $records, $fields);
         $results = [];
-        while ($row = db_fetch_assoc($data)) {
-            $results[$row["record"]][$row["field_name"]] = $row["value"];
+        foreach ($data as $record_id => $event_data) {
+            foreach ($event_data as $event_id => $fields) {
+                foreach ($fields as $field => $value) {
+                    $results[$record_id][$field] = $value;
+                }
+            }
         }
         return $results;
     }

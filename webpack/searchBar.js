@@ -32,7 +32,6 @@ class SearchBar {
     static _ready = false;
 
     static async build() {
-        const choicesEl = document.querySelector(choicesSelector)
 
         const keyEvent = (event) => {
             if (event.key != "s" || SearchBar.isVisible() || !SearchBar.isReady())
@@ -43,7 +42,7 @@ class SearchBar {
 
         const changeEvent = (event) => {
             calendar.refetchEvents()
-            const count = choicesEl.childElementCount
+            const count = document.querySelector(choicesSelector).childElementCount
             const text = count > 0 ? "" : placeholder
             const el = document.querySelector(`.${centerClassName} input`)
             el.placeholder = text

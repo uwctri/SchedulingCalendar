@@ -5,7 +5,7 @@ import PopOver from "./popover"
 const defaultStart = "05:00"
 const defaultEnd = "18:00"
 const defaultSlotSize = "30"
-const defaultHiddenDays = [0] //Sunday
+const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
 
 // Setup toggles for the week bar 

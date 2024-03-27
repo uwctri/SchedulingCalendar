@@ -59,12 +59,12 @@
         },
         {
             "key": "location-field",
-            "name": "<b>Location Field:</b><br>Subject's default location (i.e. home clinic). Should use the same coded value used in the location JSON",
+            "name": "<b>Location Field:</b><br>Subject's home clinic. Should use the same coded value used in the location JSON",
             "type": "field-list"
         },
         {
             "key": "location-default",
-            "name": "<b>Default Location</b>",
+            "name": "<b>Default Location</b>Location auto-selected when scheduling a new appointment",
             "type": "radio",
             "choices": [
                 {

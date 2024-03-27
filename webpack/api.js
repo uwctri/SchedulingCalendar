@@ -1,12 +1,31 @@
 import { CRUD, Resource } from "./enums"
 import Loading from "./loading";
+import { DateTime } from "luxon"
 
+const throttle_msg = "Throttled. Resource requested too recently."
 class API {
 
     static _time_fields = ["start_time", "end_time", "start", "end"];
-    static _availabilityCodes = null;
-    static _providers = null;
-    static _locations = null;
+
+    // Cache and throttle these gets
+    static _availabilityCodes = {
+        "data": null,
+        "expire": null,
+        "interval": 30
+    }
+    static _providers = {
+        "data": null,
+        "expire": null,
+        "interval": 30
+    }
+    static _locations = {
+        "data": null,
+        "expire": null,
+        "interval": 30
+    }
+
+    static timestamp() { return DateTime.now().toISO() }
+    static futureTimestamp(minutes) { return DateTime.now().plus({ "minutes": minutes }).toISO() }
 
     static async availabilityCodes() {
 
@@ -15,13 +34,18 @@ class API {
             "resource": Resource.AvailabilityCode
         }
 
-        if (API._availabilityCodes) return API._availabilityCodes
+        // Request was sent too recently
+        if (API._availabilityCodes.expire && API._availabilityCodes.expire > API.timestamp()) {
+            if (API._availabilityCodes.data)
+                return API._availabilityCodes.data
+            return Promise.reject(throttle_msg)
+        }
 
         const result = await API.post(data)
-        API._availabilityCodes = result
+        API._availabilityCodes.data = result
+        API._availabilityCodes.expire = API.futureTimestamp(API._availabilityCodes.interval)
         return result
     }
-
 
     static async providers() {
 
@@ -30,19 +54,28 @@ class API {
             "resource": Resource.Provider,
         }
 
-        if (API._providers) return API._providers
+        // Request was sent too recently
+        if (API._providers.expire && API._providers.expire > API.timestamp()) {
+            if (API._providers.data)
+                return API._providers.data
+            return Promise.reject(throttle_msg)
+        }
 
         const result = await API.post(data)
-        API._providers = result
+        API._providers.data = result
+        API._providers.expire = API.futureTimestamp(API._providers.interval)
         return result
     }
 
-    static async subjects(provider = "") {
+    static async subjects(providers = []) {
+
+        if (!Array.isArray(providers))
+            providers = [providers]
 
         const data = {
             "crud": CRUD.Read,
             "resource": Resource.Subject,
-            "provider": provider,
+            "providers": providers,
         }
 
         const result = await API.post(data)
@@ -56,10 +89,16 @@ class API {
             "resource": Resource.Location
         }
 
-        if (API._locations) return API._locations
+        // Request was sent too recently
+        if (API._locations.expire && API._locations.expire > API.timestamp()) {
+            if (API._locations.data)
+                return API._locations.data
+            return Promise.reject(throttle_msg)
+        }
 
         const result = await API.post(data)
-        API._locations = result
+        API._locations.data = result
+        API._locations.expire = API.futureTimestamp(API._locations.interval)
         return result
     }
 
