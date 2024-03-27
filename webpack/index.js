@@ -13,6 +13,27 @@ import API from "./api"
 import "./iconObserver"
 import "./style.less"
 
+const accessableColors = [
+    "#e6194B", // Red
+    "#3cb44b", // Green
+    "#ffe119", // Yellow
+    "#4363d8", // Blue
+    "#f58231", // Orange
+    "#42d4f4", // Cyan
+    // "#f032e6", // Magenta
+    "#fabed4", // Pink
+    "#469990", // Teal
+    "#dcbeff", // Lavender
+    "#9A6324", // Brown
+    "#fffac8", // Beige
+    "#800000", // Maroon
+    "#aaffc3", // Mint
+    "#000075", // Navy
+    "#a9a9a9", // Grey
+].map(value => ({ value, sort: Math.random() }))
+    .sort((a, b) => a.sort - b.sort)
+    .map(({ value }) => value)
+
 // Load user config and FC toolbar
 const coreEventFields = ["start", "end", "title"];
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
@@ -88,7 +109,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
     eventDidMount: (arg) => {
         arg.el.setAttribute('data-internal-id', arg.event.extendedProps.internal_id)
         if (["singleMonth", "singleWeek"].includes(calendar.view.type) && pageURL.type == "edit") {
-            ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
+            //ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
         }
     },
     unselect: function (jsEvent, view) {
@@ -147,6 +168,8 @@ calendar = new Calendar(document.getElementById("calendar"), {
         }
         API.getAvailability(params).then((data) => {
             // Copy all non-standard fields to extendedProps
+            // Assign unique colors to each provider
+            let colors = {}
             data.forEach((event) => {
                 for (const [key, value] of Object.entries(event)) {
                     if (!coreEventFields.includes(key)) {
@@ -154,6 +177,9 @@ calendar = new Calendar(document.getElementById("calendar"), {
                         event.extendedProps[key] = value
                     }
                 }
+                let color = colors[event.user] || accessableColors[Object.keys(colors).length]
+                event.color = color
+                colors[event.user] = color
             })
             successCallback(data)
         }).catch((error) => {
