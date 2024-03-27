@@ -326,12 +326,15 @@ class Scheduling extends AbstractExternalModule
             $codeName = $codes[$row["availability_code"]]["label"] ?? $row["availability_code"];
             $availability[] = [
                 "internal_id" => $row["id"],
-                "title" => "$codeName<br>$provider<br>$location",
+                "title" => "Default Title",
                 "start" => $row["time_start"],
                 "end" => $row["time_end"],
                 "location" => $row["location"],
+                "location_display" => $location,
                 "user" => $row["user"],
+                "user_display" => $provider,
                 "availability_code" => $row["availability_code"],
+                "availability_code_display" => $codeName,
                 "metadata" => json_decode($row["metadata"], true) ?? []
             ];
         }

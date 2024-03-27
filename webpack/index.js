@@ -13,6 +13,8 @@ import API from "./api"
 import "./iconObserver"
 import "./style.less"
 
+// Great contrast colors from ...
+// https://sashamaps.net/docs/resources/20-colors/
 const accessableColors = [
     "#e6194B", // Red
     "#3cb44b", // Green
@@ -109,7 +111,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
     eventDidMount: (arg) => {
         arg.el.setAttribute('data-internal-id', arg.event.extendedProps.internal_id)
         if (["singleMonth", "singleWeek"].includes(calendar.view.type) && pageURL.type == "edit") {
-            //ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
+            ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
         }
     },
     unselect: function (jsEvent, view) {
@@ -153,11 +155,21 @@ calendar = new Calendar(document.getElementById("calendar"), {
         }
     },
     eventContent: (info) => {
-        const title = `${info.timeText}<br>${info.event.title}`
+        // TODO we need to determine if its an appointment or availability
+        const props = info.event.extendedProps
+        let title = {
+            "edit":
+                `${info.timeText}<br>${props.availability_code_display}<br>${props.user_display}<br>${props.location_display}`,
+            "my":
+                `${info.timeText}<br>${props.availability_code_display}<br>${props.location_display}`,
+            "schedule":
+                `${props.user_display}<br>${props.location_display}`,
+        }[pageURL.type]
+
         return { html: title };
     },
     events: (info, successCallback, failureCallback) => {
-        const params = {
+        const paramsAvailability = {
             start: info.start.toISOString(),
             end: info.end.toISOString(),
             page: pageURL.type,
@@ -166,25 +178,33 @@ calendar = new Calendar(document.getElementById("calendar"), {
             subjects: [], // Not used in Availability
             events: [],// Not used in Availability
         }
-        API.getAvailability(params).then((data) => {
-            // Copy all non-standard fields to extendedProps
-            // Assign unique colors to each provider
-            let colors = {}
-            data.forEach((event) => {
-                for (const [key, value] of Object.entries(event)) {
-                    if (!coreEventFields.includes(key)) {
-                        event.extendedProps = event.extendedProps || {}
-                        event.extendedProps[key] = value
+
+        if (["schedule", "edit"].includes(pageURL.type)) {
+            API.getAvailability(paramsAvailability).then((data) => {
+                // Copy all non-standard fields to extendedProps
+                // Assign unique colors to each provider
+                let colors = {}
+                data.forEach((event) => {
+                    for (const [key, value] of Object.entries(event)) {
+                        if (!coreEventFields.includes(key)) {
+                            event.extendedProps = event.extendedProps || {}
+                            event.extendedProps[key] = value
+                        }
                     }
-                }
-                let color = colors[event.user] || accessableColors[Object.keys(colors).length]
-                event.color = color
-                colors[event.user] = color
+                    let color = colors[event.user] || accessableColors[Object.keys(colors).length]
+                    event.color = color
+                    colors[event.user] = color
+
+                    // If on schedule page, send the availability to background
+                    if (pageURL.type == "schedule") {
+                        event.display = "background"
+                    }
+                })
+                successCallback(data)
+            }).catch((error) => {
+                failureCallback(error)
             })
-            successCallback(data)
-        }).catch((error) => {
-            failureCallback(error)
-        })
+        }
     }
 })
 
