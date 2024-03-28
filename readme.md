@@ -34,3 +34,9 @@ cd webpack
 npm install
 npm run build
 ```
+
+## RC dependency notes
+
+* jQuery is needed for a handful of event listeners
+* The RC shipped version of popover.js is used, which depends on jQuery
+* Styling assumes BS4

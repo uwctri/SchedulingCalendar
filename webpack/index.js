@@ -5,10 +5,11 @@ import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
 import UserConfig from "./userConfig"
+import BulkEdit from "./bulkEdit"
 import SearchBar from "./searchBar"
 import PopOver from "./popover"
 import Loading from "./loading"
-import ContextMenu from "./contextmenu"
+import ContextMenu from "./contextMenu"
 import API from "./api"
 import "./iconObserver"
 import "./style.less"
@@ -67,14 +68,12 @@ calendar = new Calendar(document.getElementById("calendar"), {
             click: SearchBar.toggle
         },
         refer: {
-            text: "Return to workflow",
+            text: "Return to Workflow",
             click: () => location.href = pageURL.refer
         },
         bulk: {
             text: "Bulk Edit",
-            click: () => {
-                // TODO open bulk form
-            }
+            click: BulkEdit.open
         }
     },
     headerToolbar: {

@@ -1,5 +1,8 @@
-// This file uses the popper.js library that ships with Bootstrap and RC
-// jQuery is avoided except when necessary
+// Notes:
+// * This class uses the popper.js library that ships with Bootstrap and RC
+// jQuery is avoided except when necessary. 
+// * IMask is used for input masking and not native Bootstrap due to sizing
+// issues inside the popover.
 
 import { DateTime } from "luxon"
 import IMask from "imask";
