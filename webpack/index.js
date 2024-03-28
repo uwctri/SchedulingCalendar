@@ -18,7 +18,7 @@ import "./style.less"
 const accessableColors = [
     "#e6194B", // Red
     "#3cb44b", // Green
-    "#ffe119", // Yellow
+    //"#ffe119", // Yellow
     "#4363d8", // Blue
     "#f58231", // Orange
     "#42d4f4", // Cyan
@@ -41,17 +41,17 @@ const coreEventFields = ["start", "end", "title"];
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
-const topLeftToolbar = ["prev,next", "today", "config"]
+let topLeftToolbar = ["prev,next", "today", "config"]
 let bottomRightToolbar = [];
-if (!pageURL.type) {
-    location.href = `${location.href}&type=edit` // TODO default to schedule
-}
-if (pageURL.type != "edit") {
+if (!pageURL.type)
+    pageURL.type = "edit"// TODO default to schedule
+if (["schedule", "my"].includes(pageURL.type))
     topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
-}
-if (pageURL.refer) {
+if (pageURL.type == "edit")
+    topLeftToolbar.push("bulk")
+if (pageURL.refer)
     bottomRightToolbar = ["refer"]
-}
+
 document.getElementsByClassName(`type-${pageURL.type}`)[0].classList.add('active')
 
 // Init the calendar
@@ -69,6 +69,12 @@ calendar = new Calendar(document.getElementById("calendar"), {
         refer: {
             text: "Return to workflow",
             click: () => location.href = pageURL.refer
+        },
+        bulk: {
+            text: "Bulk Edit",
+            click: () => {
+                // TODO open bulk form
+            }
         }
     },
     headerToolbar: {
