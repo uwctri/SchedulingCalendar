@@ -8,6 +8,7 @@ import { DateTime } from "luxon"
 import IMask from "imask";
 import API from "./api"
 import html_availability from "./html/availability_popup.html"
+import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils";
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 class PopOver {
@@ -108,65 +109,15 @@ class PopOver {
 
         const startTime = document.getElementById("aPopStartTime")
         startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
-        const startMask = IMask(startTime, PopOver.timeMask12)
+        IMask(startTime, PopOver.timeMask12)
 
         const endTime = document.getElementById("aPopEndTime")
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
-        const endMask = IMask(endTime, PopOver.timeMask12)
+        IMask(endTime, PopOver.timeMask12)
 
-        // Build out the group codes
-        API.availabilityCodes().then(data => {
-            if (!PopOver.isOpen()) return
-            const select = document.getElementById("aPopGroup")
-            for (const k in data) {
-                let option = document.createElement("option")
-                option.value = data[k].value
-                option.text = data[k].label
-                select.add(option)
-            }
-        })
-
-        // Build out locations
-        API.locations().then(locations => {
-            if (!PopOver.isOpen()) return
-            // TODO Some locations should be filtered out
-            const select = document.getElementById("aPopLocation")
-            const loopOver = (obj) => {
-                for (const code in obj) {
-                    if (obj[code].sites)
-                        loopOver(obj[code].sites)
-                    if (!obj[code].active)
-                        continue
-                    let option = document.createElement("option")
-                    option.value = code
-                    option.text = obj[code].name
-                    select.add(option)
-                }
-            }
-            loopOver(locations)
-        })
-
-        // Build out the providers
-        if (!user.isCalendarAdmin) {
-            const select = document.getElementById("aPopProvider")
-            let option = document.createElement("option")
-            option.value = user.username
-            option.text = user.name
-            option.selected = true
-            select.add(option)
-        } else {
-            API.providers().then(providers => {
-                if (!PopOver.isOpen()) return
-                // TODO Some providers are unschedulable
-                const select = document.getElementById("aPopProvider")
-                for (const k in providers) {
-                    let option = document.createElement("option")
-                    option.value = providers[k].value
-                    option.text = providers[k].label
-                    select.add(option)
-                }
-            })
-        }
+        buildGroupDropdown("aPopGroup", PopOver.isOpen)
+        buildLocationDropdown("aPopLocation", PopOver.isOpen)
+        buildProviderDropdown("aPopProvider", PopOver.isOpen)
     }
 
     static openPopover(title, content, target) {

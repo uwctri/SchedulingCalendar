@@ -141,8 +141,10 @@ class Scheduling extends AbstractExternalModule
             $globalProviders[] = $row["user"];
         }
 
-        // Get all local users
+        // Get all local users & Settings
         $localProviders = REDCap::getUsers();
+        $unschedulables = $this->getProjectSetting("unschedulable");
+        $admins = $this->getProjectSetting("calendar-admin");
 
         // Get all user info for the RC instance
         $allUsers = $this->getAllUsers();
@@ -158,7 +160,9 @@ class Scheduling extends AbstractExternalModule
                     "label" => $name ?? $username,
                     "customProperties" => [
                         "username" => $username,
-                        "name" => $name
+                        "name" => $name,
+                        "is_unschedulable" => in_array($username, $unschedulables),
+                        "is_admin" => in_array($username, $admins)
                     ]
                 ];
             }
