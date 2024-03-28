@@ -3,7 +3,10 @@ const path = require("path")
 module.exports = {
     mode: "development",
     devtool: "inline-source-map",
-    entry: "./index.js",
+    entry: {
+        "calendar": "./index.js",
+        "config": "./config.js",
+    },
     resolve: {
         extensions: [".js"]
     },
@@ -31,7 +34,7 @@ module.exports = {
         ]
     },
     output: {
-        filename: "calendar.js",
+        filename: "[name].js",
         path: path.resolve(__dirname, "../"),
     },
 }

@@ -64,7 +64,7 @@
         },
         {
             "key": "location-default",
-            "name": "<b>Default Location</b>Location auto-selected when scheduling a new appointment",
+            "name": "<b>Default Location</b><br>Location auto-selected when scheduling a new appointment",
             "type": "radio",
             "choices": [
                 {
@@ -72,12 +72,12 @@
                     "name": "Blank"
                 },
                 {
-                    "value": "phone",
-                    "name": "Phone Call"
-                },
-                {
                     "value": "clinic",
                     "name": "Assigned Clinic"
+                },
+                {
+                    "value": "static",
+                    "name": "Static Location"
                 }
             ]
         },
@@ -85,6 +85,54 @@
             "key": "withdraw-field",
             "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
             "type": "field-list"
+        },
+        {
+            "key": "event-header",
+            "name": "<b>Schedulable Event</b>",
+            "type": "sub_settings",
+            "repeatable": true,
+            "sub_settings": [
+                {
+                    "key": "event-display-name",
+                    "name": "<b>Display Name</b>",
+                    "type": "text"
+                },
+                {
+                    "key": "event-notes",
+                    "name": "<b>Notes</b>",
+                    "type": "text"
+                },
+                {
+                    "key": "event-branch-logic-event",
+                    "name": "<b>Branching Logic</b>",
+                    "type": "event-list"
+                },
+                {
+                    "key": "event-branch-logic-field",
+                    "name": "",
+                    "type": "field-list"
+                },
+                {
+                    "key": "event-branch-logic-value",
+                    "name": "",
+                    "type": "text"
+                },
+                {
+                    "key": "event-duration",
+                    "name": "<b>Duration:</b><br>In minutes",
+                    "type": "text"
+                },
+                {
+                    "key": "event-extendable",
+                    "name": "<b>Allow Additional Time:</b><br>Should 'duration' be only a minimum length?",
+                    "type": "checkbox"
+                },
+                {
+                    "key": "event-location-free",
+                    "name": "<b>Allow Any Location</b><br>Is this a phone call or other location-free event",
+                    "type": "checkbox"
+                }
+            ]
         }
     ],
     "system-settings": [

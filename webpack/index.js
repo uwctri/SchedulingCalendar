@@ -155,7 +155,6 @@ calendar = new Calendar(document.getElementById("calendar"), {
         }
     },
     eventContent: (info) => {
-        // TODO we need to determine if its an appointment or availability
         const props = info.event.extendedProps
         const type = props.is_availability ? "availability" : "appointment"
         let title = {
