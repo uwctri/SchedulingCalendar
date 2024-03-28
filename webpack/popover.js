@@ -11,11 +11,13 @@ import html_availability from "./html/availability_popup.html"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils";
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
+const saveDelay = 2000 // Time to wait before closing the popover after saving
 class PopOver {
 
     static _date = null;
     static _setup = false;
     static _open = false;
+    static _animationInterval = null;
 
     static timeMask12 = {
         mask: "hh:mm aa",
@@ -75,12 +77,28 @@ class PopOver {
                 "start": start,
                 "end": end,
             }).then(data => {
-                // TODO maybe show a saving animation before closing?
                 calendar.refetchEvents()
             })
-            PopOver.close()
+
+            PopOver.savingAnimation("aPopAddBtn")
+            setTimeout(PopOver.close, saveDelay)
         })
         PopOver._setup = true
+    }
+
+    static savingAnimation(el) {
+        el = document.getElementById(el)
+        el.classList.add("disabled")
+        el.text = "      Saving      "
+        const update = (i) => {
+            const j = [13, 15, 17][i % 3]
+            let text = el.text.split("")
+            text[j] = text[j] == "." ? " " : "."
+            el.text = text.join("")
+            if (PopOver.isOpen())
+                setTimeout(update, 250, i + 1)
+        }
+        update(0)
     }
 
     static validate() {
@@ -140,6 +158,10 @@ class PopOver {
 
     static close() {
         PopOver._open = false
+        if (PopOver._animationInterval) {
+            clearInterval(PopOver._animationInterval)
+            PopOver._animationInterval = null
+        }
         document.querySelectorAll(".popover").forEach(e => e.remove())
     }
 

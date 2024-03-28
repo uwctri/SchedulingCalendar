@@ -1,12 +1,15 @@
+* {
+    --redcap-btn-color: #337ab7;
+    --redcap-btn-border: #2e6da4;
+    --calendar-searchbar-width: 600px;
+    --context-menu-off-white: #f2f2f2;
+}
+
 #west {
     height: min-content;
 }
 
 #content {
-    --redcap-btn-color: #337ab7;
-    --redcap-btn-border: #2e6da4;
-    --calendar-searchbar-width: 600px;
-    --context-menu-off-white: #f2f2f2;
     width: 1200px;
     padding-top: 0.25em;
 }
@@ -167,6 +170,7 @@
         text-align: center;
         font-size: 15px;
         font-weight: bold;
+        white-space: pre;
 
         &:hover {
             outline: none;
@@ -321,6 +325,14 @@
 
 .bulkEditModal {
 
+    .span-to {
+        line-height: 2em;
+    }
+
+    .swal2-title {
+        margin-bottom: 0;
+    }
+
     .swal2-html-container {
         margin-left: 0;
         margin-right: 0;
@@ -328,6 +340,25 @@
     }
 
     .container {
-        height: 280px;
+        height: 290px;
+        padding-top: 0.25em;
+    }
+
+    button:hover {
+        outline: none;
+
+    }
+
+    .litepicker {
+        scale: 1.2;
+        margin-top: 1.7em;
+    }
+
+    .day-item:hover {
+        outline: none;
+        color: white !important;
+        background-color: var(--redcap-btn-color);
+        border-radius: 40px;
+        -webkit-box-shadow: none !important;
     }
 }

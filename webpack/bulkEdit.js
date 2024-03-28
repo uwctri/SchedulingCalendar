@@ -5,9 +5,9 @@ import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from
 import Litepicker from 'litepicker';
 import PopOver from "./popover"
 
-const modalWidth = "760px"
-const defaultStart = "08:00 AM"
-const defaultEnd = "05:00 PM"
+const modalWidth = "800px"
+const defaultStart = "08:00"
+const defaultEnd = "17:00"
 class BulkEdit {
 
     static picker = null
@@ -15,13 +15,12 @@ class BulkEdit {
     static open() {
 
         // Modify the html with current values
-        const newHTML = html // TODO
         const btnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
 
         PopOver.close()
         Swal.fire({
             title: "Bulk Availability Edit",
-            html: newHTML,
+            html: html,
             confirmButtonColor: btnColor,
             confirmButtonText: "Save",
             customClass: {
@@ -33,6 +32,10 @@ class BulkEdit {
 
             // Bail if save wasn't clicked
             if (!result.isConfirmed) return
+
+            // TODO option to ignore weekends
+            // TOOD option to remove availability (Need Any Group option and Any Location option)
+            // TODO confirm before bulk remove
 
             // TODO 
             let start = picker.getStartDate()
@@ -55,7 +58,6 @@ class BulkEdit {
         buildGroupDropdown("bulkEditGroup", Swal.isVisible)
         buildLocationDropdown("bulkEditLocation", Swal.isVisible)
         buildProviderDropdown("bulkEditProvider", Swal.isVisible)
-
     }
 
 }

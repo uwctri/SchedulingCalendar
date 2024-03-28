@@ -292,7 +292,6 @@ class Scheduling extends AbstractExternalModule
     private function getAvailability($payload = Null)
     {
         // TODO for editing availability we would ignore the codes and just get all availability
-        // TODO for editing availability we will want to show the code in the title
         $availability = [];
         $providers = $payload["providers"];
         $locations = $payload["locations"];
