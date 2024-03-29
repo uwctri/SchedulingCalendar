@@ -121,12 +121,17 @@ class BulkEdit {
                 valid = false
             }
         }
-        return (BulkEdit.picker.getStartDate() != null) && (BulkEdit.picker.getEndDate()) != null && valid
+        if (BulkEdit.picker.getStartDate() == null || BulkEdit.picker.getEndDate() == null) {
+            document.getElementsByClassName("litepicker")[0].classList.add("litepicker-invalid")
+            valid = false
+        }
+        return valid
     }
 
     static clearValidation() {
         document.querySelectorAll(".bulkEditModal .is-invalid").forEach(e => e.classList.remove("is-invalid"))
         document.querySelectorAll(".bulkEditModal .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
+        document.getElementsByClassName("litepicker")[0].classList.remove("litepicker-invalid")
     }
 
 }

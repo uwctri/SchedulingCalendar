@@ -67,11 +67,12 @@ class SearchBar {
         centerEl.appendChild(searchBarEl)
 
         // Fetch data for the dropdown
-        let providers = await API.providers()
+        let providers = API.providers()
+        let subjects = API.subjects()
+        let locations = API.locations()
+        await Promise.all([providers, subjects, locations])
         addCustomProperty(providers, "type", "provider")
-        let subjects = await API.subjects()
         addCustomProperty(subjects, "type", "subject")
-        let locations = await API.locations()
         addCustomProperty(locations, "type", "location")
 
         addCustomProperty(testEvents, "type", "event")
