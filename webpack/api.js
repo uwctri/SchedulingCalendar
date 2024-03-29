@@ -135,6 +135,19 @@ class API {
         return await API.post(data)
     }
 
+    static async multi(payload) {
+
+        if (!("crud" in payload) || !("resource" in payload) || !("bundle" in payload))
+            return Promise.reject("Poorly formatted Multi request")
+
+        const data = {
+            "multi": true,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
     static async post(data) {
 
         let result = {}
@@ -142,12 +155,21 @@ class API {
 
         // Format times to be compatible with Postgress Timestamps
         // Trash the microseconds and swap T for space
-        for (const [key, value] of Object.entries(data)) {
-            if (API._time_fields.includes(key)) {
-                data[key] = value.split('.')[0].replace("T", " ")
+        const editTime = (obj) => {
+            for (const [key, value] of Object.entries(obj)) {
+                if (API._time_fields.includes(key)) {
+                    obj[key] = value.split('.')[0].replace("T", " ")
+                }
+            }
+        }
+        editTime(data)
+        if ("bundle" in data) {
+            for (const obj of data["bundle"]) {
+                editTime(obj)
             }
         }
 
+        console.log(data)
         Loading.show()
         await fetch(router, {
             method: 'POST',

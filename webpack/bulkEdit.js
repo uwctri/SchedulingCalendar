@@ -2,6 +2,7 @@ import Swal from 'sweetalert2'
 import html from './html/bulkEdit.html'
 import API from "./api"
 import { DateTime } from 'luxon';
+import { CRUD, Resource } from "./enums"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils"
 import Litepicker from 'litepicker';
 import PopOver from "./popover"
@@ -57,13 +58,13 @@ class BulkEdit {
                         "end": `${date.toFormat('yyyy-MM-dd')}T${end}:00`,
                     })
                 }
-                console.log(bundle)
-                // TODO need a setBulkAvailability endpoint
-                // API.setBulkAvailability({
-                //     "bundle": bundle
-                // }).then(data => {
-                //     calendar.refetchEvents()
-                // })
+                API.multi({
+                    "crud": CRUD.Create,
+                    "resource": Resource.Availability,
+                    "bundle": bundle
+                }).then(data => {
+                    calendar.refetchEvents()
+                })
             }
 
             if (result.isDenied) {
@@ -80,6 +81,7 @@ class BulkEdit {
             element: document.getElementById('litepicker'),
             inlineMode: true,
             singleMode: false,
+            firstDay: 0,
         })
         document.getElementById("bulkEditStart").value = defaultStart
         document.getElementById("bulkEditEnd").value = defaultEnd

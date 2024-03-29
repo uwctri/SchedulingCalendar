@@ -97,7 +97,13 @@ class Scheduling extends AbstractExternalModule
         ];
 
         $task = $funcs[$payload["resource"]][$payload["crud"]];
-        if (!empty($task)) {
+        if ($payload["multi"] && !empty($task)) {
+            $result = [$payload["bundle"]];
+            foreach ($payload["bundle"] as $subPayload) {
+                $subPayload["pid"] = $project_id;
+                $result[] = $this->$task($subPayload);
+            }
+        } elseif (!empty($task)) {
             $err_msg = "";
             $result = $this->$task($payload);
         } else {
@@ -105,7 +111,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Fire DET at the end
-        if ($this->getProjectSetting('fire-det') && in_array($payload["action"], ["create", "update", "delete"])) {
+        if ($this->getProjectSetting('fire-det') && in_array($payload["crud"], ["create", "update", "delete"])) {
             $this->fireDataEntryTrigger($payload);
         }
         return json_encode($result);
@@ -347,7 +353,7 @@ class Scheduling extends AbstractExternalModule
         return $availability;
     }
 
-    private function setAvailability($payload = Null)
+    private function setAvailability($payload)
     {
         $project_id = $payload["pid"];
         $code = $payload["group"];
@@ -357,18 +363,20 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["location"];
         $dateStr = substr($start, 0, 10);
 
+        $msg = "Modified existing availability";
         $mergeOccured = $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code, null, [
             "start" => $start,
             "end" => $end
         ]);
 
-        if (!$mergeOccured['bool']) {
+        if (!$mergeOccured) {
+            $msg = "Inserted new availability";
             $this->query(
                 "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)",
                 [$project_id, $code, $provider, $location, $start, $end]
             );
         }
-        return [$mergeOccured];
+        return ["msg" => $msg];
     }
 
     private function cleanupAvailabiltiy($dateStr, $provider, $location, $code, $existing = null, $working = null)
@@ -397,13 +405,13 @@ class Scheduling extends AbstractExternalModule
         if ($working == null) {
             // Nothing to merge
             if (count($existing) < 2)
-                return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '1'];
+                return false;
 
             $performDelete = true;
             $working = array_pop($existing);
         } elseif (count($existing) == 0) {
             // Nothing to merge
-            return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '2'];
+            return false;
         }
 
         $start = $working["start"];
@@ -446,11 +454,11 @@ class Scheduling extends AbstractExternalModule
         // Merge occured, attempt again
         if ($resolved) {
             $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code);
-            return ['bool' => true, 'existing' => $existing, 'working' => $working, 'msg' => '4'];
+            return true;
         }
 
         // Nothing was merged
-        return ['bool' => false, 'existing' => $existing, 'working' => $working, 'msg' => '3'];
+        return false;
     }
 
     private function deleteEntry($id)
@@ -511,7 +519,8 @@ class Scheduling extends AbstractExternalModule
         $params = array(
             'redcap_url' => APP_PATH_WEBROOT_FULL,
             'project_url' => APP_PATH_WEBROOT_FULL . "redcap_v" . REDCAP_VERSION . "/index.php?pid=" . PROJECT_ID,
-            'project_id' => PROJECT_ID, 'username' => USERID
+            'project_id' => PROJECT_ID,
+            'username' => USERID
         );
 
         // Add in stuff from save
