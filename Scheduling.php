@@ -98,7 +98,7 @@ class Scheduling extends AbstractExternalModule
 
         $task = $funcs[$payload["resource"]][$payload["crud"]];
         if ($payload["multi"] && !empty($task)) {
-            $result = [$payload["bundle"]];
+            $result = [];
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
                 $result[] = $this->$task($subPayload);

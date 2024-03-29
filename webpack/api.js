@@ -192,15 +192,21 @@ class API {
 
     static toFormData(obj) {
 
-        const data = new FormData()
-        for (const [key, value] of Object.entries(obj)) {
-            if (Array.isArray(value)) {
-                value.forEach((item) => formData.append(`${key}[]`, item))
-                continue
+        const form = new FormData()
+
+        const phpArray = (obj, outerKey, depth) => {
+            for (let [key, value] of Object.entries(obj)) {
+                key = depth > 0 ? `[${key}]` : key
+                if (typeof value == "object") {
+                    phpArray(value, `${outerKey}${key}`, depth + 1)
+                    continue
+                }
+                form.append(`${outerKey}${key}`, value)
             }
-            data.append(key, value)
         }
-        return data
+
+        phpArray(obj, "", 0)
+        return form
     }
 
 }
