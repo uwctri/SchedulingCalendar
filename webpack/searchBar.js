@@ -23,7 +23,7 @@ let testEvents = [
 const centerClassName = "fc-toolbar-chunk"
 const titleClassName = "fc-toolbar-title"
 const searchID = "search-bar"
-const placeholder = "Search or Filter by Provider, Subject, Location, or Event"
+const placeholder = "Search or Filter by Provider, Subject, Location, or Visit"
 const choicesSelector = ".choices__inner .choices__list"
 
 class SearchBar {
@@ -77,7 +77,7 @@ class SearchBar {
         addCustomProperty(subjects, "type", "subject")
         addCustomProperty(locations, "type", "location")
 
-        addCustomProperty(testEvents, "type", "event")
+        addCustomProperty(testEvents, "type", "visit")
 
         // Init the picker object
         SearchBar.choices = new Choices(searchBarEl, {
@@ -92,7 +92,7 @@ class SearchBar {
                         choices: SearchBar.formatLocations(locations)
                     },
                     {
-                        label: "Events",
+                        label: "Vists (Events)",
                         choices: testEvents
                     },
                     {

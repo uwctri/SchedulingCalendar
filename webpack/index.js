@@ -180,36 +180,56 @@ calendar = new Calendar(document.getElementById("calendar"), {
         return { html: title };
     },
     events: (info, successCallback, failureCallback) => {
-        const paramsAvailability = {
+        let paramsCommon = {
             start: info.start.toISOString(),
             end: info.end.toISOString(),
             page: pageURL.type,
             providers: SearchBar.getPickedProviders(true),
             locations: SearchBar.getPickedLocations(true),
-            subjects: [], // Not used in Availability
-            events: [],// Not used in Availability
+        }
+
+        let paramsAppointment = {
+            subjects: SearchBar.getPickedSubjects(true),
+            visits: SearchBar.getPickedEvents(true),
+        }
+
+        let colors = {}
+        const commonProcessing = (calEvent) => {
+            // Copy all non-standard fields to extendedProps
+            // Assign unique colors to each provider
+            for (const [key, value] of Object.entries(calEvent)) {
+                if (!coreEventFields.includes(key)) {
+                    calEvent.extendedProps = calEvent.extendedProps || {}
+                    calEvent.extendedProps[key] = value
+                }
+            }
+            const color = colors[calEvent.user] || accessableColors[Object.keys(colors).length % accessableColors.length]
+            calEvent.color = color
+            colors[calEvent.user] = color
+            return calEvent
         }
 
         if (["schedule", "edit"].includes(pageURL.type)) {
-            API.getAvailability(paramsAvailability).then((data) => {
-                // Copy all non-standard fields to extendedProps
-                // Assign unique colors to each provider
-                let colors = {}
+            API.getAvailability(paramsCommon).then((data) => {
                 data.forEach((event) => {
-                    for (const [key, value] of Object.entries(event)) {
-                        if (!coreEventFields.includes(key)) {
-                            event.extendedProps = event.extendedProps || {}
-                            event.extendedProps[key] = value
-                        }
-                    }
-                    const color = colors[event.user] || accessableColors[Object.keys(colors).length % accessableColors.length]
-                    event.color = color
-                    colors[event.user] = color
+                    event = commonProcessing(event)
 
                     // If on schedule page, send the availability to background
                     if (pageURL.type == "schedule") {
                         event.display = "background"
                     }
+                })
+                successCallback(data)
+            }).catch((error) => {
+                failureCallback(error)
+            })
+        }
+
+        // TODO the below doesn't work yet
+        if (["schedule", "my"].includes(pageURL.type)) {
+            API.getAppointments(...paramsCommon, ...paramsAppointment).then((data) => {
+                data.forEach((event) => {
+                    event = commonProcessing(event)
                 })
                 successCallback(data)
             }).catch((error) => {

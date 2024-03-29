@@ -135,6 +135,39 @@ class API {
         return await API.post(data)
     }
 
+    static async getAppointments(payload) {
+
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.Appointment,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
+    static async setAppointments(payload) {
+
+        const data = {
+            "crud": CRUD.Create,
+            "resource": Resource.Appointment,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
+    static async deleteAppointments(payload) {
+
+        const data = {
+            "crud": CRUD.Delete,
+            "resource": Resource.Appointment,
+            ...payload
+        }
+
+        return await API.post(data)
+    }
+
     static async multi(payload) {
 
         if (!("crud" in payload) || !("resource" in payload) || !("bundle" in payload))

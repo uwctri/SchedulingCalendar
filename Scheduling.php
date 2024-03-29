@@ -15,11 +15,10 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_module_system_enable()
     {
-        // 
         db_query("CREATE TABLE IF NOT EXISTS em_scheduling_calendar (
             `id` INT AUTO_INCREMENT,
             `project_id` INT,
-            `event_id` INT,
+            `visit` VARCHAR(255),
             `availability_code` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci,
             `user` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
             `record` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci,
@@ -80,7 +79,7 @@ class Scheduling extends AbstractExternalModule
                 "create" => "setAppointments",
                 "read" => "getAppointments",
                 "update" => "",
-                "delete" => ""
+                "delete" => "deleteEntry"
             ],
             "provider" => [
                 "read" => "getProviders",
@@ -313,7 +312,7 @@ class Scheduling extends AbstractExternalModule
         $allLocations = $this->getLocationStructure(true);
 
         $query = $this->createQuery();
-        $query->add("SELECT id, record, event_id, availability_code, user, location, time_start, time_end, metadata FROM em_scheduling_calendar");
+        $query->add("SELECT * FROM em_scheduling_calendar");
         $query->add("WHERE");
         $query->addInClause("availability_code", $codes);
 
@@ -488,27 +487,75 @@ class Scheduling extends AbstractExternalModule
 
     private function getAppointments($payload = Null)
     {
-        return [[
-            "title" => "test thing",
-            "start" => date("Y-m-d") . "T11:00",
-            "end" =>  date("Y-m-d") . "T13:00"
-        ]];
+        $appt = [];
+        $providers = $payload["providers"];
+        $locations = $payload["locations"];
+        $subjects = $payload["subjects"];
+        $vists = $payload["visits"];
+        $start = $payload["start"];
+        $end = $payload["end"];
+
+
+        $allUsers = $this->getAllUsers();
+        $allLocations = $this->getLocationStructure(true);
+
+        $query = $this->createQuery();
+        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
+
+        if (!empty($providers)) {
+            $query->add("AND")->addInClause("user", $providers);
+        }
+
+        if (!empty($locations)) {
+            $query->add("AND")->addInClause("location", $locations);
+        }
+
+        if (!empty($subjects)) {
+            $query->add("AND")->addInClause("record", $subjects);
+        }
+
+        if (!empty($vists)) {
+            $query->add("AND")->addInClause("visit", $locations);
+        }
+
+        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+
+        $result = $query->execute();
+        while ($row = $result->fetch_assoc()) {
+            $provider = $allUsers[$row["user"]] ?? $row["user"];
+            $location = $allLocations[$row["location"]]["name"] ?? $row["location"];
+            $appt[] = [
+                "internal_id" => $row["id"],
+                "title" => "Default Title",
+                "start" => $row["time_start"],
+                "end" => $row["time_end"],
+                "location" => $row["location"],
+                "location_display" => $location,
+                "user" => $row["user"],
+                "user_display" => $provider,
+                "visit" => $row["visit"],
+                "visit_display" => $row["visit"], // TODO get the display name
+                "record" => $row["record"],
+                "record_display" => $row["record"], // TODO get the display name
+                "metadata" => json_decode($row["metadata"], true) ?? [],
+                "is_availability" => false,
+                "is_appointment" => true
+            ];
+        }
+
+        return $appt;
     }
 
+    // TODO
     private function setAppointments($payload = Null)
     {
-        return [[
-            "title" => "test thing",
-            "start" => date("Y-m-d") . "T11:00",
-            "end" =>  date("Y-m-d") . "T13:00"
-        ]];
+        return [];
     }
 
     private function fireDataEntryTrigger($saveParams)
     {
         // Chunks of this function are lifted from the DataEntry class
         global $data_entry_trigger_url, $data_entry_trigger_enabled;
-        $longitudinal = REDCap::isLongitudinal();
 
         // Check if enabled
         if (!$data_entry_trigger_enabled || $data_entry_trigger_url == '') {
@@ -525,10 +572,6 @@ class Scheduling extends AbstractExternalModule
 
         // Add in stuff from save
         $params = array_merge($params, $saveParams);
-
-        if ($longitudinal) {
-            $params['redcap_event_name'] = REDCap::getEventNames(True, True, $params["event_id"]);
-        }
 
         // Set timeout value for http request
         $timeout = 10; // seconds
