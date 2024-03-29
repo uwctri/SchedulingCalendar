@@ -106,6 +106,8 @@ class PopOver {
         let els = document.querySelectorAll(".popover input, .popover select")
         let valid = true
         for (const el of els) {
+            if (el.type == "checkbox" || el.type == "radio")
+                continue
             const tmp = el.value.replaceAll(/[:_ ]/g, '')
             if (el.value === "" || tmp === "") {
                 el.classList.add(el.tagName == "SELECT" ? "is-invalid" : "is-invalid-noicon")

@@ -202,7 +202,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
                             event.extendedProps[key] = value
                         }
                     }
-                    let color = colors[event.user] || accessableColors[Object.keys(colors).length]
+                    const color = colors[event.user] || accessableColors[Object.keys(colors).length % accessableColors.length]
                     event.color = color
                     colors[event.user] = color
 
