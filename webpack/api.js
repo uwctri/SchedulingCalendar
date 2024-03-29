@@ -194,6 +194,10 @@ class API {
 
         const data = new FormData()
         for (const [key, value] of Object.entries(obj)) {
+            if (Array.isArray(value)) {
+                value.forEach((item) => formData.append(`${key}[]`, item))
+                continue
+            }
             data.append(key, value)
         }
         return data
