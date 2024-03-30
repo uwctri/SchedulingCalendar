@@ -171,7 +171,7 @@ class SearchBar {
             let data = rawVisits[id]
             visits.push({
                 value: data["code"],
-                label: data["display"],
+                label: data["label"],
                 customProperties: {
                     ...data
                 }

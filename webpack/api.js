@@ -1,5 +1,6 @@
 import { CRUD, Resource } from "./enums"
 import Loading from "./loading";
+import Adapter from "./adapter";
 import { DateTime } from "luxon"
 
 const throttle_msg = "Throttled. Resource requested too recently."
@@ -36,12 +37,15 @@ class API {
         throw Error(req_msg)
     }
 
-    static async availabilityCodes() {
+    static async availabilityCodes(payload) {
 
         const data = {
             "crud": CRUD.Read,
-            "resource": Resource.AvailabilityCode
+            "resource": Resource.AvailabilityCode,
+            ...payload
         }
+
+        API.requiredKeys(data, ["all_availability"])
 
         // Request was sent too recently
         if (API._availabilityCodes.expire && API._availabilityCodes.expire > API.timestamp()) {
@@ -209,7 +213,7 @@ class API {
     static async post(data) {
 
         let result = {}
-        data["redcap_csrf_token"] = csrf
+        data["redcap_csrf_token"] = Adapter.csrf()
 
         // Format times to be compatible with Postgress Timestamps
         // Trash the microseconds and swap T for space

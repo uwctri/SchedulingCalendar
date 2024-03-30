@@ -1,12 +1,7 @@
-// Notes:
-// * This class uses the popper.js library that ships with Bootstrap and RC
-// jQuery is avoided except when necessary. 
-// * IMask is used for input masking and not native Bootstrap due to sizing
-// issues inside the popover.
-
 import { DateTime } from "luxon"
 import IMask from "imask";
 import API from "./api"
+import Adapter from "./adapter"
 import html_availability from "./html/availability_popup.html"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils";
 
@@ -113,6 +108,8 @@ class PopOver {
         PopOver.openPopover(title, html_availability, info.jsEvent.target)
         PopOver._date = DateTime.fromISO(info.startStr)
 
+        // IMask is used for input masking and not native Bootstrap due to sizing
+        // issues inside the popover.
         const startTime = document.getElementById("aPopStartTime")
         startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
         IMask(startTime, PopOver.timeMask12)
@@ -130,13 +127,13 @@ class PopOver {
         PopOver.setup()
         PopOver.close()
         PopOver._open = true
-        jQuery(target).popover({
+        Adapter.popover(target, {
             title: title,
             content: content,
             html: true,
             sanitize: false,
             container: "body",
-        }).popover("show");
+        }).popover("show")
         document.getElementById("PopClose").addEventListener("click", PopOver.close)
     }
 

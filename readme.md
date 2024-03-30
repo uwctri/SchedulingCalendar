@@ -3,7 +3,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 ## Missing Features
 
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
-* Filter all dropdowns (searchbar too) for Location, Event, Availability Code etc
+* Filter all dropdowns (searchbar too) for Provider, Visit, Subject, Location
 * Full Scheduling workflow
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Popup for scheduling an event
@@ -12,7 +12,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
 * Right click on "my cal" event to go to the correct project
 
-* Right now you can only edit availability in a related project. Is that ok?
 * Consider Locations as providers? Obvious work around for this already.
 * We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs (Is this still an issue?)
 * The My Calendar page will be difficult to set up as we need to pull appts from all projects. My PHP assumes the current PID.
@@ -40,9 +39,3 @@ cd webpack
 npm install
 npm run build
 ```
-
-## RC dependency notes
-
-* jQuery is needed for a handful of event listeners
-* The RC shipped version of popover.js is used, which depends on jQuery
-* Styling assumes BS4

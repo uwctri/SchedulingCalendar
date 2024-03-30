@@ -2,25 +2,28 @@
 // isn't available vai the vanilla JS listener 
 
 import "./style.less"
+import Adapter from "./adapter"
 
-jQuery(document).ready(() => {
+const modalName = "Scheduling & Availability"
 
-    const prefix = "scheduling_calendar"
-    let $modal = jQuery('#external-modules-configure-modal')
+document.addEventListener("DOMContentLoaded", () => {
 
-    $modal.on("show.bs.modal", (event) => {
+    let modal = document.getElementById("external-modules-configure-modal")
 
-        // Making sure we are overriding this modules"s modal only.
-        if (jQuery(event.target).data("module") !== prefix) return
-        $modal.addClass('calConfig')
+    Adapter.listenShowModal(modal, (event) => {
+
+        if (document.querySelectorAll(".modal .module-name")[1].textContent != modalName)
+            return
+        modal.classList.add("calConfig")
 
         if (typeof ExternalModules.Settings.prototype.resetConfigInstancesOld === "undefined")
             ExternalModules.Settings.prototype.resetConfigInstancesOld = ExternalModules.Settings.prototype.resetConfigInstances
 
         ExternalModules.Settings.prototype.resetConfigInstances = () => {
             ExternalModules.Settings.prototype.resetConfigInstancesOld()
-
-            $modal.find("tr[field=visit-branch-logic-value] .external-modules-input-td").not(':contains(=)').prepend('= ')
+            document.querySelectorAll("tr[field=visit-branch-logic-value] .external-modules-input-td").forEach((el) => {
+                el.innerHTML = el.innerHTML[0] == "=" ? el.innerHTML : `= ${el.innerHTML}`
+            })
         }
     })
 })

@@ -285,14 +285,18 @@ class Scheduling extends AbstractExternalModule
 
     private function getAvailabilityCodes($payload = null)
     {
+        $localCodes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
+        $allFlag = $payload["all_availability"];
         $displayNames = $this->getSystemSetting("group-name");
         $codedValues = $this->getSystemSetting("group-code");
         $result = array_combine($codedValues, $displayNames);
         foreach ($result as $code => $name) {
-            $result[$code] = [
-                "value" => $code,
-                "label" => $name
-            ];
+            if ($allFlag || in_array($code, $localCodes)) {
+                $result[$code] = [
+                    "value" => $code,
+                    "label" => $name
+                ];
+            }
         }
         return $result;
     }
@@ -300,7 +304,7 @@ class Scheduling extends AbstractExternalModule
     private function getVisits($payload = null)
     {
         $names = [
-            "display-name" => "display",
+            "display-name" => "label",
             "linked-event" => "link",
             "code" => "code",
             "notes" => "notes",

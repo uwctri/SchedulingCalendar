@@ -1,7 +1,10 @@
 import API from "./api"
+import UserConfig from "./userConfig"
 
 export const buildGroupDropdown = (el, stillOpenFn) => {
-    API.availabilityCodes().then(groupData => {
+    API.availabilityCodes({
+        "all_availability": UserConfig.get().all_availability
+    }).then(groupData => {
         if (!stillOpenFn()) return
         const select = document.getElementById(el)
         for (const k in groupData) {
