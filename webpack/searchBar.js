@@ -67,17 +67,17 @@ class SearchBar {
         centerEl.appendChild(searchBarEl)
 
         // Fetch data for the dropdown
-        let providers, subjects, locations
-        await Promise.all([API.providers(), API.subjects(), API.locations()]).then((values) => {
+        let providers, subjects, locations, visits
+        await Promise.all([API.providers(), API.subjects(), API.locations(), API.visits()]).then((values) => {
             providers = values[0]
             subjects = values[1]
             locations = values[2]
+            visits = values[3]
         });
         addCustomProperty(providers, "type", "provider")
         addCustomProperty(subjects, "type", "subject")
         addCustomProperty(locations, "type", "location")
-
-        addCustomProperty(testEvents, "type", "visit")
+        addCustomProperty(visits, "type", "visit")
 
         // Init the picker object
         SearchBar.choices = new Choices(searchBarEl, {
@@ -92,8 +92,8 @@ class SearchBar {
                         choices: SearchBar.formatLocations(locations)
                     },
                     {
-                        label: "Vists (Events)",
-                        choices: testEvents
+                        label: "Visits (Events)",
+                        choices: SearchBar.formatVists(visits)
                     },
                     {
                         label: "Providers",
@@ -163,6 +163,21 @@ class SearchBar {
             }
         }
         return locs
+    }
+
+    static formatVists(rawVisits) {
+        let visits = []
+        for (const id in rawVisits) {
+            let data = rawVisits[id]
+            visits.push({
+                value: data["code"],
+                label: data["display"],
+                customProperties: {
+                    ...data
+                }
+            })
+        }
+        return visits
     }
 
     static getPicked(valueOnly = false, filterType = null) {

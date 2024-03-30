@@ -87,7 +87,7 @@
             "type": "field-list"
         },
         {
-            "key": "visit-header",
+            "key": "visit-group",
             "name": "<b>Schedulable Vists</b>",
             "type": "sub_settings",
             "repeatable": true,

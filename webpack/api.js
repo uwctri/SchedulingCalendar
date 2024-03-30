@@ -102,6 +102,16 @@ class API {
         return result
     }
 
+    static async visits() {
+
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.Visit
+        }
+
+        return await API.post(data)
+    }
+
     static async getAvailability(payload) {
 
         const data = {

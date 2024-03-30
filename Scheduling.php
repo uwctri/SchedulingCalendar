@@ -91,6 +91,10 @@ class Scheduling extends AbstractExternalModule
             "location" => [
                 "read" => "getLocations",
                 "default" => "Location resource is read only."
+            ],
+            "visit" => [
+                "read" => "getVisits",
+                "default" => "Vist resource is read only."
             ]
         ];
 
@@ -291,6 +295,33 @@ class Scheduling extends AbstractExternalModule
             ];
         }
         return $result;
+    }
+
+    private function getVisits($payload = Null)
+    {
+        $names = [
+            "display-name" => "display",
+            "linked-event" => "link",
+            "code" => "code",
+            "notes" => "notes",
+            "branch-logic-event" => "blEvent",
+            "branch-logic-field" => "blField",
+            "branch-logic-value" => "blValue",
+            "duration" => "durantion",
+            "extendable" => "isExtendable",
+            "location-free" => "isLocationFree",
+        ];
+
+        $values = array_map(function ($setting) {
+            return $this->getProjectSetting("visit-$setting");
+        }, array_keys($names));
+
+        $visits = [];
+        for ($i = 0; $i < count($values[0]); $i++) {
+            $visits[] = array_combine(array_values($names), array_column($values, $i));
+        }
+
+        return $visits;
     }
 
     private function getAvailability($payload = Null)
