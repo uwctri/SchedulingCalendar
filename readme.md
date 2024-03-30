@@ -12,7 +12,13 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
 
 * Right now you can only edit availability in a related project. Is that ok?
+* Consider Locations as providers? Obvious work around for this already.
 * We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs (Is this still an issue?)
+
+## Notes to Users
+
+* Explain location strucutre
+* Docs for DET post
 
 ## Running locally
 

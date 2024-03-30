@@ -10,9 +10,23 @@ import PopOver from "./popover"
 const modalWidth = "800px"
 const defaultStart = "08:00"
 const defaultEnd = "17:00"
+const loadingDots = `<div class="loading-dots"></div>`
 class BulkEdit {
 
     static picker = null
+
+    static get() {
+        return {
+            startDay: DateTime.fromJSDate(BulkEdit.picker.getStartDate().toJSDate()),
+            endDay: DateTime.fromJSDate(BulkEdit.picker.getEndDate().toJSDate()),
+            start: document.getElementById("bulkEditStart").value,
+            end: document.getElementById("bulkEditEnd").value,
+            group: document.getElementById("bulkEditGroup").value,
+            location: document.getElementById("bulkEditLocation").value,
+            provider: document.getElementById("bulkEditProvider").value,
+            skipWeekend: document.getElementById("bulkEditSkip").checked
+        }
+    }
 
     static open() {
 
@@ -28,36 +42,26 @@ class BulkEdit {
             },
             didOpen: BulkEdit.initModal,
             width: modalWidth,
-            preConfirm: BulkEdit.validate,
-            preDeny: BulkEdit.validate,
-        }).then((result) => {
+            preConfirm: () => {
+                if (!BulkEdit.validate)
+                    return false
 
-            if (!result.isConfirmed && !result.isDenied)
-                return
+                const btnEl = "swal2-confirm"
+                const o = BulkEdit.get()
 
-            // TODO validate these two dates
-            let startDay = DateTime.fromJSDate(BulkEdit.picker.getStartDate().toJSDate())
-            let endDay = DateTime.fromJSDate(BulkEdit.picker.getEndDate().toJSDate())
-            let start = document.getElementById("bulkEditStart").value
-            let end = document.getElementById("bulkEditEnd").value
-            const group = document.getElementById("bulkEditGroup").value
-            const location = document.getElementById("bulkEditLocation").value
-            const provider = document.getElementById("bulkEditProvider").value
-            const skipWeekend = document.getElementById("bulkEditSkip").checked
-
-            if (result.isConfirmed) {
                 let bundle = []
-                for (let date = startDay; date <= endDay; date = date.plus({ days: 1 })) {
-                    if (skipWeekend && (date.weekday == 6 || date.weekday == 7))
+                for (let date = o.startDay; date <= o.endDay; date = date.plus({ days: 1 })) {
+                    if (o.skipWeekend && (date.weekday == 6 || date.weekday == 7))
                         continue
                     bundle.push({
-                        "provider": provider,
-                        "location": location,
-                        "group": group,
-                        "start": `${date.toFormat('yyyy-MM-dd')}T${start}:00`,
-                        "end": `${date.toFormat('yyyy-MM-dd')}T${end}:00`,
+                        "provider": o.provider,
+                        "location": o.location,
+                        "group": o.group,
+                        "start": `${date.toFormat('yyyy-MM-dd')}T${o.start}:00`,
+                        "end": `${date.toFormat('yyyy-MM-dd')}T${o.end}:00`,
                     })
                 }
+
                 API.multi({
                     "crud": CRUD.Create,
                     "resource": Resource.Availability,
@@ -65,14 +69,22 @@ class BulkEdit {
                 }).then(data => {
                     calendar.refetchEvents()
                 })
-            }
 
-            if (result.isDenied) {
-                // TODO Allow for removal (with a check before)
-                // TODO need a deleteBulkAvailability endpoint
-            }
+                BulkEdit.savingAnimation(btnEl)
+                setTimeout(Swal.close, 2000)
+                return false
+            },
+            preDeny: () => {
+                if (!BulkEdit.validate)
+                    return false;
 
-            // TODO Add a saving animation
+                const btnEl = "swal2-deny"
+                const o = BulkEdit.get()
+
+                // TODO Allow for removal via a range
+
+                BulkEdit.savingAnimation(btnEl)
+            }
         })
     }
 
@@ -136,6 +148,11 @@ class BulkEdit {
         document.getElementsByClassName("litepicker")[0].classList.remove("litepicker-invalid")
     }
 
+    static savingAnimation(el) {
+        el = document.getElementsByClassName(el)[0]
+        el.style.width = getComputedStyle(el).width
+        el.innerHTML = loadingDots
+    }
 }
 
 export default BulkEdit

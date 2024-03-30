@@ -196,6 +196,59 @@
     }
 }
 
+.loading-dots {
+    position: relative;
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    background-color: white;
+    color: white;
+    animation: loading-dots 0.5s infinite linear alternate;
+    animation-delay: 0.25s;
+    display: inline-block;
+
+    &::before,
+    &::after {
+        content: "";
+        display: inline-block;
+        position: absolute;
+        top: 0;
+    }
+
+    &::before {
+        left: -15px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background-color: white;
+        color: white;
+        animation: loading-dots 0.5s infinite alternate;
+        animation-delay: 0s;
+    }
+
+    &::after {
+        left: 15px;
+        width: 10px;
+        height: 10px;
+        border-radius: 5px;
+        background-color: white;
+        color: white;
+        animation: loading-dots 0.5s infinite alternate;
+        animation-delay: 0.5s;
+    }
+}
+
+@keyframes loading-dots {
+    0% {
+        background-color: white;
+    }
+
+    50%,
+    100% {
+        background-color: rgba(152, 128, 255, 0.2);
+    }
+}
+
 #loader {
     border: 6px solid var(--fc-more-link-bg-color);
     border-radius: 50%;

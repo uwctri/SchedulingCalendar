@@ -12,6 +12,7 @@ import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
+const loadingDots = `<div class="loading-dots"></div>`
 class PopOver {
 
     static _date = null;
@@ -80,25 +81,10 @@ class PopOver {
                 calendar.refetchEvents()
             })
 
-            PopOver.savingAnimation("aPopAddBtn")
+            document.getElementById(el).innerHTML = loadingDots
             setTimeout(PopOver.close, saveDelay)
         })
         PopOver._setup = true
-    }
-
-    static savingAnimation(el) {
-        el = document.getElementById(el)
-        el.classList.add("disabled")
-        el.text = "      Saving      "
-        const update = (i) => {
-            const j = [13, 15, 17][i % 3]
-            let text = el.text.split("")
-            text[j] = text[j] == "." ? " " : "."
-            el.text = text.join("")
-            if (PopOver.isOpen())
-                setTimeout(update, 250, i + 1)
-        }
-        update(0)
     }
 
     static validate() {
