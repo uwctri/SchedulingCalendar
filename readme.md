@@ -10,10 +10,12 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Right side subject summary
 * Remove all future data for withdrawn subject
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
+* Right click on "my cal" event to go to the correct project
 
 * Right now you can only edit availability in a related project. Is that ok?
 * Consider Locations as providers? Obvious work around for this already.
 * We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs (Is this still an issue?)
+* The My Calendar page will be difficult to set up as we need to pull appts from all projects. My PHP assumes the current PID.
 
 ## Notes to Users
 

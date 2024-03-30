@@ -318,7 +318,8 @@ class Scheduling extends AbstractExternalModule
 
         $visits = [];
         for ($i = 0; $i < count($values[0]); $i++) {
-            $visits[] = array_combine(array_values($names), array_column($values, $i));
+            $tmp = array_combine(array_values($names), array_column($values, $i));
+            $visits[$tmp["code"]] = $tmp;
         }
 
         return $visits;
@@ -332,8 +333,8 @@ class Scheduling extends AbstractExternalModule
         $locations = $payload["locations"];
         $start = $payload["start"];
         $end = $payload["end"];
-        // Filtering by event_id and record aren't a thing for Availability
-        $codes = explode(',', $this->getProjectSetting("availability-codes"));
+
+        $codes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
         if (empty($codes)) {
             return $availability;
         }
@@ -528,6 +529,7 @@ class Scheduling extends AbstractExternalModule
 
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure(true);
+        $allVisits = $this->getVisits();
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
@@ -552,19 +554,17 @@ class Scheduling extends AbstractExternalModule
 
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
-            $provider = $allUsers[$row["user"]] ?? $row["user"];
-            $location = $allLocations[$row["location"]]["name"] ?? $row["location"];
             $appt[] = [
                 "internal_id" => $row["id"],
                 "title" => "Default Title",
                 "start" => $row["time_start"],
                 "end" => $row["time_end"],
                 "location" => $row["location"],
-                "location_display" => $location,
+                "location_display" => $allLocations[$row["location"]]["name"] ?? $row["location"],
                 "user" => $row["user"],
-                "user_display" => $provider,
+                "user_display" => $allUsers[$row["user"]] ?? $row["user"],
                 "visit" => $row["visit"],
-                "visit_display" => $row["visit"], // TODO get the display name
+                "visit_display" => $allVisits[$row["visit"]]["display"] ?? $row["visit"],
                 "record" => $row["record"],
                 "record_display" => $row["record"], // TODO get the display name
                 "metadata" => json_decode($row["metadata"], true) ?? [],
