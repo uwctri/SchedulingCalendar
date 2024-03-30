@@ -7,6 +7,7 @@ const defaultEnd = "18:00"
 const defaultSlotSize = "30"
 const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
+const defaultLimitAvailability = true
 
 // Setup toggles for the week bar 
 document.addEventListener("click", (event) => {
@@ -20,6 +21,7 @@ class UserConfig {
 
     static get() {
         const expandRows = localStorage.getItem("expandRows")
+        const limitAvailability = localStorage.getItem("limitAvailability")
         let hiddenDays = localStorage.getItem("configDays").split(',').filter(x => x)
         hiddenDays = hiddenDays ? hiddenDays.map(x => parseInt(x)) : defaultHiddenDays
         const showAllDays = localStorage.getItem("showAllDays") == "true"
@@ -29,16 +31,19 @@ class UserConfig {
             end: localStorage.getItem("configEnd") || defaultEnd,
             hiddenDays: hiddenDays || defaultHiddenDays,
             slotSize: localStorage.getItem("slotSize") || defaultSlotSize,
-            expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows
+            expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows,
+            limitAvailability: typeof limitAvailability === "string" ? limitAvailability === "true" : defaultLimitAvailability
         }
     }
 
     static open() {
 
-        const { start, end, hiddenDays, slotSize, expandRows } = UserConfig.get()
+        const { start, end, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
 
         // Modify the html with current values
-        const newHtml = html.replace("START-TIME", start).replace("END-TIME", end).replace("SLOT-SIZE", slotSize).replace("CHECKED", expandRows ? "checked" : "")
+        const newHtml = html.replace("START-TIME", start).replace("END-TIME", end).
+            replace("SLOT-SIZE", slotSize).replace("CHECKED-EXPAND", expandRows ? "checked" : "").
+            replace("CHECKED-LIMIT", limitAvailability ? "checked" : "")
         const btnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
 
         PopOver.close()
@@ -60,6 +65,7 @@ class UserConfig {
             localStorage.setItem("configEnd", document.getElementById("configEnd").value)
             localStorage.setItem("slotSize", document.getElementById("slotSize").value)
             localStorage.setItem("expandRows", document.getElementById("expandRows").checked)
+            localStorage.setItem("limitAvailability", document.getElementById("limitAvailability").checked)
             const els = document.getElementsByClassName("configWeek")
             let saveDays = []
             Array.from(els).forEach((el, index) => {

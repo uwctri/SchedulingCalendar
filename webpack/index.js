@@ -40,7 +40,7 @@ const accessableColors = [
 // Load user config and FC toolbar
 const coreEventFields = ["start", "end", "title"];
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
-const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows } = UserConfig.get()
+const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
 let topLeftToolbar = ["prev,next", "today", "config"]
 let bottomRightToolbar = [];
@@ -177,7 +177,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
             },
         }[type][pageURL.type]
 
-        return { html: title };
+        return { html: title }
     },
     events: (info, successCallback, failureCallback) => {
         let paramsCommon = {
@@ -185,6 +185,10 @@ calendar = new Calendar(document.getElementById("calendar"), {
             end: info.end.toISOString(),
             providers: SearchBar.getPickedProviders(true),
             locations: SearchBar.getPickedLocations(true),
+        }
+
+        let paramsAvailability = {
+            all_availability: !limitAvailability,
         }
 
         let paramsAppointment = {
@@ -208,33 +212,24 @@ calendar = new Calendar(document.getElementById("calendar"), {
             return calEvent
         }
 
-        if (["schedule", "edit"].includes(pageURL.type)) {
-            API.getAvailability(paramsCommon).then((data) => {
-                data.forEach((event) => {
-                    event = commonProcessing(event)
+        let availabilityPromise = ["schedule", "edit"].includes(pageURL.type) ? API.getAvailability({ ...paramsCommon, ...paramsAvailability }) : Promise.resolve([])
+        let appointmentPromise = ["schedule", "my"].includes(pageURL.type) ? API.getAppointments({ ...paramsCommon, ...paramsAppointment }) : Promise.resolve([])
 
-                    // If on schedule page, send the availability to background
-                    if (pageURL.type == "schedule") {
-                        event.display = "background"
-                    }
-                })
-                successCallback(data)
-            }).catch((error) => {
-                failureCallback(error)
-            })
-        }
+        Promise.all([availabilityPromise, appointmentPromise]).then(([availabilityData, appointmentData]) => {
+            let data = availabilityData.concat(appointmentData)
+            data.forEach((event) => {
+                event = commonProcessing(event)
 
-        // TODO the below doesn't work yet
-        if (["schedule", "my"].includes(pageURL.type)) {
-            API.getAppointments(...paramsCommon, ...paramsAppointment).then((data) => {
-                data.forEach((event) => {
-                    event = commonProcessing(event)
-                })
-                successCallback(data)
-            }).catch((error) => {
-                failureCallback(error)
+                // If on schedule page, send the availability to background
+                if (pageURL.type == "schedule" && event.is_availability) {
+                    event.display = "background"
+                }
             })
-        }
+
+            successCallback(data)
+        }).catch((error) => {
+            failureCallback(error)
+        })
     }
 })
 

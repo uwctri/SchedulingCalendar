@@ -327,15 +327,15 @@ class Scheduling extends AbstractExternalModule
 
     private function getAvailability($payload = null)
     {
-        // TODO for editing availability we would ignore the codes and just get all availability
         $availability = [];
         $providers = $payload["providers"];
         $locations = $payload["locations"];
         $start = $payload["start"];
         $end = $payload["end"];
+        $allFlag = $payload["all_availability"];
 
         $codes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
-        if (empty($codes)) {
+        if (empty($codes) && !$allFlag) {
             return $availability;
         }
 
@@ -343,8 +343,11 @@ class Scheduling extends AbstractExternalModule
         $allLocations = $this->getLocationStructure(true);
 
         $query = $this->createQuery();
-        $query->add("SELECT * FROM em_scheduling_calendar");
-        $query->add("WHERE")->addInClause("availability_code", $codes);
+        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
+
+        if (!$allFlag) {
+            $query->add("AND")->addInClause("availability_code", $codes);
+        }
 
         if (!empty($providers)) {
             $query->add("AND")->addInClause("user", $providers);

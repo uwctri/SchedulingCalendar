@@ -51,12 +51,24 @@
         </div>
     </div>
     <div class="form-group">
-        <div class="expandRowsGroup">
-            <div class="custom-control custom-checkbox custom-control-inline">
-                <input name="expandRows" id="expandRows" type="checkbox" CHECKED class="custom-control-input" value="1">
+        <div class="row expandRowsGroup">
+            <div class="custom-control custom-checkbox col-1">
+                <input name="expandRows" id="expandRows" type="checkbox" CHECKED-EXPAND class="custom-control-input"
+                    value="1">
+            </div>
+            <div class="col-11">
                 <label for="expandRows" class="custom-control-label">Try to size time slots to fit calendar</label>
             </div>
         </div>
+        <div class="row limitAvailabilityGroup">
+            <div class="custom-control custom-checkbox col-1">
+                <input name="limitAvailability" id="limitAvailability" type="checkbox" CHECKED-LIMIT
+                    class="custom-control-input" value="1">
+            </div>
+            <div class="col-11">
+                <label for="limitAvailability" class="custom-control-label">Show only availability that can used in this
+                    project</label>
+            </div>
+        </div>
     </div>
-
 </div>
