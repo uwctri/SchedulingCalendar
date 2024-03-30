@@ -20,7 +20,7 @@ jQuery(document).ready(() => {
         ExternalModules.Settings.prototype.resetConfigInstances = () => {
             ExternalModules.Settings.prototype.resetConfigInstancesOld()
 
-            $modal.find("tr[field=event-branch-logic-value] .external-modules-input-td").not(':contains(=)').prepend('= ')
+            $modal.find("tr[field=visit-branch-logic-value] .external-modules-input-td").not(':contains(=)').prepend('= ')
         }
     })
 })

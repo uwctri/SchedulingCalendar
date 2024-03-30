@@ -2,11 +2,11 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ## Missing Features
 
+* Sort out what the location json should look, update the API.
+* Filter all dropdowns (searchbar too) for Location, Event, Availability Code etc
 * Full Scheduling workflow
-* Sort out what the location json should look like and how to filter it
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Popup for scheduling an event
-* Filter the scheduling drop down for Event in a way similar to the side bar
 * Right side subject summary
 * Remove all future data for withdrawn subject
 * ICS Export calendar (with optional cron for backups) (with config for extra data)

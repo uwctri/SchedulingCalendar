@@ -47,7 +47,6 @@ class Scheduling extends AbstractExternalModule
     {
         global $Proj;
 
-        // TODO we aren't ever returning errors right now
         $request = RestUtility::processRequest($tokenRequired);
         $payload = $request->getRequestVars();
         $project_id = $payload["projectid"] ?? $_GET["pid"];

@@ -87,48 +87,58 @@
             "type": "field-list"
         },
         {
-            "key": "event-header",
-            "name": "<b>Schedulable Event</b>",
+            "key": "visit-header",
+            "name": "<b>Schedulable Vists</b>",
             "type": "sub_settings",
             "repeatable": true,
             "sub_settings": [
                 {
-                    "key": "event-display-name",
+                    "key": "visit-display-name",
                     "name": "<b>Display Name</b>",
                     "type": "text"
                 },
                 {
-                    "key": "event-notes",
+                    "key": "visit-linked-event",
+                    "name": "<b>Linked Event</b>",
+                    "type": "event-list"
+                },
+                {
+                    "key": "visit-code",
+                    "name": "<b>Internal Coded Value</b>",
+                    "type": "text"
+                },
+                {
+                    "key": "visit-notes",
                     "name": "<b>Notes</b>",
                     "type": "text"
                 },
                 {
-                    "key": "event-branch-logic-event",
+                    "key": "visit-branch-logic-event",
                     "name": "<b>Branching Logic</b>",
                     "type": "event-list"
                 },
                 {
-                    "key": "event-branch-logic-field",
+                    "key": "visit-branch-logic-field",
                     "name": "",
                     "type": "field-list"
                 },
                 {
-                    "key": "event-branch-logic-value",
+                    "key": "visit-branch-logic-value",
                     "name": "",
                     "type": "text"
                 },
                 {
-                    "key": "event-duration",
+                    "key": "visit-duration",
                     "name": "<b>Duration:</b><br>In minutes",
                     "type": "text"
                 },
                 {
-                    "key": "event-extendable",
+                    "key": "visit-extendable",
                     "name": "<b>Allow Additional Time:</b><br>Should 'duration' be only a minimum length?",
                     "type": "checkbox"
                 },
                 {
-                    "key": "event-location-free",
+                    "key": "visit-location-free",
                     "name": "<b>Allow Any Location</b><br>Is this a phone call or other location-free event",
                     "type": "checkbox"
                 }
