@@ -183,7 +183,6 @@ calendar = new Calendar(document.getElementById("calendar"), {
         let paramsCommon = {
             start: info.start.toISOString(),
             end: info.end.toISOString(),
-            page: pageURL.type,
             providers: SearchBar.getPickedProviders(true),
             locations: SearchBar.getPickedLocations(true),
         }

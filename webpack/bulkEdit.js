@@ -81,10 +81,9 @@ class BulkEdit {
                 const btnEl = "swal2-deny"
                 const o = BulkEdit.get()
 
-                // TODO Allow for removal via a range
                 API.deleteAvailability({
-                    "provider": o.provider,
-                    "location": o.location,
+                    "providers": o.provider,
+                    "locations": o.location,
                     "group": o.group,
                     "start": `${o.startDay.toFormat('yyyy-MM-dd')}T${o.start}:00`,
                     "end": `${o.endDay.toFormat('yyyy-MM-dd')}T${o.end}:00`,

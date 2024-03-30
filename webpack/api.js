@@ -3,9 +3,10 @@ import Loading from "./loading";
 import { DateTime } from "luxon"
 
 const throttle_msg = "Throttled. Resource requested too recently."
+const req_msg = "Missing required keys in payload object for API call"
 class API {
 
-    static _time_fields = ["start_time", "end_time", "start", "end"];
+    static _time_fields = ["start", "end"];
 
     // Cache and throttle these gets
     static _availabilityCodes = {
@@ -26,6 +27,14 @@ class API {
 
     static timestamp() { return DateTime.now().toISO() }
     static futureTimestamp(minutes) { return DateTime.now().plus({ "minutes": minutes }).toISO() }
+    static requiredKeys(obj, keys) {
+        let keyOptions = Array.isArray(keys[0]) ? keys : [keys]
+        for (const keySet of keyOptions) {
+            if (keySet.every(key => key in obj))
+                return true
+        }
+        throw Error(req_msg)
+    }
 
     static async availabilityCodes() {
 
@@ -120,6 +129,7 @@ class API {
             ...payload
         }
 
+        API.requiredKeys(data, ["start", "end", "providers", "locations"])
         return await API.post(data)
     }
 
@@ -131,6 +141,7 @@ class API {
             ...payload
         }
 
+        API.requiredKeys(data, ["start", "end", "providers", "locations", "group"])
         return await API.post(data)
     }
 
@@ -142,6 +153,7 @@ class API {
             ...payload
         }
 
+        API.requiredKeys(data, [["start", "end", "providers", "locations", "group"], ["id"]])
         return await API.post(data)
     }
 
@@ -153,6 +165,7 @@ class API {
             ...payload
         }
 
+        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"])
         return await API.post(data)
     }
 
@@ -164,6 +177,7 @@ class API {
             ...payload
         }
 
+        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"])
         return await API.post(data)
     }
 
@@ -175,6 +189,7 @@ class API {
             ...payload
         }
 
+        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"], ["id"])
         return await API.post(data)
     }
 

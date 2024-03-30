@@ -72,8 +72,8 @@ class PopOver {
             end = PopOver._date.toISODate() + "T" + end
 
             API.setAvailability({
-                "provider": document.getElementById("aPopProvider").value,
-                "location": document.getElementById("aPopLocation").value,
+                "providers": document.getElementById("aPopProvider").value,
+                "locations": document.getElementById("aPopLocation").value,
                 "group": document.getElementById("aPopGroup").value,
                 "start": start,
                 "end": end,

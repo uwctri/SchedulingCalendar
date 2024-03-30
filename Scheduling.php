@@ -388,8 +388,8 @@ class Scheduling extends AbstractExternalModule
         $code = $payload["group"];
         $start = $payload["start"];
         $end = $payload["end"];
-        $provider = $payload["provider"];
-        $location = $payload["location"];
+        $provider = $payload["providers"];
+        $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
 
         $msg = "Modified existing availability";
@@ -511,7 +511,7 @@ class Scheduling extends AbstractExternalModule
         if (isset($payload["start"]) && isset($payload["end"])) {
             return $this->deleteRangeAvailability($payload);
         }
-        if (isset($payload["id"]) || isset($payload["internal_id"])) {
+        if (isset($payload["id"])) {
             return $this->deleteEntry($payload);
         }
     }
@@ -521,8 +521,8 @@ class Scheduling extends AbstractExternalModule
         $codes = $payload["group"]; // Could be * for all
         $start = $payload["start"];
         $end = $payload["end"];
-        $providers = $payload["provider"];
-        $locations = $payload["location"]; // Could be * for all
+        $providers = $payload["providers"];
+        $locations = $payload["locations"]; // Could be * for all
 
         if (empty($start) || empty($end)) {
             return ["msg" => "No start or end time provided"];
