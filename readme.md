@@ -2,6 +2,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ## Missing Features
 
+* User Config setting to view only availability related to current project or all
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Filter all dropdowns (searchbar too) for Location, Event, Availability Code etc
 * Full Scheduling workflow

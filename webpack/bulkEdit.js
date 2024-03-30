@@ -82,8 +82,19 @@ class BulkEdit {
                 const o = BulkEdit.get()
 
                 // TODO Allow for removal via a range
+                API.deleteAvailability({
+                    "provider": o.provider,
+                    "location": o.location,
+                    "group": o.group,
+                    "start": `${o.startDay.toFormat('yyyy-MM-dd')}T${o.start}:00`,
+                    "end": `${o.endDay.toFormat('yyyy-MM-dd')}T${o.end}:00`,
+                }).then(data => {
+                    calendar.refetchEvents()
+                })
 
                 BulkEdit.savingAnimation(btnEl)
+                setTimeout(Swal.close, 2000)
+                return false
             }
         })
     }

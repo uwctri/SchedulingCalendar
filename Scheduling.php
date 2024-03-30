@@ -72,7 +72,7 @@ class Scheduling extends AbstractExternalModule
                 "create" => "setAvailability",
                 "read" => "getAvailability",
                 "update" => "",
-                "delete" => "deleteEntry"
+                "delete" => "deleteAvailability",
             ],
             "appointment" => [
                 "create" => "setAppointments",
@@ -139,7 +139,7 @@ class Scheduling extends AbstractExternalModule
     /*
     Get all providers that exist in the project or any other
     */
-    private function getProviders($payload = Null)
+    private function getProviders($payload = null)
     {
         // Get users that have been used the EM
         $noParams = [];
@@ -199,7 +199,7 @@ class Scheduling extends AbstractExternalModule
     all subjects that have an appointment with the given 
     provider (for My Calendar page)
     */
-    private function getSubjects($payload = Null)
+    private function getSubjects($payload = null)
     {
         $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
@@ -259,7 +259,7 @@ class Scheduling extends AbstractExternalModule
         return $result;
     }
 
-    private function getLocations($payload = Null)
+    private function getLocations($payload = null)
     {
         return $this->getLocationStructure();
     }
@@ -283,7 +283,7 @@ class Scheduling extends AbstractExternalModule
         return $locations;
     }
 
-    private function getAvailabilityCodes($payload = Null)
+    private function getAvailabilityCodes($payload = null)
     {
         $displayNames = $this->getSystemSetting("group-name");
         $codedValues = $this->getSystemSetting("group-code");
@@ -297,7 +297,7 @@ class Scheduling extends AbstractExternalModule
         return $result;
     }
 
-    private function getVisits($payload = Null)
+    private function getVisits($payload = null)
     {
         $names = [
             "display-name" => "display",
@@ -325,7 +325,7 @@ class Scheduling extends AbstractExternalModule
         return $visits;
     }
 
-    private function getAvailability($payload = Null)
+    private function getAvailability($payload = null)
     {
         // TODO for editing availability we would ignore the codes and just get all availability
         $availability = [];
@@ -344,8 +344,7 @@ class Scheduling extends AbstractExternalModule
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar");
-        $query->add("WHERE");
-        $query->addInClause("availability_code", $codes);
+        $query->add("WHERE")->addInClause("availability_code", $codes);
 
         if (!empty($providers)) {
             $query->add("AND")->addInClause("user", $providers);
@@ -491,15 +490,6 @@ class Scheduling extends AbstractExternalModule
         return false;
     }
 
-    private function deleteEntry($id)
-    {
-        if (is_array($id)) {
-            $id = $id["internal_id"] ?? $id["id"];
-        }
-        $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
-        return [];
-    }
-
     private function modifyAvailabiltiy($id, $newStart = null, $newEnd = null)
     {
         $query = $this->createQuery();
@@ -516,7 +506,59 @@ class Scheduling extends AbstractExternalModule
         return [];
     }
 
-    private function getAppointments($payload = Null)
+    private function deleteAvailability($payload = null)
+    {
+        if (isset($payload["start"]) && isset($payload["end"])) {
+            return $this->deleteRangeAvailability($payload);
+        }
+        if (isset($payload["id"]) || isset($payload["internal_id"])) {
+            return $this->deleteEntry($payload);
+        }
+    }
+
+    private function deleteRangeAvailability($payload = null)
+    {
+        $codes = $payload["group"]; // Could be * for all
+        $start = $payload["start"];
+        $end = $payload["end"];
+        $providers = $payload["provider"];
+        $locations = $payload["location"]; // Could be * for all
+
+        if (empty($start) || empty($end)) {
+            return ["msg" => "No start or end time provided"];
+        }
+
+        $query = $this->createQuery();
+        $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NULL");
+
+        if (!empty($codes) && $codes[0] != "*") {
+            $query->add("AND")->addInClause("availability_code", $codes);
+        }
+
+        if (!empty($providers)) {
+            $query->add("AND")->addInClause("user", $providers);
+        }
+
+        if (!empty($locations) && $locations[0] != "*") {
+            $query->add("AND")->addInClause("location", $locations);
+        }
+
+        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        $query->execute();
+
+        return [];
+    }
+
+    private function deleteEntry($id)
+    {
+        if (is_array($id)) {
+            $id = $id["internal_id"] ?? $id["id"];
+        }
+        $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
+        return [];
+    }
+
+    private function getAppointments($payload = null)
     {
         $appt = [];
         $providers = $payload["providers"];
@@ -525,7 +567,6 @@ class Scheduling extends AbstractExternalModule
         $vists = $payload["visits"];
         $start = $payload["start"];
         $end = $payload["end"];
-
 
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure(true);
@@ -577,7 +618,7 @@ class Scheduling extends AbstractExternalModule
     }
 
     // TODO
-    private function setAppointments($payload = Null)
+    private function setAppointments($payload = null)
     {
         return [];
     }
@@ -616,9 +657,9 @@ class Scheduling extends AbstractExternalModule
         return !!$response;
     }
 
-    private function getSingleEventFields($fields, $records = Null, $project_id = Null)
+    private function getSingleEventFields($fields, $records = null, $project_id = null)
     {
-        if ($project_id == Null) {
+        if ($project_id == null) {
             $project_id = $_GET["pid"] ?? PROJECT_ID;
         }
         $fields = array_filter($fields);
