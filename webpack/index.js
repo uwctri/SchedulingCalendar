@@ -31,7 +31,7 @@ const accessableColors = [
     "#fffac8", // Beige
     "#800000", // Maroon
     "#aaffc3", // Mint
-    "#000075", // Navy
+    //"#000075", // Navy
     "#a9a9a9", // Grey
 ].map(value => ({ value, sort: Math.random() }))
     .sort((a, b) => a.sort - b.sort)
@@ -174,9 +174,9 @@ calendar = new Calendar(document.getElementById("calendar"), {
             },
             "appointment": {
                 "my":
-                    `${info.timeText}<br>Subject's Display Name<br>Event Display Name<br>${props.location_display}`, // TODO
+                    `${info.timeText}<br>${props.record_display}<br>${props.visit_display}<br>${props.location_display}`,
                 "schedule":
-                    `${info.timeText}<br>Subject's Display Name<br>Event Display Name<br>${props.location_display}`, // TODO
+                    `${info.timeText}<br>${props.record_display}<br>${props.visit_display}<br>${props.user_display}<br>${props.location_display}`,
             },
         }[type][pageURL.type]
 

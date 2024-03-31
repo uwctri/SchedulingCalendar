@@ -194,7 +194,7 @@ class Scheduling extends AbstractExternalModule
     all subjects that have an appointment with the given 
     provider (for My Calendar page)
     */
-    private function getSubjects($payload)
+    private function getSubjects($payload = null)
     {
         $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
@@ -224,7 +224,9 @@ class Scheduling extends AbstractExternalModule
                         "label" => $name ?? $record_id,
                         "location" => $loc,
                         "name" => $name,
-                        "record_id" => $record_id
+                        "record_id" => $record_id,
+                        "pid" => $pid,
+                        "is_withdrawn" => false
                     ];
                 }
             }
@@ -235,14 +237,14 @@ class Scheduling extends AbstractExternalModule
             foreach ($data as $record_id => $recordData) {
                 $name = $recordData[$nameField];
                 $loc = $recordData[$locationField];
-                $withdraw = $recordData[$withdrawField];
-                if ($withdraw) continue;
+                $withdraw = boolval($recordData[$withdrawField]);
                 $result[$record_id] = [
                     "value" => $record_id,
                     "label" => $name ?? $record_id,
                     "location" => $loc,
                     "name" => $name,
-                    "record_id" => $record_id
+                    "record_id" => $record_id,
+                    "is_withdrawn" => $withdraw
                 ];
             }
         }
@@ -328,6 +330,7 @@ class Scheduling extends AbstractExternalModule
         $start = $payload["start"];
         $end = $payload["end"];
         $allFlag = $payload["all_availability"];
+        $overflowFlag = $payload["allow_overflow"]; // Internal param for scheduling
 
         $codes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
         if (empty($codes) && !$allFlag) {
@@ -352,7 +355,11 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND")->addInClause("location", $locations);
         }
 
-        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        if (!$overflowFlag) {
+            $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        } else {
+            $query->add("AND time_start <= ? AND time_end >= ?", [$start, $end]);
+        }
 
         $codes = $this->getAvailabilityCodes();
         $result = $query->execute();
@@ -575,6 +582,7 @@ class Scheduling extends AbstractExternalModule
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure(true);
         $allVisits = $this->getVisits();
+        $allSubjects = $this->getSubjects();
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
@@ -609,9 +617,9 @@ class Scheduling extends AbstractExternalModule
                 "user" => $row["user"],
                 "user_display" => $allUsers[$row["user"]] ?? $row["user"],
                 "visit" => $row["visit"],
-                "visit_display" => $allVisits[$row["visit"]]["display"] ?? $row["visit"],
+                "visit_display" => $allVisits[$row["visit"]]["label"] ?? $row["visit"],
                 "record" => $row["record"],
-                "record_display" => $row["record"], // TODO get the display name
+                "record_display" => $allSubjects[$row["record"]]["label"] ?? $row["record"],
                 "metadata" => json_decode($row["metadata"], true) ?? [],
                 "is_availability" => false,
                 "is_appointment" => true
@@ -624,7 +632,7 @@ class Scheduling extends AbstractExternalModule
     private function setAppointments($payload)
     {
         $project_id = $payload["pid"];
-        $visit = $payload["visit"];
+        $visit = $payload["visits"];
         $start = $payload["start"];
         $end = $payload["end"];
         $provider = $payload["providers"];
@@ -635,10 +643,42 @@ class Scheduling extends AbstractExternalModule
             return [];
         }
 
-        $this->query(
-            "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            [$project_id, $visit, $provider, $record, $location, $start, $end]
-        );
+        // Search for availability that overflows the start/end
+        $payload["allow_overflow"] = true;
+        $existing = $this->getAvailability($payload);
+
+        if (count($existing) > 0) {
+            $existing = $existing[0];
+            $id = $existing["internal_id"];
+            $exStart = $existing["start"];
+            $exEnd = $existing["end"];
+
+            if (($exStart == $start) && ($exEnd == $end)) {
+                // Delete the availability, its a perfect overlap
+                $this->deleteEntry($id);
+            } elseif (($exStart == $start) || ($exEnd == $end)) {
+                // Modify the availability
+                $newStart = ($exStart == $start) ? $end : $exStart;
+                $newEnd = ($exEnd == $end) ? $start : $exEnd;
+                $this->modifyAvailabiltiy($id, $newStart, $newEnd);
+            } else {
+                // In the middle, modify and create new availability
+                $this->modifyAvailabiltiy($id, $exStart, $start);
+                $this->setAvailability([
+                    "pid" => $payload["pid"],
+                    "start" => $end,
+                    "end" => $exEnd,
+                    "group" => $existing["availability_code"],
+                    "providers" => $existing["user"],
+                    "locations" => $existing["location"],
+                ]);
+            }
+
+            $this->query(
+                "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                [$project_id, $visit, $provider, $record, $location, $start, $end]
+            );
+        }
 
         return [];
     }

@@ -102,7 +102,7 @@ class SearchBar {
                     },
                     {
                         label: "Subjects",
-                        choices: SearchBar.formatCustomProps(subjects)
+                        choices: SearchBar.filterSubjects(subjects)
                     }
                 ]
         })
@@ -174,6 +174,12 @@ class SearchBar {
         const allProviders = !UserConfig.get().limitAvailability && (page == 'edit')
         providers = providers.filter((provider) => provider.customProperties.is_local || allProviders)
         return providers
+    }
+
+    static filterSubjects(subjects) {
+        subjects = SearchBar.formatCustomProps(subjects)
+        subjects = subjects.filter((subject) => !subject.customProperties.is_withdrawn)
+        return subjects
     }
 
     static formatCustomProps(raw) {
