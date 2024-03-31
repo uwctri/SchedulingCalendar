@@ -31,6 +31,11 @@
     },
     "project-settings": [
         {
+            "key": "scheduling-and-availability",
+            "name": "Used for CSS matching. Ignore",
+            "type": "text"
+        },
+        {
             "key": "calendar-admin",
             "name": "<b>Calendar Admin</b><br>May edit any user's calendar",
             "type": "user-list",

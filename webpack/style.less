@@ -273,9 +273,9 @@
     }
 }
 
-
 .context-sub-menu,
 .context-menu {
+
     position: fixed;
     background: white;
     z-index: 9999999;
@@ -285,9 +285,6 @@
     border-radius: 2px;
     box-shadow: 0 0 6px rgba(0, 0, 0, 0.2);
     font-size: 12px;
-}
-
-.context-menu {
 
     .context-menu-item {
         height: 30px;
@@ -342,13 +339,17 @@
 
 }
 
-.calConfig {
+table:has(tr[field=scheduling-and-availability]) {
 
     thead {
         display: none;
     }
 
     .external-modules-instance-label {
+        display: none;
+    }
+
+    tr[field=scheduling-and-availability] {
         display: none;
     }
 
@@ -371,8 +372,14 @@
             padding-bottom: 0.15rem;
         }
 
-        .external-modules-input-td input {
-            width: 94%;
+        .external-modules-input-td {
+            &::before {
+                content: "= ";
+            }
+
+            input {
+                width: 94%;
+            }
         }
     }
 }

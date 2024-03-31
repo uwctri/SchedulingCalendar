@@ -8,6 +8,7 @@ $index = $module->getUrl('index.php');
     const router = "<?= $module->getUrl('router.php'); ?>"
     const user = <?= json_encode($module->currentUser()); ?>
 </script>
+<link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
 <script src="<?= $module->getUrl('calendar.js'); ?>" defer></script>
 
 <div class="projhdr">

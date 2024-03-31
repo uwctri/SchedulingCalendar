@@ -1,6 +1,6 @@
 import { CRUD, Resource } from "./enums"
 import Loading from "./loading";
-import Adapter from "./adapter";
+import RedCap from "./redcap";
 import { DateTime } from "luxon"
 
 const throttle_msg = "Throttled. Resource requested too recently."
@@ -213,7 +213,7 @@ class API {
     static async post(data) {
 
         let result = {}
-        data["redcap_csrf_token"] = Adapter.csrf()
+        data["redcap_csrf_token"] = RedCap.csrf()
 
         // Format times to be compatible with Postgress Timestamps
         // Trash the microseconds and swap T for space

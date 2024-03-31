@@ -1,7 +1,7 @@
 import { DateTime } from "luxon"
 import IMask from "imask";
 import API from "./api"
-import Adapter from "./adapter"
+import RedCap from "./redcap"
 import html_availability from "./html/availability_popup.html"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils";
 
@@ -127,7 +127,7 @@ class PopOver {
         PopOver.setup()
         PopOver.close()
         PopOver._open = true
-        Adapter.popover(target, {
+        RedCap.popover(target, {
             title: title,
             content: content,
             html: true,

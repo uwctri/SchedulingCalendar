@@ -1,28 +1,19 @@
 const path = require("path")
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
     mode: "development",
     devtool: "inline-source-map",
+    plugins: [new MiniCssExtractPlugin({ filename: 'style.css' })],
     entry: {
         "calendar": "./index.js",
-        "config": "./config.js",
-    },
-    resolve: {
-        extensions: [".js"]
     },
     module: {
         rules: [
             {
-                test: /\.css$/,
-                use: [
-                    "style-loader",
-                    "css-loader"
-                ]
-            },
-            {
                 test: /\.less$/i,
                 use: [
-                    "style-loader",
+                    MiniCssExtractPlugin.loader,
                     "css-loader",
                     "less-loader",
                 ],

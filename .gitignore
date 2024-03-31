@@ -1,10 +1,7 @@
 .vscode
-config.js
-config.js.LICENSE.txt
-bundle.js
-bundle.js.LICENSE.txt
-calendar.js
-calendar.js.LICENSE.txt
+*.js
+*.js.LICENSE.txt
+*.css
 webpack/node_modules
 *.woff
 *.woff2
