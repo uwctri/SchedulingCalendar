@@ -1,5 +1,5 @@
 .vscode
-*.js
+calendar.js
 *.js.LICENSE.txt
 *.css
 webpack/node_modules
