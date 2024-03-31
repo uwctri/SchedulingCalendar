@@ -117,11 +117,12 @@ calendar = new Calendar(document.getElementById("calendar"), {
         return true
     },
     eventDidMount: (arg) => {
-        arg.el.setAttribute('data-internal-id', arg.event.extendedProps.internal_id)
+        const props = arg.event.extendedProps
+        arg.el.setAttribute('data-internal-id', props.internal_id)
         if (["singleDay", "singleWeek"].includes(calendar.view.type)) {
             if (pageURL.type == "edit") {
                 ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
-            } else if (pageURL.type == "schedule") {
+            } else if (pageURL.type == "schedule" && props.is_appointment) {
                 ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
             }
         }

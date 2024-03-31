@@ -5,7 +5,8 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Add a notes option to the sched popup
 * Remove all future data for withdrawn subject
-* Right click to edit/delete an appointment
+* Right click to edit/delete an appointment (not functional yet)
+* Toggle viewing availability on the Schedule cal
 
 * Filter all dropdowns for Provider(done) , Visit(Sched pop), Subject(Sched pop), Location(both pops, bar)
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
