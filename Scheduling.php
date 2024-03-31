@@ -50,6 +50,7 @@ class Scheduling extends AbstractExternalModule
         $request = RestUtility::processRequest($tokenRequired);
         $payload = $request->getRequestVars();
         $project_id = $payload["projectid"] ?? $_GET["pid"];
+        $payload["pid"] = $project_id;
         $err_msg = "Not supported";
         $result = null;
 
@@ -57,11 +58,6 @@ class Scheduling extends AbstractExternalModule
         if (!isset($Proj)) {
             $Proj = new Project($project_id);
         }
-
-        // Grab start/end from GET for full calendar
-        $payload["start"] = $_GET["start"] ?? $payload["start"];
-        $payload["end"] = $_GET["end"] ?? $payload["end"];
-        $payload["pid"] = $project_id;
 
         $funcs = [
             "availabilitycode" => [
@@ -99,7 +95,7 @@ class Scheduling extends AbstractExternalModule
         ];
 
         $task = $funcs[$payload["resource"]][$payload["crud"]];
-        if ($payload["multi"] && !empty($task)) {
+        if ($payload["bundle"] && !empty($task)) {
             $result = [];
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
@@ -294,7 +290,8 @@ class Scheduling extends AbstractExternalModule
             if ($allFlag || in_array($code, $localCodes)) {
                 $result[$code] = [
                     "value" => $code,
-                    "label" => $name
+                    "label" => $name,
+                    "flag" => boolval($allFlag)
                 ];
             }
         }

@@ -214,12 +214,7 @@ class API {
         if (!("crud" in payload) || !("resource" in payload) || !("bundle" in payload))
             return Promise.reject("Poorly formatted Multi request")
 
-        const data = {
-            "multi": true,
-            ...payload
-        }
-
-        return await API.post(data)
+        return await API.post(payload)
     }
 
     static async post(data) {

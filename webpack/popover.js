@@ -76,7 +76,7 @@ class PopOver {
                 calendar.refetchEvents()
             })
 
-            document.getElementById(el).innerHTML = loadingDots
+            document.getElementById("aPopAddBtn").innerHTML = loadingDots
             setTimeout(PopOver.close, saveDelay)
         })
         PopOver._setup = true
