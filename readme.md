@@ -2,7 +2,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ## Missing Features
 
-* PHP isn't parsing BOOLS correctly. Verify availaiblityCodes is correct after fix.
 * Do we need a quick way to filter only availaiblity of the current provider?
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Filter all dropdowns (searchbar too) for Provider, Visit, Subject, Location

@@ -224,17 +224,21 @@ class API {
 
         // Format times to be compatible with Postgress Timestamps
         // Trash the microseconds and swap T for space
-        const editTime = (obj) => {
+        // Swap bools to 1 or 0 
+        const format = (obj) => {
             for (const [key, value] of Object.entries(obj)) {
                 if (API._time_fields.includes(key)) {
                     obj[key] = value.split('.')[0].replace("T", " ")
                 }
+                if (typeof value == "boolean") {
+                    obj[key] = value ? 1 : 0
+                }
             }
         }
-        editTime(data)
+        format(data)
         if ("bundle" in data) {
             for (const obj of data["bundle"]) {
-                editTime(obj)
+                format(obj)
             }
         }
 

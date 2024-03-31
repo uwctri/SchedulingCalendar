@@ -283,15 +283,13 @@ class Scheduling extends AbstractExternalModule
     {
         $localCodes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
         $allFlag = $payload["all_availability"]; // Defaults to false when payload is null
-        $displayNames = $this->getSystemSetting("group-name");
-        $codedValues = $this->getSystemSetting("group-code");
-        $result = array_combine($codedValues, $displayNames);
-        foreach ($result as $code => $name) {
+        $allCodes = array_combine($this->getSystemSetting("group-code"), $this->getSystemSetting("group-name"));
+        $result = [];
+        foreach ($allCodes as $code => $name) {
             if ($allFlag || in_array($code, $localCodes)) {
                 $result[$code] = [
                     "value" => $code,
                     "label" => $name,
-                    "flag" => boolval($allFlag)
                 ];
             }
         }
