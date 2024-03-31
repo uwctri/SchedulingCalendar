@@ -71,14 +71,14 @@ class Scheduling extends AbstractExternalModule
             "availability" => [
                 "create" => "setAvailability",
                 "read" => "getAvailability",
-                "update" => "",
+                "update" => "", # Use create for updates
                 "delete" => "deleteAvailability",
             ],
             "appointment" => [
                 "create" => "setAppointments",
                 "read" => "getAppointments",
-                "update" => "",
-                "delete" => "deleteEntry"
+                "update" => "modifyAppointments",
+                "delete" => "deleteAppointments"
             ],
             "provider" => [
                 "read" => "getProviders",
@@ -199,7 +199,7 @@ class Scheduling extends AbstractExternalModule
     all subjects that have an appointment with the given 
     provider (for My Calendar page)
     */
-    private function getSubjects($payload = null)
+    private function getSubjects($payload)
     {
         $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
@@ -286,7 +286,7 @@ class Scheduling extends AbstractExternalModule
     private function getAvailabilityCodes($payload = null)
     {
         $localCodes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
-        $allFlag = $payload["all_availability"];
+        $allFlag = $payload["all_availability"]; // Defaults to false when payload is null
         $displayNames = $this->getSystemSetting("group-name");
         $codedValues = $this->getSystemSetting("group-code");
         $result = array_combine($codedValues, $displayNames);
@@ -329,7 +329,7 @@ class Scheduling extends AbstractExternalModule
         return $visits;
     }
 
-    private function getAvailability($payload = null)
+    private function getAvailability($payload)
     {
         $availability = [];
         $providers = $payload["providers"];
@@ -513,7 +513,7 @@ class Scheduling extends AbstractExternalModule
         return [];
     }
 
-    private function deleteAvailability($payload = null)
+    private function deleteAvailability($payload)
     {
         if (isset($payload["start"]) && isset($payload["end"])) {
             return $this->deleteRangeAvailability($payload);
@@ -523,7 +523,7 @@ class Scheduling extends AbstractExternalModule
         }
     }
 
-    private function deleteRangeAvailability($payload = null)
+    private function deleteRangeAvailability($payload)
     {
         $codes = $payload["group"]; // Could be * for all
         $start = $payload["start"];
@@ -533,6 +533,9 @@ class Scheduling extends AbstractExternalModule
 
         if (empty($start) || empty($end)) {
             return ["msg" => "No start or end time provided"];
+        }
+        if (empty($providers)) {
+            return ["msg" => "No providers provided"];
         }
 
         $query = $this->createQuery();
@@ -561,11 +564,14 @@ class Scheduling extends AbstractExternalModule
         if (is_array($id)) {
             $id = $id["internal_id"] ?? $id["id"];
         }
+        if (empty($id)) {
+            return ["msg" => "No id provided"];
+        }
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
         return [];
     }
 
-    private function getAppointments($payload = null)
+    private function getAppointments($payload)
     {
         $appt = [];
         $providers = $payload["providers"];
@@ -624,9 +630,74 @@ class Scheduling extends AbstractExternalModule
         return $appt;
     }
 
-    // TODO
-    private function setAppointments($payload = null)
+    private function setAppointments($payload)
     {
+        $project_id = $payload["pid"];
+        $visit = $payload["visit"];
+        $start = $payload["start"];
+        $end = $payload["end"];
+        $provider = $payload["providers"];
+        $location = $payload["locations"];
+        $record = $payload["subjects"];
+
+        if (empty($project_id) || empty($visit) || empty($start) || empty($end) || empty($provider) || empty($location) || empty($record)) {
+            return [];
+        }
+
+        $this->query(
+            "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            [$project_id, $visit, $provider, $record, $location, $start, $end]
+        );
+
+        return [];
+    }
+
+    private function modifyAppointments($payload)
+    {
+        $id = $payload["id"];
+        $provider = $payload["providers"];
+        $location = $payload["locations"];
+
+        if (empty($id) || empty($provider) || empty($location)) {
+            return [];
+        }
+
+        $this->query(
+            "UPDATE em_scheduling_calendar SET user = ?, location = ? WHERE id = ?",
+            [$provider, $location, $id]
+        );
+
+        return [];
+    }
+
+    private function deleteAppointments($payload)
+    {
+        if (isset($payload["start"]) && isset($payload["end"])) {
+            return $this->deleteRangeAppointments($payload);
+        }
+        if (isset($payload["id"])) {
+            return $this->deleteEntry($payload);
+        }
+    }
+
+    private function deleteRangeAppointments($payload)
+    {
+        $start = $payload["start"];
+        $end = $payload["end"];
+        $subjects = $payload["subjects"];
+
+        $query = $this->createQuery();
+        $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");
+
+        if (empty($subjects)) {
+            return [];
+        }
+
+        $query->add("AND")->addInClause("record", $subjects);
+
+        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        $query->execute();
+
         return [];
     }
 

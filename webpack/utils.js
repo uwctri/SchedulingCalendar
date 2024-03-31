@@ -3,7 +3,7 @@ import UserConfig from "./userConfig"
 
 export const buildGroupDropdown = (el, stillOpenFn) => {
     API.availabilityCodes({
-        "all_availability": UserConfig.get().all_availability
+        "all_availability": !UserConfig.get().limitAvailability
     }).then(groupData => {
         if (!stillOpenFn()) return
         const select = document.getElementById(el)

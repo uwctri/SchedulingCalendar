@@ -185,6 +185,18 @@ class API {
         return await API.post(data)
     }
 
+    static async updateAppointments(payload) {
+
+        const data = {
+            "crud": CRUD.Update,
+            "resource": Resource.Appointment,
+            ...payload
+        }
+
+        API.requiredKeys(data, ["id", "providers", "locations"])
+        return await API.post(data)
+    }
+
     static async deleteAppointments(payload) {
 
         const data = {
@@ -193,7 +205,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"], ["id"])
+        API.requiredKeys(data, [["start", "time", "subjects"], ["id"]])
         return await API.post(data)
     }
 
