@@ -38,7 +38,6 @@ const accessableColors = [
     .map(({ value }) => value)
 
 // Load user config and FC toolbar
-const coreEventFields = ["start", "end", "title"];
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
 let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
@@ -100,8 +99,12 @@ calendar = new Calendar(document.getElementById("calendar"), {
         }
     },
     select: (selectionInfo) => {
-        if (pageURL.type == "edit" && ["singleWeek", "singleDay"].includes(calendar.view.type)) {
-            PopOver.openAvailability(selectionInfo)
+        if (["singleWeek", "singleDay"].includes(calendar.view.type)) {
+            if (pageURL.type == "edit") {
+                PopOver.openAvailability(selectionInfo)
+            } else if (pageURL.type == "schedule") {
+                PopOver.openScheduleVisit(selectionInfo)
+            }
         }
     },
     selectAllow: (selectionInfo) => {
@@ -201,7 +204,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
             // Copy all non-standard fields to extendedProps
             // Assign unique colors to each provider
             for (const [key, value] of Object.entries(calEvent)) {
-                if (!coreEventFields.includes(key)) {
+                if (!["start", "end", "title"].includes(key)) {
                     calEvent.extendedProps = calEvent.extendedProps || {}
                     calEvent.extendedProps[key] = value
                 }

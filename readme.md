@@ -2,14 +2,17 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ## Missing Features
 
+* Idea: Have everything return "label" and "value" so that things can share the same select building code.
+
+* Setting to default the scheduled location to a static value or subject's assigned location
+* Add a notes option to the sched popup
+* Remove all future data for withdrawn subject
+* Right click to edit/delete an appointment
+
 * Do we need a quick way to filter only availaiblity of the current provider?
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
-* Filter all dropdowns (searchbar too) for Provider, Visit, Subject, Location
-* Full Scheduling workflow
-* Setting to default the scheduled location to a static value or subject's assigned location
-* Popup for scheduling an event
+* Filter all dropdowns for Provider(done) , Visit(Sched pop), Subject(both pops, bar), Location(both pops, bar)
 * Right side subject summary
-* Remove all future data for withdrawn subject
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
 * Right click on "my cal" event to go to the correct project
 
@@ -17,10 +20,11 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs (Is this still an issue?)
 * The My Calendar page will be difficult to set up as we need to pull appts from all projects. My PHP assumes the current PID.
 
-## Notes to Users
+## Docs
 
-* Explain location strucutre
-* Docs for DET post
+* Location Structure
+* DET Post messages
+* More explinations in config.json. Especially for events.
 
 ## Running locally
 

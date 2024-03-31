@@ -1,5 +1,6 @@
 import Choices from "choices.js"
 import API from "./api"
+import UserConfig from "./userConfig"
 
 let testEvents = [
     {
@@ -89,19 +90,19 @@ class SearchBar {
                 [
                     {
                         label: "Locations",
-                        choices: SearchBar.formatLocations(locations)
+                        choices: SearchBar.filterLocations(locations)
                     },
                     {
                         label: "Visits (Events)",
-                        choices: SearchBar.formatVists(visits)
+                        choices: SearchBar.formatCustomProps(visits)
                     },
                     {
                         label: "Providers",
-                        choices: Object.values(providers)
+                        choices: SearchBar.filterProviders(providers)
                     },
                     {
                         label: "Subjects",
-                        choices: Object.values(subjects)
+                        choices: SearchBar.formatCustomProps(subjects)
                     }
                 ]
         })
@@ -145,39 +146,50 @@ class SearchBar {
         document.querySelector(`.${centerClassName} input`).focus()
     }
 
-    static formatLocations(rawLocations) {
+    static filterLocations(locations) {
         let locs = []
-        for (const id in rawLocations) {
-            let data = rawLocations[id]
+        for (const id in locations) {
+            let data = locations[id]
             // TODO for the edit Avail cal we should show all active locs that the user has access to
             // TODO for the my calednar only show ... something
             if (data.active && (!data.projects || !data.projects.length || data.projects.includes(project_code))) {
                 locs.push({
                     value: id,
                     label: data["name"],
-                    ...data
+                    customProperties: {
+                        ...data
+                    }
                 })
             }
             if (data.sites) {
-                locs = locs.concat(SearchBar.formatLocations(data.sites))
+                locs = locs.concat(SearchBar.filterLocations(data.sites))
             }
         }
         return locs
     }
 
-    static formatVists(rawVisits) {
-        let visits = []
-        for (const id in rawVisits) {
-            let data = rawVisits[id]
-            visits.push({
-                value: data["code"],
-                label: data["label"],
+    static filterProviders(providers) {
+        providers = SearchBar.formatCustomProps(providers)
+        const page = new URLSearchParams(location.search).get('type')
+        const allProviders = !UserConfig.get().limitAvailability && (page == 'edit')
+        providers = providers.filter((provider) => provider.customProperties.is_local || allProviders)
+        return providers
+    }
+
+    static formatCustomProps(raw) {
+        let result = []
+        console.log(raw)
+        for (const id in raw) {
+            const data = raw[id]
+            result.push({
+                value: data.value,
+                label: data.label,
                 customProperties: {
                     ...data
                 }
             })
         }
-        return visits
+        return result
     }
 
     static getPicked(valueOnly = false, filterType = null) {

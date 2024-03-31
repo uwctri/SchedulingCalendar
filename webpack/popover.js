@@ -3,7 +3,8 @@ import IMask from "imask";
 import API from "./api"
 import RedCap from "./redcap"
 import html_availability from "./html/availability_popup.html"
-import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils";
+import html_appointment from "./html/appointment_popup.html"
+import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils";
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
@@ -61,20 +62,34 @@ class PopOver {
             if (!PopOver.validate())
                 return
 
+            const page = new URLSearchParams(location.search).get('type')
             let start = DateTime.fromFormat(document.getElementById("aPopStartTime").value, "hh:mm a").toISOTime()
             start = PopOver._date.toISODate() + "T" + start
             let end = DateTime.fromFormat(document.getElementById("aPopEndTime").value, "hh:mm a").toISOTime()
             end = PopOver._date.toISODate() + "T" + end
 
-            API.setAvailability({
-                "providers": document.getElementById("aPopProvider").value,
-                "locations": document.getElementById("aPopLocation").value,
-                "group": document.getElementById("aPopGroup").value,
-                "start": start,
-                "end": end,
-            }).then(data => {
-                calendar.refetchEvents()
-            })
+            if (page == "edit") {
+                API.setAvailability({
+                    "providers": document.getElementById("aPopProvider").value,
+                    "locations": document.getElementById("aPopLocation").value,
+                    "group": document.getElementById("aPopGroup").value,
+                    "start": start,
+                    "end": end,
+                }).then(data => {
+                    calendar.refetchEvents()
+                })
+            } else if (page == "schedule") {
+                API.setAppointments({
+                    "visits": document.getElementById("aPopVisit").value,
+                    "providers": document.getElementById("aPopProvider").value,
+                    "locations": document.getElementById("aPopLocation").value,
+                    "subjects": document.getElementById("aPopSubject").value,
+                    "start": start,
+                    "end": end,
+                }).then(data => {
+                    calendar.refetchEvents()
+                })
+            }
 
             document.getElementById("aPopAddBtn").innerHTML = loadingDots
             setTimeout(PopOver.close, saveDelay)
@@ -104,7 +119,7 @@ class PopOver {
     }
 
     static openAvailability(info) {
-        let title = `Adding New Availability ${closeBtn}`
+        const title = `Adding New Availability ${closeBtn}`
         PopOver.openPopover(title, html_availability, info.jsEvent.target)
         PopOver._date = DateTime.fromISO(info.startStr)
 
@@ -121,6 +136,27 @@ class PopOver {
         buildGroupDropdown("aPopGroup", PopOver.isOpen)
         buildLocationDropdown("aPopLocation", PopOver.isOpen)
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
+    }
+
+    static openScheduleVisit(info) {
+        const title = `Schedule A New Visit ${closeBtn}`
+        PopOver.openPopover(title, html_appointment, info.jsEvent.target)
+        PopOver._date = DateTime.fromISO(info.startStr)
+
+        // IMask is used for input masking and not native Bootstrap due to sizing
+        // issues inside the popover.
+        const startTime = document.getElementById("aPopStartTime")
+        startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
+        IMask(startTime, PopOver.timeMask12)
+
+        const endTime = document.getElementById("aPopEndTime")
+        endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
+        IMask(endTime, PopOver.timeMask12)
+
+        buildVisitDropdown("aPopVisit", PopOver.isOpen)
+        buildLocationDropdown("aPopLocation", PopOver.isOpen)
+        buildProviderDropdown("aPopProvider", PopOver.isOpen)
+        buildSubjectDropdown("aPopSubject", PopOver.isOpen)
     }
 
     static openPopover(title, content, target) {

@@ -137,7 +137,7 @@ class Scheduling extends AbstractExternalModule
     */
     private function getProviders($payload = null)
     {
-        // Get users that have been used the EM
+        // Get users that have used the EM
         $noParams = [];
         $sql = $this->query("SELECT DISTINCT user FROM em_scheduling_calendar", $noParams);
         $globalProviders = [];
@@ -162,12 +162,11 @@ class Scheduling extends AbstractExternalModule
                 $providers[$username] = [
                     "value" => $username,
                     "label" => $name ?? $username,
-                    "customProperties" => [
-                        "username" => $username,
-                        "name" => $name,
-                        "is_unschedulable" => in_array($username, $unschedulables),
-                        "is_admin" => in_array($username, $admins)
-                    ]
+                    "username" => $username,
+                    "name" => $name ?? $username,
+                    "is_unschedulable" => in_array($username, $unschedulables),
+                    "is_admin" => in_array($username, $admins),
+                    "is_local" => in_array($username, $localProviders)
                 ];
             }
         }
@@ -223,11 +222,9 @@ class Scheduling extends AbstractExternalModule
                     $result["$pid:$record_id"] = [
                         "value" => $record_id,
                         "label" => $name ?? $record_id,
-                        "customProperties" => [
-                            "location" => $loc,
-                            "name" => $name,
-                            "record_id" => $record_id
-                        ]
+                        "location" => $loc,
+                        "name" => $name,
+                        "record_id" => $record_id
                     ];
                 }
             }
@@ -243,11 +240,9 @@ class Scheduling extends AbstractExternalModule
                 $result[$record_id] = [
                     "value" => $record_id,
                     "label" => $name ?? $record_id,
-                    "customProperties" => [
-                        "location" => $loc,
-                        "name" => $name,
-                        "record_id" => $record_id
-                    ]
+                    "location" => $loc,
+                    "name" => $name,
+                    "record_id" => $record_id
                 ];
             }
         }
@@ -318,6 +313,7 @@ class Scheduling extends AbstractExternalModule
         $visits = [];
         for ($i = 0; $i < count($values[0]); $i++) {
             $tmp = array_combine(array_values($names), array_column($values, $i));
+            $tmp["value"] = $tmp["code"];
             $visits[$tmp["code"]] = $tmp;
         }
 

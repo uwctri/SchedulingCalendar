@@ -25,6 +25,16 @@ class API {
         "expire": null,
         "interval": 30
     }
+    static _visits = {
+        "data": null,
+        "expire": null,
+        "interval": 30
+    }
+    static _subjects = {
+        "data": null,
+        "expire": null,
+        "interval": 5
+    }
 
     static timestamp() { return DateTime.now().toISO() }
     static futureTimestamp(minutes) { return DateTime.now().plus({ "minutes": minutes }).toISO() }
@@ -91,7 +101,16 @@ class API {
             "providers": providers,
         }
 
+        // Request was sent too recently
+        if (API._subjects.expire && API._subjects.expire > API.timestamp()) {
+            if (API._subjects.data)
+                return API._subjects.data
+            return Promise.reject(throttle_msg)
+        }
+
         const result = await API.post(data)
+        API._subjects.data = result
+        API._subjects.expire = API.futureTimestamp(API._subjects.interval)
         return result
     }
 
@@ -122,7 +141,17 @@ class API {
             "resource": Resource.Visit
         }
 
-        return await API.post(data)
+        // Request was sent too recently
+        if (API._visits.expire && API._visits.expire > API.timestamp()) {
+            if (API._visits.data)
+                return API._visits.data
+            return Promise.reject(throttle_msg)
+        }
+
+        const result = await API.post(data)
+        API._visits.data = result
+        API._visits.expire = API.futureTimestamp(API._visits.interval)
+        return result
     }
 
     static async getAvailability(payload) {

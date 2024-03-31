@@ -49,7 +49,7 @@ export const buildProviderDropdown = (el, stillOpenFn) => {
         API.providers().then(providers => {
             if (!stillOpenFn()) return
             for (const k in providers) {
-                if (providers[k].is_unschedulable)
+                if (providers[k].is_unschedulable || providers[k].is_local)
                     continue
                 let option = document.createElement("option")
                 option.value = providers[k].value
@@ -58,4 +58,30 @@ export const buildProviderDropdown = (el, stillOpenFn) => {
             }
         })
     }
+}
+
+export const buildVisitDropdown = (el, stillOpenFn) => {
+    API.visits().then(visitData => {
+        if (!stillOpenFn()) return
+        const select = document.getElementById(el)
+        for (const k in visitData) {
+            let option = document.createElement("option")
+            option.value = visitData[k].value
+            option.text = visitData[k].label
+            select.add(option)
+        }
+    })
+}
+
+export const buildSubjectDropdown = (el, stillOpenFn) => {
+    API.subjects().then(subjectData => {
+        if (!stillOpenFn()) return
+        const select = document.getElementById(el)
+        for (const k in subjectData) {
+            let option = document.createElement("option")
+            option.value = subjectData[k].value
+            option.text = subjectData[k].label
+            select.add(option)
+        }
+    })
 }
