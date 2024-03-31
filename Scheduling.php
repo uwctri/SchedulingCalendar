@@ -708,6 +708,7 @@ class Scheduling extends AbstractExternalModule
         }
         if (isset($payload["id"])) {
             return $this->deleteEntry($payload);
+            // TODO restore the old availability
         }
     }
 

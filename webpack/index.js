@@ -118,8 +118,12 @@ calendar = new Calendar(document.getElementById("calendar"), {
     },
     eventDidMount: (arg) => {
         arg.el.setAttribute('data-internal-id', arg.event.extendedProps.internal_id)
-        if (["singleMonth", "singleWeek"].includes(calendar.view.type) && pageURL.type == "edit") {
-            ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
+        if (["singleDay", "singleWeek"].includes(calendar.view.type)) {
+            if (pageURL.type == "edit") {
+                ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
+            } else if (pageURL.type == "schedule") {
+                ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
+            }
         }
     },
     unselect: function (jsEvent, view) {

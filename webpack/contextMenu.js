@@ -35,6 +35,32 @@ class ContextMenu {
         },
     }]
 
+    static appointmentMenu = [
+        {
+            label: "Delete Appointment",
+            action(o) {
+                o.target.remove()
+                API.deleteAppointments({
+                    "id": o.target.getAttribute('data-internal-id')
+                }).then((data) => {
+                    calendar.refetchEvents()
+                })
+            },
+        },
+        {
+            label: "Change Provider",
+            action(o) {
+                console.log(o) // TODO
+            },
+        },
+        {
+            label: "Change Location",
+            action(o) {
+                console.log(o) // TODO
+            },
+        },
+    ]
+
     static closeAll() {
         document.querySelectorAll('.context-menu').forEach(menu => menu.remove())
     }
