@@ -26,9 +26,10 @@ class ContextMenu {
     static availabilityMenu = [{
         label: "Delete Availability",
         action(o) {
+            const id = o.target.getAttribute('data-internal-id')
             o.target.remove()
             API.deleteAvailability({
-                "id": o.target.getAttribute('data-internal-id')
+                id: id
             }).then((data) => {
                 calendar.refetchEvents()
             })
@@ -39,9 +40,10 @@ class ContextMenu {
         {
             label: "Delete Appointment",
             action(o) {
+                const id = o.target.getAttribute('data-internal-id')
                 o.target.remove()
                 API.deleteAppointments({
-                    "id": o.target.getAttribute('data-internal-id')
+                    id: id
                 }).then((data) => {
                     calendar.refetchEvents()
                 })
@@ -50,13 +52,27 @@ class ContextMenu {
         {
             label: "Change Provider",
             action(o) {
-                console.log(o) // TODO
+                const id = o.target.getAttribute('data-internal-id')
+                const fcEvent = calendar.getEventById(id)
+                // TODO get the new provider
+                API.updateAppointments({
+                    id: id,
+                    providers: fcEvent.extendedProps.user,
+                    locations: fcEvent.extendedProps.location,
+                })
             },
         },
         {
             label: "Change Location",
             action(o) {
-                console.log(o) // TODO
+                const id = o.target.getAttribute('data-internal-id')
+                const fcEvent = calendar.getEventById(id)
+                // TODO get the new location
+                API.updateAppointments({
+                    id: id,
+                    providers: fcEvent.extendedProps.user,
+                    locations: fcEvent.extendedProps.location,
+                })
             },
         },
     ]

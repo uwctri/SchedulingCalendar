@@ -207,8 +207,9 @@ calendar = new Calendar(document.getElementById("calendar"), {
         const commonProcessing = (calEvent) => {
             // Copy all non-standard fields to extendedProps
             // Assign unique colors to each provider
+            calEvent["id"] = calEvent["internal_id"]
             for (const [key, value] of Object.entries(calEvent)) {
-                if (!["start", "end", "title"].includes(key)) {
+                if (!["id", "start", "end", "title"].includes(key)) {
                     calEvent.extendedProps = calEvent.extendedProps || {}
                     calEvent.extendedProps[key] = value
                 }
