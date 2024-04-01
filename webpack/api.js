@@ -10,30 +10,37 @@ class API {
     static _time_fields = ["start", "end"];
 
     // Cache and throttle these gets
-    static _availabilityCodes = {
-        "data": null,
-        "expire": null,
-        "interval": 30
-    }
-    static _providers = {
-        "data": null,
-        "expire": null,
-        "interval": 30
-    }
-    static _locations = {
-        "data": null,
-        "expire": null,
-        "interval": 30
-    }
-    static _visits = {
-        "data": null,
-        "expire": null,
-        "interval": 30
-    }
-    static _subjects = {
-        "data": null,
-        "expire": null,
-        "interval": 5
+    static cache = {
+        availabilityCodes: {
+            data: null,
+            expire: null,
+            promise: null,
+            interval: 999
+        },
+        providers: {
+            data: null,
+            expire: null,
+            promise: null,
+            interval: 999
+        },
+        locations: {
+            data: null,
+            expire: null,
+            promise: null,
+            interval: 999
+        },
+        visits: {
+            data: null,
+            expire: null,
+            promise: null,
+            interval: 999
+        },
+        subjects: {
+            data: null,
+            expire: null,
+            promise: null,
+            interval: 5
+        }
     }
 
     static timestamp() { return DateTime.now().toISO() }
@@ -47,6 +54,15 @@ class API {
         throw Error(req_msg)
     }
 
+    static async updateCache(promise, cacheObj) {
+        cacheObj.promise = promise
+        const result = await promise
+        cacheObj.promise = null
+        cacheObj.data = result
+        cacheObj.expire = API.futureTimestamp(cacheObj.interval)
+        return result
+    }
+
     static async availabilityCodes(payload) {
 
         const data = {
@@ -57,17 +73,14 @@ class API {
 
         API.requiredKeys(data, ["all_availability"])
 
-        // Request was sent too recently
-        if (API._availabilityCodes.expire && API._availabilityCodes.expire > API.timestamp()) {
-            if (API._availabilityCodes.data)
-                return API._availabilityCodes.data
-            return Promise.reject(throttle_msg)
-        }
-
-        const result = await API.post(data)
-        API._availabilityCodes.data = result
-        API._availabilityCodes.expire = API.futureTimestamp(API._availabilityCodes.interval)
-        return result
+        // Throttle, return cache, or store to cache
+        const cache = API.cache.availabilityCodes
+        if (cache.expire && cache.expire > API.timestamp())
+            return cache.data
+        if (cache.promise)
+            return cache.promise
+        const promise = API.post(data)
+        return await API.updateCache(promise, cache)
     }
 
     static async providers() {
@@ -77,17 +90,14 @@ class API {
             "resource": Resource.Provider,
         }
 
-        // Request was sent too recently
-        if (API._providers.expire && API._providers.expire > API.timestamp()) {
-            if (API._providers.data)
-                return API._providers.data
-            return Promise.reject(throttle_msg)
-        }
-
-        const result = await API.post(data)
-        API._providers.data = result
-        API._providers.expire = API.futureTimestamp(API._providers.interval)
-        return result
+        // Throttle, return cache, or store to cache
+        const cache = API.cache.providers
+        if (cache.expire && cache.expire > API.timestamp())
+            return cache.data
+        if (cache.promise)
+            return cache.promise
+        const promise = API.post(data)
+        return await API.updateCache(promise, cache)
     }
 
     static async subjects(providers = []) {
@@ -101,17 +111,14 @@ class API {
             "providers": providers,
         }
 
-        // Request was sent too recently
-        if (API._subjects.expire && API._subjects.expire > API.timestamp()) {
-            if (API._subjects.data)
-                return API._subjects.data
-            return Promise.reject(throttle_msg)
-        }
-
-        const result = await API.post(data)
-        API._subjects.data = result
-        API._subjects.expire = API.futureTimestamp(API._subjects.interval)
-        return result
+        // Throttle, return cache, or store to cache
+        const cache = API.cache.subjects
+        if (cache.expire && cache.expire > API.timestamp())
+            return cache.data
+        if (cache.promise)
+            return cache.promise
+        const promise = API.post(data)
+        return await API.updateCache(promise, cache)
     }
 
     static async locations() {
@@ -121,17 +128,14 @@ class API {
             "resource": Resource.Location
         }
 
-        // Request was sent too recently
-        if (API._locations.expire && API._locations.expire > API.timestamp()) {
-            if (API._locations.data)
-                return API._locations.data
-            return Promise.reject(throttle_msg)
-        }
-
-        const result = await API.post(data)
-        API._locations.data = result
-        API._locations.expire = API.futureTimestamp(API._locations.interval)
-        return result
+        // Throttle, return cache, or store to cache
+        const cache = API.cache.locations
+        if (cache.expire && cache.expire > API.timestamp())
+            return cache.data
+        if (cache.promise)
+            return cache.promise
+        const promise = API.post(data)
+        return await API.updateCache(promise, cache)
     }
 
     static async visits() {
@@ -141,17 +145,14 @@ class API {
             "resource": Resource.Visit
         }
 
-        // Request was sent too recently
-        if (API._visits.expire && API._visits.expire > API.timestamp()) {
-            if (API._visits.data)
-                return API._visits.data
-            return Promise.reject(throttle_msg)
-        }
-
-        const result = await API.post(data)
-        API._visits.data = result
-        API._visits.expire = API.futureTimestamp(API._visits.interval)
-        return result
+        // Throttle, return cache, or store to cache
+        const cache = API.cache.visits
+        if (cache.expire && cache.expire > API.timestamp())
+            return cache.data
+        if (cache.promise)
+            return cache.promise
+        const promise = API.post(data)
+        return await API.updateCache(promise, cache)
     }
 
     static async getAvailability(payload) {
