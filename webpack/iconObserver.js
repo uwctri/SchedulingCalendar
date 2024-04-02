@@ -2,21 +2,17 @@
 // when FC loads Font Awesome
 
 new MutationObserver((mutations) => {
-    let brokenGear = document.querySelector("span.fc-icon-fa-gear")
-    let brokenSearch = document.querySelector("span.fc-icon-fa-magnifying-glass")
-    if (!brokenGear && !brokenSearch) return
-    if (!brokenGear.parentNode.querySelector(".fa-gear")) {
-        let el = document.createElement("i")
-        el.classList = "fa-solid fa-gear"
-        brokenGear.parentNode.replaceChild(el, brokenGear)
-    }
-    if (!brokenSearch.parentNode.querySelector(".fa-magnifying-glass")) {
-        let el = document.createElement("i")
-        el.classList = "fa-solid fa-magnifying-glass"
-        brokenSearch.parentNode.replaceChild(el, brokenSearch)
-    }
-    brokenSearch.remove()
-    brokenGear.remove()
+    Array.from(document.querySelectorAll(".fc-header-toolbar span.fc-icon")).forEach((el, index) => {
+        if ([0, 1].includes(index)) // Skip page back and page forward arrows
+            return
+        const className = el.classList[1].replace("fc-icon-", "")
+        document.querySelector(`.${className}`)?.remove()
+        let newEl = document.createElement("i")
+        newEl.classList = `fa-solid ${className}`
+        newEl.replaceWith(el)
+        el.parentNode.replaceChild(newEl, el)
+        el.remove()
+    });
 }).observe(document.getElementById("calendar"), {
     attributes: true,
     childList: true,

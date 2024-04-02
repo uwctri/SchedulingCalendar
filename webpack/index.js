@@ -39,22 +39,34 @@ const accessableColors = [
 
 // Load user config and FC toolbar
 const pageURL = Object.fromEntries(new URLSearchParams(location.search))
+pageURL.type = pageURL.type || "edit"// TODO default to schedule
 const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
-let topRightToolbar = ["search", "singleMonth,singleWeek,singleDay"]
-let topLeftToolbar = ["prev,next", "today", "config"]
-let bottomRightToolbar = [];
-if (!pageURL.type)
-    pageURL.type = "edit"// TODO default to schedule
-if (["schedule", "my"].includes(pageURL.type))
-    topRightToolbar[1] = `agenda,${topRightToolbar[1]}`
-if (pageURL.type == "edit")
-    topLeftToolbar.push("bulk")
-if (pageURL.refer)
-    bottomRightToolbar = ["refer"]
+const toolbars = {
+    edit: {
+        topRight: ["search", "singleMonth,singleWeek,singleDay"],
+        topLeft: ["prev,next", "today", "config", "bulk"],
+        bottomRight: []
+    },
+    schedule: {
+        topRight: ["search", "agenda,singleMonth,singleWeek,singleDay"],
+        topLeft: ["prev,next", "today", "config", "availability"],
+        bottomRight: []
+    },
+    my: {
+        topRight: ["search", "agenda,singleMonth,singleWeek,singleDay"],
+        topLeft: ["prev,next", "today", "config"],
+        bottomRight: []
+    }
+}[pageURL.type]
 
+if (pageURL.refer)
+    toolbars.bottomRight = ["refer"]
+
+// Highlight the current page
 document.getElementsByClassName(`type-${pageURL.type}`)[0].classList.add('active')
 
 // Init the calendar
+let showAvailability = true;
 calendar = new Calendar(document.getElementById("calendar"), {
     plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
     customButtons: {
@@ -73,15 +85,24 @@ calendar = new Calendar(document.getElementById("calendar"), {
         bulk: {
             text: "Bulk Edit",
             click: BulkEdit.open
+        },
+        availability: {
+            icon: "fa-eye",
+            click: () => {
+                const o = showAvailability ? ["fa-eye", "fa-eye-slash"] : ["fa-eye-slash", "fa-eye"]
+                showAvailability = !showAvailability
+                document.querySelector(".fc-availability-button ." + o[0]).classList.replace(o[0], o[1])
+                calendar.refetchEvents()
+            }
         }
     },
     headerToolbar: {
-        left: topLeftToolbar.join(" "),
+        left: toolbars.topLeft.join(" "),
         center: "title",
-        right: topRightToolbar.join(" ")
+        right: toolbars.topRight.join(" ")
     },
     footerToolbar: {
-        right: bottomRightToolbar.join(" ")
+        right: toolbars.bottomRight.join(" ")
     },
     slotDuration: `00:${slotSize}:00`,
     navLinks: true,
@@ -221,7 +242,7 @@ calendar = new Calendar(document.getElementById("calendar"), {
             return calEvent
         }
 
-        let availabilityPromise = ["schedule", "edit"].includes(pageURL.type) ? API.getAvailability({ ...paramsCommon, ...paramsAvailability }) : Promise.resolve([])
+        let availabilityPromise = ["schedule", "edit"].includes(pageURL.type) && showAvailability ? API.getAvailability({ ...paramsCommon, ...paramsAvailability }) : Promise.resolve([])
         let appointmentPromise = ["schedule", "my"].includes(pageURL.type) ? API.getAppointments({ ...paramsCommon, ...paramsAppointment }) : Promise.resolve([])
 
         Promise.all([availabilityPromise, appointmentPromise]).then(([availabilityData, appointmentData]) => {
