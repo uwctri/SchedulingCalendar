@@ -6,7 +6,7 @@ module.exports = {
     devtool: "inline-source-map",
     plugins: [new MiniCssExtractPlugin({ filename: 'style.css' })],
     entry: {
-        "calendar": "./index.js",
+        "index": "./index.js",
     },
     module: {
         rules: [

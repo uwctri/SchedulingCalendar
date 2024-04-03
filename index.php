@@ -4,12 +4,11 @@ $module->tt_transferToJavascriptModuleObject();
 $index = $module->getUrl('index.php');
 ?>
 <script>
-    let calendar; // global FullCalendar object
     const router = "<?= $module->getUrl('router.php'); ?>"
     const user = <?= json_encode($module->currentUser()); ?>
 </script>
 <link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
-<script src="<?= $module->getUrl('calendar.js'); ?>" defer></script>
+<script src="<?= $module->getUrl('index.js'); ?>" defer></script>
 
 <div class="projhdr">
     <i class="fas fa-calendar"></i> <?= $module->tt('module_name'); ?>

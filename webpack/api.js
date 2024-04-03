@@ -1,5 +1,5 @@
 import { CRUD, Resource } from "./enums"
-import Loading from "./loading";
+import Calendar from "./calendar";
 import RedCap from "./redcap";
 import { DateTime } from "luxon"
 
@@ -273,7 +273,7 @@ class API {
         }
 
         console.log(data)
-        Loading.show()
+        Calendar.showLoading()
         await fetch(router, {
             method: 'POST',
             body: API.toFormData(data)
@@ -284,7 +284,7 @@ class API {
             return Promise.reject(response)
         }).then((data) => {
             result = data
-            Loading.hide()
+            Calendar.hideLoading()
             console.log(data)
         }).catch((error) => {
             console.warn('Something went wrong in API.js', error, data)

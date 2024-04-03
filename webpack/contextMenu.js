@@ -21,6 +21,10 @@
 // ])
 
 import API from './api.js'
+import Swal from 'sweetalert2'
+import Calendar from './calendar';
+
+const rcBtnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
 class ContextMenu {
 
     static availabilityMenu = [{
@@ -31,7 +35,7 @@ class ContextMenu {
             API.deleteAvailability({
                 id: id
             }).then((data) => {
-                calendar.refetchEvents()
+                Calendar.refetchEvents()
             })
         },
     }]
@@ -45,7 +49,7 @@ class ContextMenu {
                 API.deleteAppointments({
                     id: id
                 }).then((data) => {
-                    calendar.refetchEvents()
+                    Calendar.refetchEvents()
                 })
             },
         },
@@ -54,11 +58,18 @@ class ContextMenu {
             action(o) {
                 const id = o.target.getAttribute('data-internal-id')
                 const fcEvent = calendar.getEventById(id)
-                // TODO get the new provider
-                API.updateAppointments({
-                    id: id,
-                    providers: fcEvent.extendedProps.user,
-                    locations: fcEvent.extendedProps.location,
+                Swal.fire({
+                    title: "Change Provider", // TODO collect new provider
+                    confirmButtonColor: rcBtnColor,
+                    confirmButtonText: "Save",
+                }).then((result) => {
+                    // Bail if save wasn't clicked
+                    if (!result.isConfirmed) return
+                    API.updateAppointments({
+                        id: id,
+                        providers: fcEvent.extendedProps.user,
+                        locations: fcEvent.extendedProps.location,
+                    })
                 })
             },
         },

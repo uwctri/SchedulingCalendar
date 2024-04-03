@@ -4,6 +4,7 @@ import API from "./api"
 import RedCap from "./redcap"
 import html_availability from "./html/availability_popup.html"
 import html_appointment from "./html/appointment_popup.html"
+import Calendar from './calendar';
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils";
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
@@ -76,7 +77,7 @@ class PopOver {
                     "start": start,
                     "end": end,
                 }).then(data => {
-                    calendar.refetchEvents()
+                    Calendar.refetchEvents()
                 })
             } else if (page == "schedule") {
                 API.setAppointments({
@@ -87,7 +88,7 @@ class PopOver {
                     "start": start,
                     "end": end,
                 }).then(data => {
-                    calendar.refetchEvents()
+                    Calendar.refetchEvents()
                 })
             }
 

@@ -4,6 +4,7 @@ import API from "./api"
 import { DateTime } from 'luxon';
 import { CRUD, Resource } from "./enums"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils"
+import Calendar from './calendar';
 import Litepicker from 'litepicker';
 import PopOver from "./popover"
 
@@ -67,7 +68,7 @@ class BulkEdit {
                     "resource": Resource.Availability,
                     "bundle": bundle
                 }).then(data => {
-                    calendar.refetchEvents()
+                    Calendar.refetchEvents()
                 })
 
                 BulkEdit.savingAnimation(btnEl)
@@ -88,7 +89,7 @@ class BulkEdit {
                     "start": `${o.startDay.toFormat('yyyy-MM-dd')}T${o.start}:00`,
                     "end": `${o.endDay.toFormat('yyyy-MM-dd')}T${o.end}:00`,
                 }).then(data => {
-                    calendar.refetchEvents()
+                    Calendar.refetchEvents()
                 })
 
                 BulkEdit.savingAnimation(btnEl)

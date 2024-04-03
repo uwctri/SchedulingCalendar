@@ -1,25 +1,7 @@
 import Choices from "choices.js"
 import API from "./api"
 import UserConfig from "./userConfig"
-
-let testEvents = [
-    {
-        value: "eventa",
-        label: 'Event A',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    },
-    {
-        value: "eventb",
-        label: 'Event B',
-        customProperties: {
-            description: 'Custom description about child six',
-            random: 'Another random custom property',
-        }
-    },
-]
+import Calendar from './calendar';
 
 const centerClassName = "fc-toolbar-chunk"
 const titleClassName = "fc-toolbar-title"
@@ -42,7 +24,7 @@ class SearchBar {
         }
 
         const changeEvent = (event) => {
-            calendar.refetchEvents()
+            Calendar.refetchEvents()
             const count = document.querySelector(choicesSelector).childElementCount
             const text = count > 0 ? "" : placeholder
             const el = document.querySelector(`.${centerClassName} input`)
