@@ -9,12 +9,13 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
 * Agenda view looks bad
 
-## Larger projects
+### Larger projects
 
 * Filter all dropdowns for Provider(done) , Visit(Sched pop), Subject(Sched pop), Location(both pops, bar)
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Right side subject summary
 * Right click on "my cal" event to go to the correct project
+* Add docs to config.json
 
 ### Questions
 
@@ -23,11 +24,13 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs (Is this still an issue?)
 * The My Calendar page will be difficult to set up as we need to pull appts from all projects. My PHP assumes the current PID.
 
-### Docs
+### DET Integration
 
-* Location Structure
-* DET Post messages
-* More explinations in config.json. Especially for events.
+TODO
+
+### Location Settings Structure
+
+TODO
 
 ## Running locally
 
