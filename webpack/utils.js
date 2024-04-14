@@ -1,5 +1,6 @@
 import API from "./api"
 import UserConfig from "./userConfig"
+import RedCap from "./redcap"
 
 export const buildGroupDropdown = (el, stillOpenFn) => {
     API.availabilityCodes({
@@ -39,10 +40,10 @@ export const buildLocationDropdown = (el, stillOpenFn) => {
 
 export const buildProviderDropdown = (el, stillOpenFn) => {
     const select = document.getElementById(el)
-    if (!user.isCalendarAdmin) {
+    if (!RedCap.user.isCalendarAdmin) {
         let option = document.createElement("option")
-        option.value = user.username
-        option.text = user.name
+        option.value = RedCap.user.username
+        option.text = RedCap.user.name
         option.selected = true
         select.add(option)
     } else {

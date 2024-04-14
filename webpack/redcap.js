@@ -3,6 +3,9 @@
 
 class RedCap {
 
+    static router = ExternalModules.UWMadison.Scheduling?.router
+    static user = ExternalModules.UWMadison.Scheduling?.user
+
     static tt = ExternalModules.UWMadison.Scheduling?.tt // Redcap EM translate func
     static csrf = get_csrf_token // Redcap function
     static popover = (target, obj) => jQuery(target).popover(obj) // popper.js ships with Bootstrap as a jQuery plugin

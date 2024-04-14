@@ -273,7 +273,7 @@ class API {
 
         console.log(data)
         Calendar.showLoading()
-        await fetch(router, {
+        await fetch(RedCap.router, {
             method: 'POST',
             body: API.toFormData(data)
         }).then((response) => {

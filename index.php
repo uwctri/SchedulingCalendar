@@ -4,8 +4,8 @@ $module->tt_transferToJavascriptModuleObject();
 $index = $module->getUrl('index.php');
 ?>
 <script>
-    const router = "<?= $module->getUrl('router.php'); ?>"
-    const user = <?= json_encode($module->currentUser()); ?>
+    <?= $module->getJavascriptModuleObjectName(); ?>.router = "<?= $module->getUrl('router.php'); ?>"
+    <?= $module->getJavascriptModuleObjectName(); ?>.user = <?= json_encode($module->currentUser()); ?>
 </script>
 <link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
 <script src="<?= $module->getUrl('index.js'); ?>" defer></script>
