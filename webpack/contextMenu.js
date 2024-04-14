@@ -69,11 +69,12 @@ class ContextMenu {
         },
     ]
 
-    // TODO Modifications don't 
     static modifyModal(el, str) {
         const id = el.target.getAttribute('data-internal-id')
         const fcEvent = Calendar.getEvent(id)
         const title = str[0].toUpperCase() + str.slice(1)
+        let modalUser = null
+        let modalLoc = null
         Swal.fire({
             title: `Change ${title}`,
             html: html,
@@ -83,21 +84,20 @@ class ContextMenu {
                 document.getElementById(`aPop${title}`).classList.remove('hidden')
                 buildProviderDropdown("aPopProvider", Swal.isVisible)
                 buildLocationDropdown("aPopLocation", Swal.isVisible)
+            },
+            preConfirm: () => {
+                modalUser = document.getElementById("aPopProvider").value
+                modalLoc = document.getElementById("aPopLocation").value
             }
         }).then((result) => {
             // Bail if save wasn't clicked
             if (!result.isConfirmed) return
-            let user = fcEvent.extendedProps.user
-            let loc = fcEvent.extendedProps.location
-            if (str == "provider") {
-                user = fcEvent.extendedProps.user
-            } else if (str == "location") {
-                loc = fcEvent.extendedProps.location
-            }
             API.updateAppointments({
                 id: id,
-                providers: user,
-                locations: loc,
+                providers: modalUser || fcEvent.extendedProps.user,
+                locations: modalLoc || fcEvent.extendedProps.location,
+            }).then(data => {
+                Calendar.refresh() // TODO it would be nice to have a saving animation
             })
         })
     }
