@@ -27,6 +27,7 @@ import html from './html/modify_appointment_popup.html'
 import { buildLocationDropdown, buildProviderDropdown } from "./utils";
 
 const rcBtnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
+const loadingDots = `<div class="loading-dots"></div>`
 class ContextMenu {
 
     static availabilityMenu = [{
@@ -86,19 +87,22 @@ class ContextMenu {
                 buildLocationDropdown("aPopLocation", Swal.isVisible)
             },
             preConfirm: () => {
+                const btnEl = "swal2-confirm"
                 modalUser = document.getElementById("aPopProvider").value
                 modalLoc = document.getElementById("aPopLocation").value
+
+                API.updateAppointments({
+                    id: id,
+                    providers: modalUser || fcEvent.extendedProps.user,
+                    locations: modalLoc || fcEvent.extendedProps.location,
+                }).then(data => {
+                    Calendar.refresh()
+                })
+
+                ContextMenu.savingAnimation(btnEl)
+                setTimeout(Swal.close, 2000)
+                return false
             }
-        }).then((result) => {
-            // Bail if save wasn't clicked
-            if (!result.isConfirmed) return
-            API.updateAppointments({
-                id: id,
-                providers: modalUser || fcEvent.extendedProps.user,
-                locations: modalLoc || fcEvent.extendedProps.location,
-            }).then(data => {
-                Calendar.refresh() // TODO it would be nice to have a saving animation
-            })
         })
     }
 
@@ -178,6 +182,12 @@ class ContextMenu {
         }
 
         el.addEventListener('contextmenu', (jsEvent) => showMenu(el, jsEvent, options))
+    }
+
+    static savingAnimation(el) {
+        el = document.getElementsByClassName(el)[0]
+        el.style.width = getComputedStyle(el).width
+        el.innerHTML = loadingDots
     }
 }
 
