@@ -5,7 +5,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Add a notes option to the sched popup
 * Remove all future data for withdrawn subject
-* Right click to edit/delete an appointment (not functional yet)
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
 * Agenda view looks bad
 

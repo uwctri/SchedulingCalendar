@@ -698,6 +698,9 @@ class Scheduling extends AbstractExternalModule
             [$provider, $location, $id]
         );
 
+        // TODO should we update availability or make sure that the provider is available?
+        // TOOD probably have a checkbox for override.
+
         return [];
     }
 

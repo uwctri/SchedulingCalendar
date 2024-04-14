@@ -61,6 +61,7 @@ class Calendar {
     static refresh = () => { Calendar._fc.refetchEvents() }
     static render = () => { Calendar._fc.render() }
     static getView = () => { return Calendar._fc.view.type }
+    static getEvent = (id) => { return Calendar._fc.getEventById(id) }
 
     static showLoading() {
         document.getElementById("loader").classList.remove("d-none")

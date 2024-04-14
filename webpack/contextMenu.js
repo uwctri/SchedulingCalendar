@@ -23,6 +23,8 @@
 import API from './api.js'
 import Swal from 'sweetalert2'
 import Calendar from './calendar';
+import html from './html/modify_appointment_popup.html'
+import { buildLocationDropdown, buildProviderDropdown } from "./utils";
 
 const rcBtnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
 class ContextMenu {
@@ -55,38 +57,50 @@ class ContextMenu {
         },
         {
             label: "Change Provider",
-            action(o) {
-                const id = o.target.getAttribute('data-internal-id')
-                const fcEvent = calendar.getEventById(id)
-                Swal.fire({
-                    title: "Change Provider", // TODO collect new provider
-                    confirmButtonColor: rcBtnColor,
-                    confirmButtonText: "Save",
-                }).then((result) => {
-                    // Bail if save wasn't clicked
-                    if (!result.isConfirmed) return
-                    API.updateAppointments({
-                        id: id,
-                        providers: fcEvent.extendedProps.user,
-                        locations: fcEvent.extendedProps.location,
-                    })
-                })
+            action(el) {
+                ContextMenu.modifyModal(el, "provider")
             },
         },
         {
             label: "Change Location",
-            action(o) {
-                const id = o.target.getAttribute('data-internal-id')
-                const fcEvent = calendar.getEventById(id)
-                // TODO get the new location
-                API.updateAppointments({
-                    id: id,
-                    providers: fcEvent.extendedProps.user,
-                    locations: fcEvent.extendedProps.location,
-                })
+            action(el) {
+                ContextMenu.modifyModal(el, "location")
             },
         },
     ]
+
+    // TODO Modifications don't 
+    static modifyModal(el, str) {
+        const id = el.target.getAttribute('data-internal-id')
+        const fcEvent = Calendar.getEvent(id)
+        const title = str[0].toUpperCase() + str.slice(1)
+        Swal.fire({
+            title: `Change ${title}`,
+            html: html,
+            confirmButtonColor: rcBtnColor,
+            confirmButtonText: "Update",
+            didOpen: () => {
+                document.getElementById(`aPop${title}`).classList.remove('hidden')
+                buildProviderDropdown("aPopProvider", Swal.isVisible)
+                buildLocationDropdown("aPopLocation", Swal.isVisible)
+            }
+        }).then((result) => {
+            // Bail if save wasn't clicked
+            if (!result.isConfirmed) return
+            let user = fcEvent.extendedProps.user
+            let loc = fcEvent.extendedProps.location
+            if (str == "provider") {
+                user = fcEvent.extendedProps.user
+            } else if (str == "location") {
+                loc = fcEvent.extendedProps.location
+            }
+            API.updateAppointments({
+                id: id,
+                providers: user,
+                locations: loc,
+            })
+        })
+    }
 
     static closeAll() {
         document.querySelectorAll('.context-menu').forEach(menu => menu.remove())
