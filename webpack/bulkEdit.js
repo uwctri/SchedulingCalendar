@@ -68,7 +68,7 @@ class BulkEdit {
                     "resource": Resource.Availability,
                     "bundle": bundle
                 }).then(data => {
-                    Calendar.refetchEvents()
+                    Calendar.refresh()
                 })
 
                 BulkEdit.savingAnimation(btnEl)
@@ -89,7 +89,7 @@ class BulkEdit {
                     "start": `${o.startDay.toFormat('yyyy-MM-dd')}T${o.start}:00`,
                     "end": `${o.endDay.toFormat('yyyy-MM-dd')}T${o.end}:00`,
                 }).then(data => {
-                    Calendar.refetchEvents()
+                    Calendar.refresh()
                 })
 
                 BulkEdit.savingAnimation(btnEl)

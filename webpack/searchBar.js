@@ -2,6 +2,7 @@ import Choices from "choices.js"
 import API from "./api"
 import UserConfig from "./userConfig"
 import Calendar from './calendar';
+import Page from "./page"
 
 const centerClassName = "fc-toolbar-chunk"
 const titleClassName = "fc-toolbar-title"
@@ -24,7 +25,7 @@ class SearchBar {
         }
 
         const changeEvent = (event) => {
-            Calendar.refetchEvents()
+            Calendar.refresh()
             const count = document.querySelector(choicesSelector).childElementCount
             const text = count > 0 ? "" : placeholder
             const el = document.querySelector(`.${centerClassName} input`)
@@ -152,8 +153,7 @@ class SearchBar {
 
     static filterProviders(providers) {
         providers = SearchBar.formatCustomProps(providers)
-        const page = new URLSearchParams(location.search).get('type')
-        const allProviders = !UserConfig.get().limitAvailability && (page == 'edit')
+        const allProviders = !UserConfig.get().limitAvailability && (Page.type == 'edit')
         providers = providers.filter((provider) => provider.customProperties.is_local || allProviders)
         return providers
     }

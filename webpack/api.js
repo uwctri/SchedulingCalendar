@@ -3,7 +3,6 @@ import Calendar from "./calendar";
 import RedCap from "./redcap";
 import { DateTime } from "luxon"
 
-const throttle_msg = "Throttled. Resource requested too recently."
 const req_msg = "Missing required keys in payload object for API call"
 class API {
 

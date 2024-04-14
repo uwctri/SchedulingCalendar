@@ -1,10 +1,11 @@
 import { DateTime } from "luxon"
-import IMask from "imask";
+import IMask from "imask"
 import API from "./api"
 import RedCap from "./redcap"
 import html_availability from "./html/availability_popup.html"
 import html_appointment from "./html/appointment_popup.html"
-import Calendar from './calendar';
+import Calendar from "./calendar"
+import Page from "./page"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils";
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
@@ -63,13 +64,12 @@ class PopOver {
             if (!PopOver.validate())
                 return
 
-            const page = new URLSearchParams(location.search).get('type')
             let start = DateTime.fromFormat(document.getElementById("aPopStartTime").value, "hh:mm a").toISOTime()
             start = PopOver._date.toISODate() + "T" + start
             let end = DateTime.fromFormat(document.getElementById("aPopEndTime").value, "hh:mm a").toISOTime()
             end = PopOver._date.toISODate() + "T" + end
 
-            if (page == "edit") {
+            if (Page.type == "edit") {
                 API.setAvailability({
                     "providers": document.getElementById("aPopProvider").value,
                     "locations": document.getElementById("aPopLocation").value,
@@ -77,9 +77,9 @@ class PopOver {
                     "start": start,
                     "end": end,
                 }).then(data => {
-                    Calendar.refetchEvents()
+                    Calendar.refresh()
                 })
-            } else if (page == "schedule") {
+            } else if (Page.type == "schedule") {
                 API.setAppointments({
                     "visits": document.getElementById("aPopVisit").value,
                     "providers": document.getElementById("aPopProvider").value,
@@ -88,7 +88,7 @@ class PopOver {
                     "start": start,
                     "end": end,
                 }).then(data => {
-                    Calendar.refetchEvents()
+                    Calendar.refresh()
                 })
             }
 

@@ -10,6 +10,7 @@ import ContextMenu from "./contextMenu"
 import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
 import API from "./api"
+import Page from "./page"
 
 class Calendar {
 
@@ -75,12 +76,9 @@ class Calendar {
 
     static init() {
 
-        const pageURL = Object.fromEntries(new URLSearchParams(location.search))
-        pageURL.type = pageURL.type || "edit"// TODO default to schedule
-
         // Modify toolbars
-        Calendar.toolbars = Calendar.toolbars[pageURL.type]
-        Calendar.toolbars.bottomRight = pageURL.refer ? ["refer"] : Calendar.toolbars.bottomRight
+        Calendar.toolbars = Calendar.toolbars[Page.type]
+        Calendar.toolbars.bottomRight = Page.refer ? ["refer"] : Calendar.toolbars.bottomRight
 
         // Grab user settings
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
@@ -98,7 +96,7 @@ class Calendar {
                 },
                 refer: {
                     text: "Return to Workflow",
-                    click: () => location.href = pageURL.refer
+                    click: () => location.href = Page.refer
                 },
                 bulk: {
                     text: "Bulk Edit",
@@ -130,7 +128,7 @@ class Calendar {
             slotMinTime: startTime,
             slotMaxTime: endTime,
             expandRows: expandRows,
-            selectable: pageURL.type != "my",
+            selectable: Page.type != "my",
             dateClick: (dateClickInfo) => {
                 if (dateClickInfo.view.type == "singleMonth") {
                     Calendar._fc.changeView("singleWeek")
@@ -139,9 +137,9 @@ class Calendar {
             },
             select: (selectionInfo) => {
                 if (["singleWeek", "singleDay"].includes(Calendar.getView())) {
-                    if (pageURL.type == "edit") {
+                    if (Page.type == "edit") {
                         PopOver.openAvailability(selectionInfo)
-                    } else if (pageURL.type == "schedule") {
+                    } else if (Page.type == "schedule") {
                         PopOver.openScheduleVisit(selectionInfo)
                     }
                 }
@@ -159,9 +157,9 @@ class Calendar {
                 const props = arg.event.extendedProps
                 arg.el.setAttribute('data-internal-id', props.internal_id)
                 if (["singleDay", "singleWeek"].includes(Calendar.getView())) {
-                    if (pageURL.type == "edit") {
+                    if (Page.type == "edit") {
                         ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
-                    } else if (pageURL.type == "schedule" && props.is_appointment) {
+                    } else if (Page.type == "schedule" && props.is_appointment) {
                         ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
                     }
                 }
@@ -222,7 +220,7 @@ class Calendar {
                         "schedule":
                             `${info.timeText}<br>${props.record_display}<br>${props.visit_display}<br>${props.user_display}<br>${props.location_display}`,
                     },
-                }[type][pageURL.type]
+                }[type][Page.type]
 
                 return { html: title }
             },
@@ -260,8 +258,8 @@ class Calendar {
                     return calEvent
                 }
 
-                let availabilityPromise = ["schedule", "edit"].includes(pageURL.type) && Calendar._showAvailability ? API.getAvailability({ ...paramsCommon, ...paramsAvailability }) : Promise.resolve([])
-                let appointmentPromise = ["schedule", "my"].includes(pageURL.type) ? API.getAppointments({ ...paramsCommon, ...paramsAppointment }) : Promise.resolve([])
+                let availabilityPromise = ["schedule", "edit"].includes(Page.type) && Calendar._showAvailability ? API.getAvailability({ ...paramsCommon, ...paramsAvailability }) : Promise.resolve([])
+                let appointmentPromise = ["schedule", "my"].includes(Page.type) ? API.getAppointments({ ...paramsCommon, ...paramsAppointment }) : Promise.resolve([])
 
                 Promise.all([availabilityPromise, appointmentPromise]).then(([availabilityData, appointmentData]) => {
                     let data = availabilityData.concat(appointmentData)
@@ -269,7 +267,7 @@ class Calendar {
                         event = commonProcessing(event)
 
                         // If on schedule page, send the availability to background
-                        if (pageURL.type == "schedule" && event.is_availability) {
+                        if (Page.type == "schedule" && event.is_availability) {
                             event.display = "background"
                         }
                     })

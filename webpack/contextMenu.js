@@ -35,7 +35,7 @@ class ContextMenu {
             API.deleteAvailability({
                 id: id
             }).then((data) => {
-                Calendar.refetchEvents()
+                Calendar.refresh()
             })
         },
     }]
@@ -49,7 +49,7 @@ class ContextMenu {
                 API.deleteAppointments({
                     id: id
                 }).then((data) => {
-                    Calendar.refetchEvents()
+                    Calendar.refresh()
                 })
             },
         },
