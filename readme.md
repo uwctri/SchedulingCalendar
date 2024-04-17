@@ -1,4 +1,8 @@
-Work in progress project. The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availaiblity. It is a re-write of an internal-only EM that we hope to make available via the Vanderbilt Redcap repo.
+# Recalculate - Scheduling Calendar
+
+## What does it do?
+
+Work in progress project. The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availaiblity. It is a re-write of an internal-only EM devolped for the UW Center for Tobacco Research and Intervention that we hope to make available via the Vanderbilt Redcap repo in the near future.
 
 ### Missing Features
 
@@ -6,7 +10,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Add a notes option to the sched popup
 * Remove all future data for withdrawn subject
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
-* Agenda view looks bad
 
 ### Larger projects
 
@@ -14,6 +17,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Right side subject summary
 * Right click on "my cal" event to go to the correct project
+* Clicking, in general, should take you somewhere for appts
 * Add docs to config.json
 
 ### Questions
@@ -31,20 +35,20 @@ TODO
 
 TODO
 
-## Running locally
+## Local Development & Build
 
 See this [Docker Compose](https://github.com/123andy/redcap-docker-compose) for starting a local Redcap instnace.
 
-If you don't have NPM install NVM and use it to setup the latest npm version.
+If you don't have NPM already then install [NVM](https://github.com/nvm-sh/nvm) and use it to setup the latest npm version.
 
-```
+```sh
 nvm install 21.7.0
 nvm use 21.7.0
 ```
 
-Setup the build
+Install and build
 
-```
+```sh
 cd webpack
 npm install
 npm run build

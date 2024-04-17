@@ -157,16 +157,13 @@ class Calendar {
             eventDidMount: (arg) => {
                 const props = arg.event.extendedProps
                 arg.el.setAttribute('data-internal-id', props.internal_id)
-                if (["singleDay", "singleWeek"].includes(Calendar.getView())) {
+                if (["singleDay", "singleWeek", "agenda"].includes(Calendar.getView())) {
                     if (Page.type == "edit") {
                         ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
                     } else if (Page.type == "schedule" && props.is_appointment) {
                         ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
                     }
                 }
-            },
-            unselect: function (jsEvent, view) {
-                // TODO close any open forms
             },
             loading: (isLoading) => {
                 Calendar[isLoading ? "showLoading" : "hideLoading"]()
@@ -222,6 +219,11 @@ class Calendar {
                             `${info.timeText}<br>${props.record_display}<br>${props.visit_display}<br>${props.user_display}<br>${props.location_display}`,
                     },
                 }[type][Page.type]
+
+                // Agenda view, change title
+                if (Calendar.getView() == "agenda") {
+                    title = `${props.record_display} - ${props.visit_display}<br>${props.user_display}<br>${props.location_display}`
+                }
 
                 return { html: title }
             },

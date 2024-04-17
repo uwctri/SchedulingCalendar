@@ -174,7 +174,6 @@ class Scheduling extends AbstractExternalModule
         return $providers;
     }
 
-
     /*
     Get all users in the redcap instance
     */
@@ -711,7 +710,7 @@ class Scheduling extends AbstractExternalModule
         }
         if (isset($payload["id"])) {
             return $this->deleteEntry($payload);
-            // TODO restore the old availability
+            // TODO restore the old availability?
         }
     }
 

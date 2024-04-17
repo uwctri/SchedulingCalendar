@@ -40,6 +40,7 @@ class API {
             promise: null,
             interval: 5
         }
+        // TODO cache availability too, interval of 30seconds
     }
 
     static timestamp() { return DateTime.now().toISO() }
