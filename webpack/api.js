@@ -39,8 +39,15 @@ class API {
             expire: null,
             promise: null,
             interval: 5
+        },
+        availability: {
+            data: null,
+            // Cache is hit explicitly and updated on any pull
+        },
+        appointments: {
+            data: null,
+            // Cache is hit explicitly and updated on any pull
         }
-        // TODO cache availability too, interval of 30seconds
     }
 
     static timestamp() { return DateTime.now().toISO() }
@@ -155,7 +162,7 @@ class API {
         return await API.updateCache(promise, cache)
     }
 
-    static async getAvailability(payload) {
+    static async getAvailability(payload, useCache = false) {
 
         const data = {
             "crud": CRUD.Read,
@@ -164,7 +171,13 @@ class API {
         }
 
         API.requiredKeys(data, ["start", "end", "providers", "locations", "all_availability"])
-        return await API.post(data)
+
+        if (useCache && API.cache.availability.data)
+            return API.cache.availability.data
+
+        const response = await API.post(data)
+        API.cache.availability.data = response
+        return response
     }
 
     static async setAvailability(payload) {
@@ -191,7 +204,7 @@ class API {
         return await API.post(data)
     }
 
-    static async getAppointments(payload) {
+    static async getAppointments(payload, useCache = false) {
 
         const data = {
             "crud": CRUD.Read,
@@ -200,7 +213,13 @@ class API {
         }
 
         API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"])
-        return await API.post(data)
+
+        if (useCache && API.cache.appointments.data)
+            return API.cache.appointments.data
+
+        const response = await API.post(data)
+        API.cache.appointments.data = response
+        return response
     }
 
     static async setAppointments(payload) {

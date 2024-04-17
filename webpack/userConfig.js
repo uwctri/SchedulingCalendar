@@ -82,7 +82,7 @@ class UserConfig {
             localStorage.setItem("configDays", saveDays)
             localStorage.setItem("showAllDays", saveDays.length == 0)
 
-            // Refresh
+            // Reload Page to reinit the cal
             location.reload()
         })
 
