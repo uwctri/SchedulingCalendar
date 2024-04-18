@@ -212,7 +212,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"])
+        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits", "all_appointments"])
 
         if (useCache && API.cache.appointments.data)
             return API.cache.appointments.data

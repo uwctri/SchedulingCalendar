@@ -24,6 +24,7 @@ import API from './api.js'
 import Swal from 'sweetalert2'
 import Calendar from './calendar';
 import html from './html/modify_appointment_popup.html'
+import { goToRecord } from './page.js';
 import { buildLocationDropdown, buildProviderDropdown } from "./utils";
 
 const rcBtnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
@@ -45,15 +46,17 @@ class ContextMenu {
 
     static appointmentMenu = [
         {
+            label: "Open Record",
+            action(el) {
+                const id = el.target.getAttribute('data-internal-id')
+                const details = Calendar.getEvent(id)
+                goToRecord(details.extendedProps.record, details.extendedProps.project_id)
+            },
+        },
+        {
             label: "Delete Appointment",
-            action(o) {
-                const id = o.target.getAttribute('data-internal-id')
-                o.target.remove()
-                API.deleteAppointments({
-                    id: id
-                }).then((data) => {
-                    Calendar.refresh()
-                })
+            action(el) {
+                ContextMenu.deleteModal(el)
             },
         },
         {
@@ -69,6 +72,37 @@ class ContextMenu {
             },
         },
     ]
+
+    static readMenu = [
+        {
+            label: "Open Record",
+            action(el) {
+                const id = el.target.getAttribute('data-internal-id')
+                const details = Calendar.getEvent(id)
+                goToRecord(details.extendedProps.record, details.extendedProps.project_id)
+            },
+        },
+    ]
+
+    static deleteModal(el) {
+        const id = el.target.getAttribute('data-internal-id')
+        Swal.fire({
+            icon: "warning",
+            title: "Are you sure?",
+            text: "Do you want to delete this appointment?",
+            confirmButtonText: "Delete",
+            confirmButtonColor: "#dc3741" //swal-deny color
+        }).then((result) => {
+            if (!result.isConfirmed)
+                return
+            el.target.remove()
+            API.deleteAppointments({
+                id: id
+            }).then((data) => {
+                Calendar.refresh()
+            })
+        });
+    }
 
     static modifyModal(el, str) {
         const id = el.target.getAttribute('data-internal-id')

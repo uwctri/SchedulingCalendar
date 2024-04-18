@@ -180,6 +180,8 @@ class Calendar {
                         ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
                     } else if (Page.type == "schedule" && props.is_appointment) {
                         ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
+                    } else if (Page.type == "my") {
+                        ContextMenu.attachContextMenu(arg.el, ContextMenu.readMenu)
                     }
                 }
             },
@@ -261,6 +263,7 @@ class Calendar {
                 let paramsAppointment = {
                     subjects: SearchBar.getPickedSubjects(true),
                     visits: SearchBar.getPickedEvents(true),
+                    all_appointments: Page.type == "my",
                 }
 
                 let colors = {}

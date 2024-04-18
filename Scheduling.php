@@ -368,6 +368,7 @@ class Scheduling extends AbstractExternalModule
             $codeName = $codes[$row["availability_code"]]["label"] ?? $row["availability_code"];
             $availability[] = [
                 "internal_id" => $row["id"],
+                "project_id" => $row["pid"],
                 "title" => "Default Title",
                 "start" => $row["time_start"],
                 "end" => $row["time_end"],
@@ -571,6 +572,8 @@ class Scheduling extends AbstractExternalModule
     private function getAppointments($payload)
     {
         $appt = [];
+        $project_id = $payload["pid"];
+        $allFlag = $payload["all_appointments"];
         $providers = $payload["providers"];
         $locations = $payload["locations"];
         $subjects = $payload["subjects"];
@@ -585,6 +588,10 @@ class Scheduling extends AbstractExternalModule
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
+
+        if (!$allFlag) {
+            $query->add("AND project_id = ?", $project_id);
+        }
 
         if (!empty($providers)) {
             $query->add("AND")->addInClause("user", $providers);
@@ -608,6 +615,7 @@ class Scheduling extends AbstractExternalModule
         while ($row = $result->fetch_assoc()) {
             $appt[] = [
                 "internal_id" => $row["id"],
+                "project_id" => $row["pid"],
                 "title" => "Default Title",
                 "start" => $row["time_start"],
                 "end" => $row["time_end"],

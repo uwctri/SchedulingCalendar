@@ -10,8 +10,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Add a notes option to the sched popup
 * Remove all future data for withdrawn subject
 * ICS Export calendar (with optional cron for backups) (with config for extra data)
-
-### Larger projects
+* Should a popover exist for titles that are too large for block area?
 
 * Filter all dropdowns for Provider(done) , Visit(Sched pop), Subject(Sched pop), Location(both pops, bar)
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
