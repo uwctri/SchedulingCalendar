@@ -1,6 +1,7 @@
 * {
     --redcap-btn-color: #337ab7;
     --redcap-btn-border: #2e6da4;
+    --redcap-dark-grey: #e6e6e6;
     --calendar-searchbar-width: 600px;
     --calendar-content-width: 1200px;
     --context-menu-off-white: #f2f2f2;
@@ -349,6 +350,10 @@ table:has(tr[field=scheduling-and-availability]) {
 
     .external-modules-instance-label {
         display: none;
+    }
+
+    .sub_start td {
+        background-color: var(--redcap-dark-grey)
     }
 
     tr[field=scheduling-and-availability] {

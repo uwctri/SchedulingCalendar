@@ -6,25 +6,25 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
+* Admin tools
+  * Remove all future data for withdrawn subject
+  * ICS Export calendar (with optional cron for backups) (with config for extra data)
+  * Purge old availability
+
 * Setting to default the scheduled location to a static value or subject's assigned location
-* Add a notes option to the sched popup
-* Remove all future data for withdrawn subject
-* ICS Export calendar (with optional cron for backups) (with config for extra data)
+* Add a notes option to the sched popup?
 * Should a popover exist for titles that are too large for block area?
 
 * Filter all dropdowns for Provider(done) , Visit(Sched pop), Subject(Sched pop), Location(both pops, bar)
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Right side subject summary
-* Right click on "my cal" event to go to the correct project
-* Clicking, in general, should take you somewhere for appts
 * Add docs to config.json
+* My Calendar Page - Visit names and Display names aren't going to pull correctly as the methods for getting the info assume PID
 
 ### Questions
 
 * Do we need a quick way to filter only availaiblity of the current provider?
 * Consider Locations as providers? Obvious work around for this already.
-* We can't have a "My Calendar" Page that pulls in from multiple projects, we could have clashes with DAGs (Is this still an issue?)
-* The My Calendar page will be difficult to set up as we need to pull appts from all projects. My PHP assumes the current PID.
 
 ### DET Integration
 

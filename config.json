@@ -37,7 +37,7 @@
         },
         {
             "key": "calendar-admin",
-            "name": "<b>Calendar Admin</b><br>May edit any user's calendar",
+            "name": "<b>Calendar Admin</b><br>May edit any user's calendar and has access to additional tools",
             "type": "user-list",
             "repeatable": true
         },
@@ -93,7 +93,7 @@
         },
         {
             "key": "visit-group",
-            "name": "<b>Schedulable Vists</b>",
+            "name": "<b>Schedulable Visit</b>",
             "type": "sub_settings",
             "repeatable": true,
             "sub_settings": [

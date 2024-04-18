@@ -11,6 +11,7 @@ import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
 import API from "./api"
 import Page from "./page"
+import RedCap from "./redcap"
 
 const autoRefreshTime = 120 // seconds
 class Calendar {
@@ -47,17 +48,20 @@ class Calendar {
         edit: {
             topRight: ["search", "singleMonth,singleWeek,singleDay"],
             topLeft: ["prev,next", "today", "config", "bulk"],
-            bottomRight: []
+            bottomRight: [],
+            bottomLeft: [],
         },
         schedule: {
             topRight: ["search", "agenda,singleMonth,singleWeek,singleDay"],
             topLeft: ["prev,next", "today", "config", "availability"],
-            bottomRight: []
+            bottomRight: [],
+            bottomLeft: [],
         },
         my: {
             topRight: ["search", "agenda,singleMonth,singleWeek,singleDay"],
             topLeft: ["prev,next", "today", "config"],
-            bottomRight: []
+            bottomRight: [],
+            bottomLeft: [],
         }
     }
 
@@ -98,6 +102,7 @@ class Calendar {
         // Modify toolbars
         Calendar.toolbars = Calendar.toolbars[Page.type]
         Calendar.toolbars.bottomRight = Page.refer ? ["refer"] : Calendar.toolbars.bottomRight
+        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["admin"] : Calendar.toolbars.bottomLeft
 
         // Grab user settings
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
@@ -105,12 +110,22 @@ class Calendar {
         Calendar._fc = new FullCalendar(document.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
             customButtons: {
+                admin: {
+                    icon: "fa-tools",
+                    hint: "Admin tools",
+                    click: () => {
+                        // TODO - Maybe break this out into 3 button for each Admin task?
+                        console.log("TODO")
+                    }
+                },
                 config: {
                     icon: "fa-gear",
+                    hint: "User configuration",
                     click: UserConfig.open
                 },
                 search: {
                     icon: "fa-magnifying-glass",
+                    hint: "Search",
                     click: SearchBar.toggle
                 },
                 refer: {
@@ -123,6 +138,7 @@ class Calendar {
                 },
                 availability: {
                     icon: "fa-eye",
+                    hint: "Toggle Availability",
                     click: () => {
                         const o = Calendar._showAvailability ? ["fa-eye", "fa-eye-slash"] : ["fa-eye-slash", "fa-eye"]
                         Calendar._showAvailability = !Calendar._showAvailability
@@ -137,6 +153,7 @@ class Calendar {
                 right: Calendar.toolbars.topRight.join(" ")
             },
             footerToolbar: {
+                left: Calendar.toolbars.bottomLeft.join(" "),
                 right: Calendar.toolbars.bottomRight.join(" ")
             },
             slotDuration: `00:${slotSize}:00`,
