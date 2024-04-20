@@ -38,7 +38,7 @@ class API {
             data: null,
             expire: null,
             promise: null,
-            interval: 5
+            interval: 10
         },
         availability: {
             data: null,

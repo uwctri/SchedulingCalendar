@@ -195,11 +195,12 @@ class Scheduling extends AbstractExternalModule
     */
     private function getSubjects($payload = null)
     {
+        $project_id = $payload["pid"];
         $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
         $locationField = $this->getProjectSetting("location-field");
         $withdrawField = $this->getProjectSetting("withdraw-field");
-        $result = [];
+        $subjects = [];
 
         if (empty($nameField)) {
             return [];
@@ -218,13 +219,13 @@ class Scheduling extends AbstractExternalModule
                 foreach ($projectData as $record_id => $record_data) {
                     $loc = $records[$record_id];
                     $name = $record_data[$nameField];
-                    $result["$pid:$record_id"] = [
+                    $subjects["$pid:$record_id"] = [
                         "value" => $record_id,
                         "label" => $name ?? $record_id,
                         "location" => $loc,
                         "name" => $name,
                         "record_id" => $record_id,
-                        "pid" => $pid,
+                        "project_id" => $pid,
                         "is_withdrawn" => false
                     ];
                 }
@@ -237,18 +238,28 @@ class Scheduling extends AbstractExternalModule
                 $name = $recordData[$nameField];
                 $loc = $recordData[$locationField];
                 $withdraw = boolval($recordData[$withdrawField]);
-                $result[$record_id] = [
+                $subjects[$record_id] = [
                     "value" => $record_id,
                     "label" => $name ?? $record_id,
                     "location" => $loc,
                     "name" => $name,
                     "record_id" => $record_id,
-                    "is_withdrawn" => $withdraw
+                    "is_withdrawn" => $withdraw,
+                    "visits" => []
                 ];
+            }
+
+            // Perform a second query to get all scheduled visits for the subjects
+            $query = $this->createQuery();
+            $query->add("SELECT record, visit from em_scheduling_calendar WHERE project_id = ?", $project_id);
+            $query->add("AND")->addInClause("record", array_keys($subjects));
+            $result = $query->execute();
+            while ($row = $result->fetch_assoc()) {
+                $subjects[$row["record"]]["visits"][] = $row["visit"];
             }
         }
 
-        return $result;
+        return $subjects;
     }
 
     private function getLocations($payload = null)

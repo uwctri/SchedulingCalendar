@@ -154,10 +154,18 @@ class PopOver {
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
         IMask(endTime, PopOver.timeMask12)
 
-        buildVisitDropdown("aPopVisit", PopOver.isOpen)
+        buildVisitDropdown("aPopVisit", null, PopOver.isOpen)
         buildLocationDropdown("aPopLocation", PopOver.isOpen)
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
+
+        document.getElementById("aPopSubject").addEventListener("change", () => {
+            [...document.querySelectorAll("#aPopVisit option")].slice(1).forEach(e => e.remove())
+            buildVisitDropdown("aPopVisit", document.getElementById("aPopSubject").value, PopOver.isOpen)
+        })
+
+        // TODO prevent clicking schedule if the provider isn't free at the time
+        // TODO location validation / warning
     }
 
     static openPopover(title, content, target) {
