@@ -159,12 +159,20 @@ class PopOver {
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
+        // When the subject changes update the list of visits
         document.getElementById("aPopSubject").addEventListener("change", () => {
-            [...document.querySelectorAll("#aPopVisit option")].slice(1).forEach(e => e.remove())
+            const selEl = document.getElementById("aPopVisit")
+            const visit = selEl.value;
+            [...selEl.options].slice(1).forEach(e => e.remove())
             buildVisitDropdown("aPopVisit", document.getElementById("aPopSubject").value, PopOver.isOpen)
+            if ([...selEl.options].map(e => e.value).includes(visit))
+                selEl.value = visit
         })
 
-        // TODO prevent clicking schedule if the provider isn't free at the time
+        // When the provider, start, or stop time change update the list of valid providers.
+        console.log(API.cache.availability)
+        //TODO - prevent clicking schedule if the provider isn't free at the time
+
         // TODO location validation / warning
     }
 
