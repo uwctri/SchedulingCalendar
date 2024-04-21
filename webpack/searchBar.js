@@ -18,7 +18,7 @@ class SearchBar {
     static async build() {
 
         const keyEvent = (event) => {
-            if (event.key != "s" || SearchBar.isVisible() || !SearchBar.isReady())
+            if (event.key != "Enter" || SearchBar.isVisible() || !SearchBar.isReady())
                 return;
             document.getElementsByClassName("fc-search-button")[0].click()
             SearchBar.focus()

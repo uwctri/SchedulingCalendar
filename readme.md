@@ -15,8 +15,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
   * ICS Export calendar (with optional cron for backups) (with config for extra data)
   * Purge old availability
 
-* Add a notes option to the sched popup?
-* Should a popover exist for titles that are too large for block area?
+* Should a popover exist for titles that are too large for block area? (we need to show notes here too)
 
 * Right side subject summary
 * Add docs to config.json

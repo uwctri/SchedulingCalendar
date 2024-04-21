@@ -76,6 +76,11 @@
         font-weight: bold;
         text-shadow: -1px 0 white, 0 1px white, 1px 0 white, 0 -1px white;
         color: black;
+        cursor: default;
+    }
+
+    .fc-v-event:hover {
+        font-size: var(--fc-small-font-size);
     }
 
     .fc-event:not(.fc-list-event):hover {
@@ -152,8 +157,14 @@
         text-decoration: none;
     }
 
-    select {
-        margin: 6px 0 6px 0
+    select,
+    textarea {
+        margin: 6px 0 6px 0;
+        scrollbar-width: none;
+    }
+
+    textarea:focus {
+        height: 8em;
     }
 
     .timeRow input {

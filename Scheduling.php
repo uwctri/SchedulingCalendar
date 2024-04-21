@@ -25,6 +25,7 @@ class Scheduling extends AbstractExternalModule
             `location` VARCHAR(255) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
             `time_start` timestamp NOT NULL,
             `time_end` timestamp NOT NULL,
+            `notes` TEXT, 
             `metadata` JSON,
             PRIMARY KEY (`id`)
         );");
@@ -638,6 +639,7 @@ class Scheduling extends AbstractExternalModule
                 "visit_display" => $allVisits[$row["visit"]]["label"] ?? $row["visit"],
                 "record" => $row["record"],
                 "record_display" => $allSubjects[$row["record"]]["label"] ?? $row["record"],
+                "notes" => $row["notes"],
                 "metadata" => json_decode($row["metadata"], true) ?? [],
                 "is_availability" => false,
                 "is_appointment" => true
@@ -656,6 +658,8 @@ class Scheduling extends AbstractExternalModule
         $provider = $payload["providers"];
         $location = $payload["locations"];
         $record = $payload["subjects"];
+        $notes = $payload["notes"];
+        $notes = empty($notes) ? null : $notes; // If empty note then store null, not empty string
 
         if (empty($project_id) || empty($visit) || empty($start) || empty($end) || empty($provider) || empty($location) || empty($record)) {
             return [];
@@ -693,8 +697,8 @@ class Scheduling extends AbstractExternalModule
             }
 
             $this->query(
-                "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                [$project_id, $visit, $provider, $record, $location, $start, $end]
+                "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                [$project_id, $visit, $provider, $record, $location, $start, $end, $notes]
             );
         }
 

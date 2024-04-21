@@ -230,7 +230,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits"])
+        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits", "notes"])
         return await API.post(data)
     }
 

@@ -85,6 +85,7 @@ class PopOver {
                     "providers": document.getElementById("aPopProvider").value,
                     "locations": document.getElementById("aPopLocation").value,
                     "subjects": document.getElementById("aPopSubject").value,
+                    "notes": document.getElementById("aPopNotes").value,
                     "start": start,
                     "end": end,
                 }).then(data => {
@@ -170,9 +171,7 @@ class PopOver {
         })
 
         // When the provider, start, or stop time change update the list of valid providers.
-        console.log(API.cache.availability)
-        //TODO - prevent clicking schedule if the provider isn't free at the time
-
+        // TODO - prevent clicking schedule if the provider isn't free at the time (or rebuild provider list)
         // TODO location validation / warning
     }
 
