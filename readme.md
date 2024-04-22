@@ -6,6 +6,8 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
+* Resolve core bug. Not able to schedule.
+
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Filter Location dropdowns and search bar
@@ -16,6 +18,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
   * Purge old availability
 
 * Should a popover exist for titles that are too large for block area? (we need to show notes here too)
+  * Idea - Click to open a popover with all details. Don't auto hide.
 
 * Right side subject summary
 * Add docs to config.json

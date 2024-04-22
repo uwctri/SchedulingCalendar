@@ -61,7 +61,7 @@ export const buildProviderDropdown = (el, stillOpenFn) => {
     }
 }
 
-export const buildVisitDropdown = (el, subject, stillOpenFn) => {
+export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) => {
     const subjectData = subject ? API.cache.subjects.data[subject] : null
     API.visits().then(visitData => {
         if (!stillOpenFn()) return
@@ -74,6 +74,8 @@ export const buildVisitDropdown = (el, subject, stillOpenFn) => {
             option.text = visitData[k].label
             select.add(option)
         }
+        if (defaultSelection && [...select.options].map(e => e.value).includes(defaultSelection))
+            select.value = defaultSelection
     })
 }
 

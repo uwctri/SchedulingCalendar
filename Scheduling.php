@@ -687,7 +687,7 @@ class Scheduling extends AbstractExternalModule
                 // In the middle, modify and create new availability
                 $this->modifyAvailabiltiy($id, $exStart, $start);
                 $this->setAvailability([
-                    "pid" => $payload["pid"],
+                    "pid" => $project_id,
                     "start" => $end,
                     "end" => $exEnd,
                     "group" => $existing["availability_code"],
@@ -696,9 +696,19 @@ class Scheduling extends AbstractExternalModule
                 ]);
             }
 
+            // Create JSON with info for resotring avail if deleted
+            $meta = json_encode([
+                "restore" => [
+                    "pid" => $project_id,
+                    "group" => $existing["availability_code"],
+                    "providers" => $existing["user"],
+                    "locations" => $existing["location"],
+                ]
+            ]);
+
             $this->query(
-                "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                [$project_id, $visit, $provider, $record, $location, $start, $end, $notes]
+                "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end, notes, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                [$project_id, $visit, $provider, $record, $location, $start, $end, $notes, $meta]
             );
         }
 
@@ -721,19 +731,31 @@ class Scheduling extends AbstractExternalModule
         );
 
         // TODO should we update availability or make sure that the provider is available?
-        // TOOD probably have a checkbox for override.
+        // TODO probably have a checkbox for override.
 
         return [];
     }
 
     private function deleteAppointments($payload)
     {
+        $id = $payload["id"];
         if (isset($payload["start"]) && isset($payload["end"])) {
             return $this->deleteRangeAppointments($payload);
         }
         if (isset($payload["id"])) {
-            return $this->deleteEntry($payload);
-            // TODO restore the old availability?
+            $meta = $this->getRowMetadata($id);
+            if (isset($meta["restore"])) {
+                $this->setAvailability(
+                    array_merge(
+                        $meta["restore"],
+                        [
+                            "start" => $meta["start"],
+                            "end" => $meta["end"]
+                        ]
+                    )
+                );
+            }
+            return $this->deleteEntry($id);
         }
     }
 
@@ -756,6 +778,17 @@ class Scheduling extends AbstractExternalModule
         $query->execute();
 
         return [];
+    }
+
+    private function getRowMetadata($id)
+    {
+        $sql = $this->query("SELECT time_start, time_end, metadata from em_scheduling_calendar WHERE id = ?", [$id]);
+        $row = db_fetch_assoc($sql);
+        $meta = json_decode($row["metadata"] ?? "", true);
+        $meta = $meta ?? [];
+        $meta["start"] = $row["time_start"];
+        $meta["end"] = $row["time_end"];
+        return $meta;
     }
 
     private function fireDataEntryTrigger($saveParams)

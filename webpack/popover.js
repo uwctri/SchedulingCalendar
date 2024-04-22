@@ -155,7 +155,7 @@ class PopOver {
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
         IMask(endTime, PopOver.timeMask12)
 
-        buildVisitDropdown("aPopVisit", null, PopOver.isOpen)
+        buildVisitDropdown("aPopVisit", null, null, PopOver.isOpen)
         buildLocationDropdown("aPopLocation", PopOver.isOpen)
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
@@ -165,9 +165,7 @@ class PopOver {
             const selEl = document.getElementById("aPopVisit")
             const visit = selEl.value;
             [...selEl.options].slice(1).forEach(e => e.remove())
-            buildVisitDropdown("aPopVisit", document.getElementById("aPopSubject").value, PopOver.isOpen)
-            if ([...selEl.options].map(e => e.value).includes(visit))
-                selEl.value = visit
+            buildVisitDropdown("aPopVisit", document.getElementById("aPopSubject").value, visit, PopOver.isOpen)
         })
 
         // When the provider, start, or stop time change update the list of valid providers.
