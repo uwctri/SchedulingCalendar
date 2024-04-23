@@ -41,17 +41,29 @@ class API {
             interval: 10
         },
         availability: {
-            data: null,
-            // Cache is hit explicitly and updated on any pull
+            stor: {
+                "hash": {
+                    expire: "",
+                    data: [],
+                }
+            },
+            interval: 5,
         },
         appointments: {
-            data: null,
-            // Cache is hit explicitly and updated on any pull
+            stor: {
+                "hash": {
+                    expire: "",
+                    data: [],
+                }
+            },
+            interval: 5,
         }
     }
 
     static timestamp() { return DateTime.now().toISO() }
     static futureTimestamp(minutes) { return DateTime.now().plus({ "minutes": minutes }).toISO() }
+    static expireAvailabilityCache() { API.cache.availability.stor = {} }
+    static expireAppointmentsCache() { API.cache.appointments.stor = {} }
     static requiredKeys(obj, keys) {
         let keyOptions = Array.isArray(keys[0]) ? keys : [keys]
         for (const keySet of keyOptions) {
@@ -162,7 +174,7 @@ class API {
         return await API.updateCache(promise, cache)
     }
 
-    static async getAvailability(payload, useCache = false) {
+    static async getAvailability(payload) {
 
         const data = {
             "crud": CRUD.Read,
@@ -172,11 +184,18 @@ class API {
 
         API.requiredKeys(data, ["start", "end", "providers", "locations", "all_availability"])
 
-        if (useCache && API.cache.availability.data)
-            return API.cache.availability.data
+        const hash = JSON.stringify(payload)
+        let cache = API.cache.availability.stor[hash]
+        if (cache && cache.expire > API.timestamp())
+            return cache.data
 
-        const response = await API.post(data)
-        API.cache.availability.data = response
+        const promise = API.post(data)
+        const response = await promise
+        API.cache.availability.stor[hash] = {
+            data: response,
+            expire: API.futureTimestamp(API.cache.availability.interval),
+            promise: null
+        }
         return response
     }
 
@@ -189,6 +208,7 @@ class API {
         }
 
         API.requiredKeys(data, ["start", "end", "providers", "locations", "group"])
+        API.expireAvailabilityCache()
         return await API.post(data)
     }
 
@@ -201,10 +221,11 @@ class API {
         }
 
         API.requiredKeys(data, [["start", "end", "providers", "locations", "group"], ["id"], ["end", "purge"]])
+        API.expireAvailabilityCache()
         return await API.post(data)
     }
 
-    static async getAppointments(payload, useCache = false) {
+    static async getAppointments(payload) {
 
         const data = {
             "crud": CRUD.Read,
@@ -214,11 +235,17 @@ class API {
 
         API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits", "all_appointments"])
 
-        if (useCache && API.cache.appointments.data)
-            return API.cache.appointments.data
+        const hash = JSON.stringify(payload)
+        let cache = API.cache.appointments.stor[hash]
+        if (cache && cache.expire > API.timestamp())
+            return cache.data
 
-        const response = await API.post(data)
-        API.cache.appointments.data = response
+        const promise = API.post(data)
+        const response = await promise
+        API.cache.appointments.stor[hash] = {
+            data: response,
+            expire: API.futureTimestamp(API.cache.appointments.interval),
+        }
         return response
     }
 
@@ -231,6 +258,7 @@ class API {
         }
 
         API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits", "notes"])
+        API.expireAppointmentsCache()
         return await API.post(data)
     }
 
@@ -255,6 +283,7 @@ class API {
         }
 
         API.requiredKeys(data, [["start", "time", "subjects"], ["id"]])
+        API.expireAppointmentsCache()
         return await API.post(data)
     }
 
@@ -262,6 +291,14 @@ class API {
 
         if (!("crud" in payload) || !("resource" in payload) || !("bundle" in payload))
             return Promise.reject("Poorly formatted Multi request")
+
+        const crud = payload.crud
+        const reso = payload.resource
+
+        if ([CRUD.Delete, CRUD.Create].includes(crud) && reso == Resource.Appointment)
+            API.expireAppointmentsCache()
+        if ([CRUD.Delete, CRUD.Create].includes(crud) && reso == Resource.Availability)
+            API.expireAvailabilityCache()
 
         return await API.post(payload)
     }

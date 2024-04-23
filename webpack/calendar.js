@@ -20,7 +20,6 @@ class Calendar {
 
     static _fc = null
     static _showAvailability = true
-    static _useAAcache = false
     static _refreshTime = DateTime.now().minus({ minutes: 60 })
 
     // Great contrast colors from ...
@@ -71,11 +70,7 @@ class Calendar {
         Calendar._refreshTime = DateTime.now()
         Calendar._fc.refetchEvents()
     }
-    static refreshFromCache = () => {
-        Calendar._useAAcache = true
-        Calendar._fc.refetchEvents()
-        Calendar._useAAcache = false
-    }
+
     static render = () => { Calendar._fc.render() }
     static getView = () => { return Calendar._fc.view.type }
     static getEvent = (id) => { return Calendar._fc.getEventById(id) }
@@ -147,7 +142,7 @@ class Calendar {
                         const o = Calendar._showAvailability ? ["fa-eye", "fa-eye-slash"] : ["fa-eye-slash", "fa-eye"]
                         Calendar._showAvailability = !Calendar._showAvailability
                         $.querySelector(".fc-availability-button ." + o[0]).classList.replace(o[0], o[1])
-                        Calendar.refreshFromCache()
+                        Calendar.refresh()
                     }
                 }
             },
@@ -269,7 +264,6 @@ class Calendar {
                 return { html: title }
             },
             events: (info, successCallback, failureCallback) => {
-                const useCache = Calendar._useAAcache
                 let paramsCommon = {
                     start: info.start.toISOString(),
                     end: info.end.toISOString(),
@@ -306,11 +300,11 @@ class Calendar {
 
                 let availabilityPromise = Promise.resolve([])
                 if (["schedule", "edit"].includes(Page.type) && Calendar._showAvailability)
-                    availabilityPromise = API.getAvailability({ ...paramsCommon, ...paramsAvailability }, useCache)
+                    availabilityPromise = API.getAvailability({ ...paramsCommon, ...paramsAvailability })
 
                 let appointmentPromise = Promise.resolve([])
                 if (["schedule", "my"].includes(Page.type))
-                    appointmentPromise = API.getAppointments({ ...paramsCommon, ...paramsAppointment }, useCache)
+                    appointmentPromise = API.getAppointments({ ...paramsCommon, ...paramsAppointment })
 
                 Promise.all([availabilityPromise, appointmentPromise]).then(([availabilityData, appointmentData]) => {
                     let data = availabilityData.concat(appointmentData)
