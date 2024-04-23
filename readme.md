@@ -6,8 +6,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* Resolve core bug. Not able to schedule.
-
 * Sort out what the location json should look, update the API. Should location actually be on project settings?
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Filter Location dropdowns and search bar

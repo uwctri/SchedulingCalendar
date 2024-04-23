@@ -20,15 +20,15 @@ class SearchBar {
         const keyEvent = (event) => {
             if (event.key != "Enter" || SearchBar.isVisible() || !SearchBar.isReady())
                 return;
-            document.getElementsByClassName("fc-search-button")[0].click()
+            $.getElementsByClassName("fc-search-button")[0].click()
             SearchBar.focus()
         }
 
         const changeEvent = (event) => {
             Calendar.refresh()
-            const count = document.querySelector(choicesSelector).childElementCount
+            const count = $.querySelector(choicesSelector).childElementCount
             const text = count > 0 ? "" : placeholder
-            const el = document.querySelector(`.${centerClassName} input`)
+            const el = $.querySelector(`.${centerClassName} input`)
             el.placeholder = text
             el.style.width = `${text.length}ch`
         }
@@ -40,11 +40,11 @@ class SearchBar {
             }
         }
 
-        let centerEl = document.getElementsByClassName(centerClassName)[1]
+        let centerEl = $.getElementsByClassName(centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
 
         // Build out the select el and insert it
-        let searchBarEl = document.createElement("select")
+        let searchBarEl = $.createElement("select")
         searchBarEl.id = searchID
         searchBarEl.setAttribute("multiple", "")
         searchBarEl.style.display = "none"
@@ -93,18 +93,18 @@ class SearchBar {
         SearchBar.hide()
         searchBarEl.style.display = ""
         searchBarEl.addEventListener('change', changeEvent)
-        document.addEventListener("keyup", keyEvent)
+        $.addEventListener("keyup", keyEvent)
         SearchBar._ready = true
     }
 
     static show() {
-        document.getElementById(searchID).parentElement.parentElement.classList.remove("d-none")
-        document.getElementsByClassName(titleClassName)[0].classList.add("d-none")
+        $.getElementById(searchID).parentElement.parentElement.classList.remove("d-none")
+        $.getElementsByClassName(titleClassName)[0].classList.add("d-none")
     }
 
     static hide() {
-        document.getElementById(searchID).parentElement.parentElement.classList.add("d-none")
-        document.getElementsByClassName(titleClassName)[0].classList.remove("d-none")
+        $.getElementById(searchID).parentElement.parentElement.classList.add("d-none")
+        $.getElementsByClassName(titleClassName)[0].classList.remove("d-none")
     }
 
     static toggle() {
@@ -118,7 +118,7 @@ class SearchBar {
     }
 
     static isVisible() {
-        return document.getElementsByClassName(titleClassName)[0].classList.contains("d-none")
+        return $.getElementsByClassName(titleClassName)[0].classList.contains("d-none")
     }
 
     static isReady() {
@@ -126,7 +126,7 @@ class SearchBar {
     }
 
     static focus() {
-        document.querySelector(`.${centerClassName} input`).focus()
+        $.querySelector(`.${centerClassName} input`).focus()
     }
 
     static filterLocations(locations) {

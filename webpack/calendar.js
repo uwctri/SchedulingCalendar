@@ -79,15 +79,15 @@ class Calendar {
     static getEvent = (id) => { return Calendar._fc.getEventById(id) }
 
     static showLoading() {
-        document.getElementById("loader").classList.remove("d-none")
+        $.getElementById("loader").classList.remove("d-none")
     }
 
     static hideLoading() {
-        document.getElementById("loader").classList.add("d-none")
+        $.getElementById("loader").classList.add("d-none")
     }
 
     static isLoadingVisible() {
-        return !document.getElementById("loader").classList.contains("d-none")
+        return !$.getElementById("loader").classList.contains("d-none")
     }
 
     static init() {
@@ -107,7 +107,7 @@ class Calendar {
         // Grab user settings
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
 
-        Calendar._fc = new FullCalendar(document.getElementById("calendar"), {
+        Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
             customButtons: {
                 admin: {
@@ -142,7 +142,7 @@ class Calendar {
                     click: () => {
                         const o = Calendar._showAvailability ? ["fa-eye", "fa-eye-slash"] : ["fa-eye-slash", "fa-eye"]
                         Calendar._showAvailability = !Calendar._showAvailability
-                        document.querySelector(".fc-availability-button ." + o[0]).classList.replace(o[0], o[1])
+                        $.querySelector(".fc-availability-button ." + o[0]).classList.replace(o[0], o[1])
                         Calendar.refreshFromCache()
                     }
                 }

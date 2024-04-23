@@ -1,0 +1,2 @@
+let $ = document
+export default $

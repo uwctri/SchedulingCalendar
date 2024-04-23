@@ -9,7 +9,7 @@ const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
 const defaultLimitAvailability = true
 
-const rcBtnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
+const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 class UserConfig {
 
     static _init = false
@@ -34,7 +34,7 @@ class UserConfig {
     static init() {
         if (UserConfig._init) return
         // Setup toggles for the week bar 
-        document.addEventListener("click", (event) => {
+        $.addEventListener("click", (event) => {
             let classList = event.target.classList
             if (!classList.contains("configWeek")) return;
             event.target.classList.toggle("btn-primary")
@@ -68,12 +68,12 @@ class UserConfig {
             if (!result.isConfirmed) return
 
             // Save everything back to local storage
-            localStorage.setItem("configStart", document.getElementById("configStart").value)
-            localStorage.setItem("configEnd", document.getElementById("configEnd").value)
-            localStorage.setItem("slotSize", document.getElementById("slotSize").value)
-            localStorage.setItem("expandRows", document.getElementById("expandRows").checked)
-            localStorage.setItem("limitAvailability", document.getElementById("limitAvailability").checked)
-            const els = document.getElementsByClassName("configWeek")
+            localStorage.setItem("configStart", $.getElementById("configStart").value)
+            localStorage.setItem("configEnd", $.getElementById("configEnd").value)
+            localStorage.setItem("slotSize", $.getElementById("slotSize").value)
+            localStorage.setItem("expandRows", $.getElementById("expandRows").checked)
+            localStorage.setItem("limitAvailability", $.getElementById("limitAvailability").checked)
+            const els = $.getElementsByClassName("configWeek")
             let saveDays = []
             Array.from(els).forEach((el, index) => {
                 if (!el.classList.contains("btn-danger")) return
@@ -87,7 +87,7 @@ class UserConfig {
         })
 
         // Load days to hide values
-        const els = document.getElementsByClassName("configWeek")
+        const els = $.getElementsByClassName("configWeek")
         Array.from(els).forEach((el, index) => {
             if (!hiddenDays.includes(index)) return
             el.classList.toggle("btn-primary")

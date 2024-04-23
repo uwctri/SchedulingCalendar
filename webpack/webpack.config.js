@@ -1,10 +1,14 @@
 const path = require("path")
+const { webpack } = require("webpack");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 module.exports = {
     mode: "development",
     devtool: "inline-source-map",
-    plugins: [new MiniCssExtractPlugin({ filename: 'style.css' })],
+    plugins: [
+        new MiniCssExtractPlugin({ filename: 'style.css' }),
+        new webpack.ProvidePlugin({ $: ['./dollar', '$'] })
+    ],
     entry: {
         "index": "./index.js",
     },

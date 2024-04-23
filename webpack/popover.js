@@ -58,22 +58,22 @@ class PopOver {
 
     static setup() {
         if (PopOver._setup) return
-        document.addEventListener("click", (e) => {
+        $.addEventListener("click", (e) => {
             if (e.target.id !== "aPopAddBtn")
                 return
             if (!PopOver.validate())
                 return
 
-            let start = DateTime.fromFormat(document.getElementById("aPopStartTime").value, "hh:mm a").toISOTime()
+            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, "hh:mm a").toISOTime()
             start = PopOver._date.toISODate() + "T" + start
-            let end = DateTime.fromFormat(document.getElementById("aPopEndTime").value, "hh:mm a").toISOTime()
+            let end = DateTime.fromFormat($.getElementById("aPopEndTime").value, "hh:mm a").toISOTime()
             end = PopOver._date.toISODate() + "T" + end
 
             if (Page.type == "edit") {
                 API.setAvailability({
-                    "providers": document.getElementById("aPopProvider").value,
-                    "locations": document.getElementById("aPopLocation").value,
-                    "group": document.getElementById("aPopGroup").value,
+                    "providers": $.getElementById("aPopProvider").value,
+                    "locations": $.getElementById("aPopLocation").value,
+                    "group": $.getElementById("aPopGroup").value,
                     "start": start,
                     "end": end,
                 }).then(data => {
@@ -81,11 +81,11 @@ class PopOver {
                 })
             } else if (Page.type == "schedule") {
                 API.setAppointments({
-                    "visits": document.getElementById("aPopVisit").value,
-                    "providers": document.getElementById("aPopProvider").value,
-                    "locations": document.getElementById("aPopLocation").value,
-                    "subjects": document.getElementById("aPopSubject").value,
-                    "notes": document.getElementById("aPopNotes").value,
+                    "visits": $.getElementById("aPopVisit").value,
+                    "providers": $.getElementById("aPopProvider").value,
+                    "locations": $.getElementById("aPopLocation").value,
+                    "subjects": $.getElementById("aPopSubject").value,
+                    "notes": $.getElementById("aPopNotes").value,
                     "start": start,
                     "end": end,
                 }).then(data => {
@@ -93,7 +93,7 @@ class PopOver {
                 })
             }
 
-            document.getElementById("aPopAddBtn").innerHTML = loadingDots
+            $.getElementById("aPopAddBtn").innerHTML = loadingDots
             setTimeout(PopOver.close, saveDelay)
         })
         PopOver._setup = true
@@ -101,7 +101,7 @@ class PopOver {
 
     static validate() {
         PopOver.clearValidation()
-        let els = document.querySelectorAll(".popover input, .popover select")
+        let els = $.querySelectorAll(".popover input, .popover select")
         let valid = true
         for (const el of els) {
             if (el.type == "checkbox" || el.type == "radio")
@@ -116,8 +116,8 @@ class PopOver {
     }
 
     static clearValidation() {
-        document.querySelectorAll(".popover .is-invalid").forEach(e => e.classList.remove("is-invalid"))
-        document.querySelectorAll(".popover .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
+        $.querySelectorAll(".popover .is-invalid").forEach(e => e.classList.remove("is-invalid"))
+        $.querySelectorAll(".popover .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
     }
 
     static openAvailability(info) {
@@ -127,11 +127,11 @@ class PopOver {
 
         // IMask is used for input masking and not native Bootstrap due to sizing
         // issues inside the popover.
-        const startTime = document.getElementById("aPopStartTime")
+        const startTime = $.getElementById("aPopStartTime")
         startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
         IMask(startTime, PopOver.timeMask12)
 
-        const endTime = document.getElementById("aPopEndTime")
+        const endTime = $.getElementById("aPopEndTime")
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
         IMask(endTime, PopOver.timeMask12)
 
@@ -147,11 +147,11 @@ class PopOver {
 
         // IMask is used for input masking and not native Bootstrap due to sizing
         // issues inside the popover.
-        const startTime = document.getElementById("aPopStartTime")
+        const startTime = $.getElementById("aPopStartTime")
         startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
         IMask(startTime, PopOver.timeMask12)
 
-        const endTime = document.getElementById("aPopEndTime")
+        const endTime = $.getElementById("aPopEndTime")
         endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
         IMask(endTime, PopOver.timeMask12)
 
@@ -161,11 +161,11 @@ class PopOver {
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
         // When the subject changes update the list of visits
-        document.getElementById("aPopSubject").addEventListener("change", () => {
-            const selEl = document.getElementById("aPopVisit")
+        $.getElementById("aPopSubject").addEventListener("change", () => {
+            const selEl = $.getElementById("aPopVisit")
             const visit = selEl.value;
             [...selEl.options].slice(1).forEach(e => e.remove())
-            buildVisitDropdown("aPopVisit", document.getElementById("aPopSubject").value, visit, PopOver.isOpen)
+            buildVisitDropdown("aPopVisit", $.getElementById("aPopSubject").value, visit, PopOver.isOpen)
         })
 
         // When the provider, start, or stop time change update the list of valid providers.
@@ -184,7 +184,7 @@ class PopOver {
             sanitize: false,
             container: "body",
         }).popover("show")
-        document.getElementById("PopClose").addEventListener("click", PopOver.close)
+        $.getElementById("PopClose").addEventListener("click", PopOver.close)
     }
 
     static isOpen() {
@@ -197,7 +197,7 @@ class PopOver {
             clearInterval(PopOver._animationInterval)
             PopOver._animationInterval = null
         }
-        document.querySelectorAll(".popover").forEach(e => e.remove())
+        $.querySelectorAll(".popover").forEach(e => e.remove())
     }
 
 }

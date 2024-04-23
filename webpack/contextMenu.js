@@ -27,7 +27,7 @@ import html from './html/modify_appointment_popup.html'
 import { goToRecord } from './page.js';
 import { buildLocationDropdown, buildProviderDropdown } from "./utils";
 
-const rcBtnColor = getComputedStyle(document.getElementById("content")).getPropertyValue("--redcap-btn-color")
+const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 const loadingDots = `<div class="loading-dots"></div>`
 class ContextMenu {
 
@@ -116,14 +116,14 @@ class ContextMenu {
             confirmButtonColor: rcBtnColor,
             confirmButtonText: "Update",
             didOpen: () => {
-                document.getElementById(`aPop${title}`).classList.remove('hidden')
+                $.getElementById(`aPop${title}`).classList.remove('hidden')
                 buildProviderDropdown("aPopProvider", Swal.isVisible)
                 buildLocationDropdown("aPopLocation", Swal.isVisible)
             },
             preConfirm: () => {
                 const btnEl = "swal2-confirm"
-                modalUser = document.getElementById("aPopProvider").value
-                modalLoc = document.getElementById("aPopLocation").value
+                modalUser = $.getElementById("aPopProvider").value
+                modalLoc = $.getElementById("aPopLocation").value
 
                 API.updateAppointments({
                     id: id,
@@ -141,23 +141,23 @@ class ContextMenu {
     }
 
     static closeAll() {
-        document.querySelectorAll('.context-menu').forEach(menu => menu.remove())
+        $.querySelectorAll('.context-menu').forEach(menu => menu.remove())
     }
 
     static attachContextMenu(el, options) {
-        const contextMenu = document.createElement('ul')
+        const contextMenu = $.createElement('ul')
         const hideOnResize = () => hideMenu(true)
 
         const hideMenu = (e) => {
             if (e === true || !contextMenu.contains(e.target)) {
                 contextMenu.remove()
-                document.removeEventListener('click', hideMenu)
+                $.removeEventListener('click', hideMenu)
                 window.removeEventListener('resize', hideOnResize)
             }
         }
 
         const attachOption = (target, opt, el) => {
-            const item = document.createElement('li')
+            const item = $.createElement('li')
             item.className = 'context-menu-item'
             item.innerHTML = `<span>${opt.label}</span>`
             item.addEventListener('click', e => {
@@ -172,7 +172,7 @@ class ContextMenu {
             target.appendChild(item)
 
             if (opt.subMenu && opt.subMenu.length) {
-                const subMenu = document.createElement('ul')
+                const subMenu = $.createElement('ul')
                 subMenu.className = 'context-sub-menu'
                 item.appendChild(subMenu)
                 opt.subMenu.forEach(subOpt => attachOption(subMenu, subOpt))
@@ -185,7 +185,7 @@ class ContextMenu {
             contextMenu.className = 'context-menu'
             contextMenu.innerHTML = ''
             menuOptions.forEach(opt => attachOption(contextMenu, opt, el))
-            document.body.appendChild(contextMenu)
+            $.body.appendChild(contextMenu)
 
             const { innerWidth, innerHeight } = window
             const { offsetWidth, offsetHeight } = contextMenu
@@ -211,7 +211,7 @@ class ContextMenu {
             contextMenu.style.left = jsEvent.clientX + 'px'
             contextMenu.style.top = jsEvent.clientY + 'px'
             contextMenu.style.transform = `translate(${x}, ${y})`
-            document.addEventListener('click', hideMenu)
+            $.addEventListener('click', hideMenu)
             window.addEventListener('resize', hideOnResize)
         }
 
@@ -219,7 +219,7 @@ class ContextMenu {
     }
 
     static savingAnimation(el) {
-        el = document.getElementsByClassName(el)[0]
+        el = $.getElementsByClassName(el)[0]
         el.style.width = getComputedStyle(el).width
         el.innerHTML = loadingDots
     }

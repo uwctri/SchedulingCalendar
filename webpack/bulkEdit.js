@@ -20,12 +20,12 @@ class BulkEdit {
         return {
             startDay: DateTime.fromJSDate(BulkEdit.picker.getStartDate().toJSDate()),
             endDay: DateTime.fromJSDate(BulkEdit.picker.getEndDate().toJSDate()),
-            start: document.getElementById("bulkEditStart").value,
-            end: document.getElementById("bulkEditEnd").value,
-            group: document.getElementById("bulkEditGroup").value,
-            location: document.getElementById("bulkEditLocation").value,
-            provider: document.getElementById("bulkEditProvider").value,
-            skipWeekend: document.getElementById("bulkEditSkip").checked
+            start: $.getElementById("bulkEditStart").value,
+            end: $.getElementById("bulkEditEnd").value,
+            group: $.getElementById("bulkEditGroup").value,
+            location: $.getElementById("bulkEditLocation").value,
+            provider: $.getElementById("bulkEditProvider").value,
+            skipWeekend: $.getElementById("bulkEditSkip").checked
         }
     }
 
@@ -101,41 +101,41 @@ class BulkEdit {
 
     static initModal() {
         BulkEdit.picker = new Litepicker({
-            element: document.getElementById('litepicker'),
+            element: $.getElementById('litepicker'),
             inlineMode: true,
             singleMode: false,
             firstDay: 0,
         })
-        document.getElementById("bulkEditStart").value = defaultStart
-        document.getElementById("bulkEditEnd").value = defaultEnd
+        $.getElementById("bulkEditStart").value = defaultStart
+        $.getElementById("bulkEditEnd").value = defaultEnd
 
         const addOption = (el, text) => {
-            let option = document.createElement("option")
+            let option = $.createElement("option")
             option.value = "*"
             option.text = text
-            document.getElementById(el).add(option)
+            $.getElementById(el).add(option)
         }
 
         const checkBothDropdowns = (event) => {
-            const a = document.getElementById("bulkEditGroup").value
-            const b = document.getElementById("bulkEditLocation").value
-            document.getElementsByClassName("swal2-confirm")[0].disabled = (a == "*" || b == "*")
+            const a = $.getElementById("bulkEditGroup").value
+            const b = $.getElementById("bulkEditLocation").value
+            $.getElementsByClassName("swal2-confirm")[0].disabled = (a == "*" || b == "*")
         }
 
         addOption("bulkEditGroup", "Any Group (Remove Only)")
         buildGroupDropdown("bulkEditGroup", Swal.isVisible)
-        document.getElementById("bulkEditGroup").addEventListener("change", checkBothDropdowns)
+        $.getElementById("bulkEditGroup").addEventListener("change", checkBothDropdowns)
 
         addOption("bulkEditLocation", "Any Location (Remove Only)")
         buildLocationDropdown("bulkEditLocation", Swal.isVisible)
-        document.getElementById("bulkEditLocation").addEventListener("change", checkBothDropdowns)
+        $.getElementById("bulkEditLocation").addEventListener("change", checkBothDropdowns)
 
         buildProviderDropdown("bulkEditProvider", Swal.isVisible)
     }
 
     static validate() {
         BulkEdit.clearValidation()
-        let els = document.querySelectorAll(".bulkEditModal .inputCol input, .bulkEditModal .inputCol select")
+        let els = $.querySelectorAll(".bulkEditModal .inputCol input, .bulkEditModal .inputCol select")
         let valid = true
         for (const el of els) {
             if (el.type == "checkbox" || el.type == "radio")
@@ -147,20 +147,20 @@ class BulkEdit {
             }
         }
         if (BulkEdit.picker.getStartDate() == null || BulkEdit.picker.getEndDate() == null) {
-            document.getElementsByClassName("litepicker")[0].classList.add("litepicker-invalid")
+            $.getElementsByClassName("litepicker")[0].classList.add("litepicker-invalid")
             valid = false
         }
         return valid
     }
 
     static clearValidation() {
-        document.querySelectorAll(".bulkEditModal .is-invalid").forEach(e => e.classList.remove("is-invalid"))
-        document.querySelectorAll(".bulkEditModal .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
-        document.getElementsByClassName("litepicker")[0].classList.remove("litepicker-invalid")
+        $.querySelectorAll(".bulkEditModal .is-invalid").forEach(e => e.classList.remove("is-invalid"))
+        $.querySelectorAll(".bulkEditModal .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
+        $.getElementsByClassName("litepicker")[0].classList.remove("litepicker-invalid")
     }
 
     static savingAnimation(el) {
-        el = document.getElementsByClassName(el)[0]
+        el = $.getElementsByClassName(el)[0]
         el.style.width = getComputedStyle(el).width
         el.innerHTML = loadingDots
     }

@@ -5,15 +5,15 @@ import Calendar from "./calendar"
 const head = ".fc-header-toolbar"
 
 new MutationObserver((mutations) => {
-    document.querySelectorAll(`${head} span.fc-icon`).forEach((el, index) => {
+    $.querySelectorAll(`${head} span.fc-icon`).forEach((el, index) => {
         // Skip page back and page forward arrows
         if ([0, 1].includes(index))
             return
 
         let className = el.classList[1].replace("fc-icon-", "")
-        document.querySelector(`${head} .${className}`)?.remove()
-        document.querySelectorAll(`${head} [class*=${className}-]`).forEach(el => el.remove())
-        let newEl = document.createElement("i")
+        $.querySelector(`${head} .${className}`)?.remove()
+        $.querySelectorAll(`${head} [class*=${className}-]`).forEach(el => el.remove())
+        let newEl = $.createElement("i")
 
         // Make sure the toggle icon doesn't gett reset
         if (className == "fa-eye" && !Calendar._showAvailability)
@@ -24,7 +24,7 @@ new MutationObserver((mutations) => {
         el.parentNode.replaceChild(newEl, el)
         el.remove()
     })
-}).observe(document.getElementById("calendar"), {
+}).observe($.getElementById("calendar"), {
     attributes: true,
     childList: true,
     subtree: true,
