@@ -525,7 +525,7 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteAvailability($payload)
     {
-        if (isset($payload["start"]) && isset($payload["end"])) {
+        if ((isset($payload["start"]) && isset($payload["end"])) || (isset($payload["purge"]) && isset($payload["end"]))) {
             return $this->deleteRangeAvailability($payload);
         }
         if (isset($payload["id"])) {
@@ -535,16 +535,18 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteRangeAvailability($payload)
     {
+        $project_id = $payload["pid"];
         $codes = $payload["group"]; // Could be * for all
         $start = $payload["start"];
         $end = $payload["end"];
         $providers = $payload["providers"];
         $locations = $payload["locations"]; // Could be * for all
+        $purge = boolval($payload["purge"]);
 
-        if (empty($start) || empty($end)) {
+        if (!$purge && (empty($start) || empty($end))) {
             return ["msg" => "No start or end time provided"];
         }
-        if (empty($providers)) {
+        if (!$purge && empty($providers)) {
             return ["msg" => "No providers provided"];
         }
 
@@ -563,7 +565,12 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND")->addInClause("location", $locations);
         }
 
-        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        if ($purge) {
+            $query->add("AND project_id = ? AND time_end <= ?", [$project_id, $end]);
+        } else {
+            $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        }
+
         $query->execute();
 
         return [];

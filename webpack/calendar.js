@@ -8,6 +8,8 @@ import BulkEdit from "./bulkEdit"
 import PopOver from "./popover"
 import ContextMenu from "./contextMenu"
 import UserConfig from "./userConfig"
+import ICS from "./ics"
+import CleanUp from "./cleanup"
 import SearchBar from "./searchBar"
 import API from "./api"
 import Page from "./page"
@@ -102,7 +104,7 @@ class Calendar {
         // Modify toolbars
         Calendar.toolbars = Calendar.toolbars[Page.type]
         Calendar.toolbars.bottomRight = Page.refer ? ["refer"] : Calendar.toolbars.bottomRight
-        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["admin"] : Calendar.toolbars.bottomLeft
+        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["cleanup", "ics"] : Calendar.toolbars.bottomLeft
 
         // Grab user settings
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
@@ -110,13 +112,15 @@ class Calendar {
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
             customButtons: {
-                admin: {
-                    icon: "fa-tools",
-                    hint: "Admin tools",
-                    click: () => {
-                        // TODO - Maybe break this out into 3 button for each Admin task?
-                        console.log("TODO")
-                    }
+                cleanup: {
+                    icon: "fa-broom",
+                    hint: "Clean Up old availability & withdrawn subjects",
+                    click: CleanUp.open
+                },
+                ics: {
+                    text: ".ICS",
+                    hint: "Setup ICS exports",
+                    click: ICS.open
                 },
                 config: {
                     icon: "fa-gear",

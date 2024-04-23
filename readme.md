@@ -10,10 +10,9 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Setting to default the scheduled location to a static value or subject's assigned location
 * Filter Location dropdowns and search bar
 
-* Admin tools
-  * Remove all future data for withdrawn subject
+* Admin tools (Started)
+  * Cleanup Remove all future data for withdrawn subject & Purge old availability
   * ICS Export calendar (with optional cron for backups) (with config for extra data)
-  * Purge old availability
 
 * Should a popover exist for titles that are too large for block area? (we need to show notes here too)
   * Idea - Click to open a popover with all details. Don't auto hide.

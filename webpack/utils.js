@@ -93,3 +93,10 @@ export const buildSubjectDropdown = (el, stillOpenFn) => {
         }
     })
 }
+
+export const savingAnimation = (el) => {
+    const loadingDots = `<div class="loading-dots"></div>`
+    el = $.getElementsByClassName(el)[0]
+    el.style.width = getComputedStyle(el).width
+    el.innerHTML = loadingDots
+}

@@ -3,9 +3,10 @@
 
 import Calendar from "./calendar"
 const head = ".fc-header-toolbar"
+const foot = ".fc-footer-toolbar"
 
 new MutationObserver((mutations) => {
-    $.querySelectorAll(`${head} span.fc-icon`).forEach((el, index) => {
+    $.querySelectorAll(`${head} span.fc-icon, ${foot} span.fc-icon`).forEach((el, index) => {
         // Skip page back and page forward arrows
         if ([0, 1].includes(index))
             return

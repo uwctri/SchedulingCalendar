@@ -23,9 +23,9 @@
 import API from './api.js'
 import Swal from 'sweetalert2'
 import Calendar from './calendar';
-import html from './html/modify_appointment_popup.html'
+import html from './html/modify_appointment.html'
 import { goToRecord } from './page.js';
-import { buildLocationDropdown, buildProviderDropdown } from "./utils";
+import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils";
 
 const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 const loadingDots = `<div class="loading-dots"></div>`
@@ -133,7 +133,7 @@ class ContextMenu {
                     Calendar.refresh()
                 })
 
-                ContextMenu.savingAnimation(btnEl)
+                savingAnimation(btnEl)
                 setTimeout(Swal.close, 2000)
                 return false
             }
@@ -216,12 +216,6 @@ class ContextMenu {
         }
 
         el.addEventListener('contextmenu', (jsEvent) => showMenu(el, jsEvent, options))
-    }
-
-    static savingAnimation(el) {
-        el = $.getElementsByClassName(el)[0]
-        el.style.width = getComputedStyle(el).width
-        el.innerHTML = loadingDots
     }
 }
 

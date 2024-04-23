@@ -1,17 +1,15 @@
 import Swal from 'sweetalert2'
 import html from './html/bulkEdit.html'
 import API from "./api"
-import { DateTime } from 'luxon';
-import { CRUD, Resource } from "./enums"
-import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown } from "./utils"
-import Calendar from './calendar';
-import Litepicker from 'litepicker';
+import { DateTime } from 'luxon'
+import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
+import Calendar from './calendar'
+import Litepicker from 'litepicker'
 import PopOver from "./popover"
 
 const modalWidth = "800px"
 const defaultStart = "08:00"
 const defaultEnd = "17:00"
-const loadingDots = `<div class="loading-dots"></div>`
 class BulkEdit {
 
     static picker = null
@@ -71,7 +69,7 @@ class BulkEdit {
                     Calendar.refresh()
                 })
 
-                BulkEdit.savingAnimation(btnEl)
+                savingAnimation(btnEl)
                 setTimeout(Swal.close, 2000)
                 return false
             },
@@ -92,7 +90,7 @@ class BulkEdit {
                     Calendar.refresh()
                 })
 
-                BulkEdit.savingAnimation(btnEl)
+                savingAnimation(btnEl)
                 setTimeout(Swal.close, 2000)
                 return false
             }
@@ -157,12 +155,6 @@ class BulkEdit {
         $.querySelectorAll(".bulkEditModal .is-invalid").forEach(e => e.classList.remove("is-invalid"))
         $.querySelectorAll(".bulkEditModal .is-invalid-noicon").forEach(e => e.classList.remove("is-invalid-noicon"))
         $.getElementsByClassName("litepicker")[0].classList.remove("litepicker-invalid")
-    }
-
-    static savingAnimation(el) {
-        el = $.getElementsByClassName(el)[0]
-        el.style.width = getComputedStyle(el).width
-        el.innerHTML = loadingDots
     }
 }
 

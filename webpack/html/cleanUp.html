@@ -1,0 +1,36 @@
+<div class="container mx-0 cleanupModal">
+
+    <div class="form-group">
+        <label class="float-left" for="cleanUpEnd">Availability Time</label>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    <i class="fa-solid fa-clock"></i>
+                </div>
+            </div>
+            <input id="cleanUpEnd" name="cleanUpEnd" type="time" value="END-TIME" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="row">
+            <div class="custom-control custom-checkbox col-1">
+                <input name="removeAvailability" id="removeAvailability" type="checkbox" class="custom-control-input"
+                    value="1">
+            </div>
+            <div class="col-11">
+                <label for="removeAvailability" class="custom-control-label">Remove all availability before the above
+                    date.</label>
+            </div>
+        </div>
+        <div class="row limitAvailabilityGroup">
+            <div class="custom-control custom-checkbox col-1">
+                <input name="limitAvailability" id="limitAvailability" type="checkbox" CHECKED-LIMIT
+                    class="custom-control-input" value="1">
+            </div>
+            <div class="col-11">
+                <label for="limitAvailability" class="custom-control-label">Show only availability that can used in this
+                    project</label>
+            </div>
+        </div>
+    </div>
+</div>

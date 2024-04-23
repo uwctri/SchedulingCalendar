@@ -59,9 +59,6 @@ class UserConfig {
             html: newHtml,
             confirmButtonColor: rcBtnColor,
             confirmButtonText: "Save",
-            customClass: {
-                container: 'userConfigModal'
-            }
         }).then((result) => {
 
             // Bail if save wasn't clicked
