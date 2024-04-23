@@ -170,7 +170,16 @@ class Calendar {
                     Calendar._fc.gotoDate(dateClickInfo.date)
                 }
             },
+            eventClick: (eventClickInfo) => {
+                const props = eventClickInfo.event.extendedProps
+                if (["singleWeek", "singleDay"].includes(eventClickInfo.view.type) &&
+                    ["my", "schedule"].includes(Page.type) &&
+                    props.is_appointment) {
+                    PopOver.openDetails(eventClickInfo)
+                }
+            },
             select: (selectionInfo) => {
+                console.log(selectionInfo)
                 if (["singleWeek", "singleDay"].includes(Calendar.getView())) {
                     if (Page.type == "edit") {
                         PopOver.openAvailability(selectionInfo)

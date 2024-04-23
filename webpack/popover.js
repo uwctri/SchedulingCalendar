@@ -4,6 +4,7 @@ import API from "./api"
 import RedCap from "./redcap"
 import html_availability from "./html/availability_popup.html"
 import html_appointment from "./html/appointment_popup.html"
+import html_details from "./html/details_popup.html"
 import Calendar from "./calendar"
 import Page from "./page"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils";
@@ -59,6 +60,8 @@ class PopOver {
     static setup() {
         if (PopOver._setup) return
         $.addEventListener("click", (e) => {
+            if (e.target.id == "PopClose")
+                PopOver.close()
             if (e.target.id !== "aPopAddBtn")
                 return
             if (!PopOver.validate())
@@ -173,6 +176,21 @@ class PopOver {
         // TODO location validation / warning
     }
 
+    static openDetails(info) {
+        const title = `Appointment Details ${closeBtn}`
+        const props = info.event.extendedProps
+        const start = DateTime.fromISO(info.event.startStr).toFormat("hh:mm a")
+        const end = DateTime.fromISO(info.event.endStr).toFormat("hh:mm a")
+        let html = html_details.replace("Example Time", `${start} - ${end}`)
+            .replace("Example Subject", props.record_display).replace("Example Visit", props.visit_display)
+            .replace("Example Provider", props.user_display).replace("Example Location", props.location_display)
+            .replace("Example Notes", props.notes)
+        if (!props.notes)
+            html = html.replace("PopNotes", "PopNotes d-none")
+        PopOver.openPopover(title, html, info.jsEvent.target)
+        PopOver._date = null
+    }
+
     static openPopover(title, content, target) {
         PopOver.setup()
         PopOver.close()
@@ -184,7 +202,6 @@ class PopOver {
             sanitize: false,
             container: "body",
         }).popover("show")
-        $.getElementById("PopClose").addEventListener("click", PopOver.close)
     }
 
     static isOpen() {

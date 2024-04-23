@@ -6,16 +6,13 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* Sort out what the location json should look, update the API. Should location actually be on project settings?
-* Setting to default the scheduled location to a static value or subject's assigned location
-* Filter Location dropdowns and search bar
-
 * Admin tools (Started)
   * Cleanup Remove all future data for withdrawn subject & Purge old availability
   * ICS Export calendar (with optional cron for backups) (with config for extra data)
 
-* Should a popover exist for titles that are too large for block area? (we need to show notes here too)
-  * Idea - Click to open a popover with all details. Don't auto hide.
+* Sort out what the location json should look, update the API. Should location actually be on project settings?
+* Setting to default the scheduled location to a static value or subject's assigned location
+* Filter Location dropdowns and search bar
 
 * Right side subject summary
 * Add docs to config.json
