@@ -1,10 +1,10 @@
 
 function createEnum(values) {
-    const enumObject = {};
+    const enumObject = {}
     for (const val of values) {
-        enumObject[val] = val.toLowerCase();
+        enumObject[val] = val.toLowerCase()
     }
-    return Object.freeze(enumObject);
+    return Object.freeze(enumObject)
 }
 
 export const CRUD = createEnum(["Create", "Read", "Update", "Delete"])

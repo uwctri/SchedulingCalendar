@@ -1,7 +1,7 @@
 import Choices from "choices.js"
 import API from "./api"
 import UserConfig from "./userConfig"
-import Calendar from './calendar';
+import Calendar from './calendar'
 import Page from "./page"
 
 const centerClassName = "fc-toolbar-chunk"
@@ -12,14 +12,14 @@ const choicesSelector = ".choices__inner .choices__list"
 
 class SearchBar {
 
-    static choices = null;
-    static _ready = false;
+    static choices = null
+    static _ready = false
 
     static async build() {
 
         const keyEvent = (event) => {
             if (event.key != "Enter" || SearchBar.isVisible() || !SearchBar.isReady())
-                return;
+                return
             $.getElementsByClassName("fc-search-button")[0].click()
             SearchBar.focus()
         }
@@ -57,7 +57,7 @@ class SearchBar {
             subjects = values[1]
             locations = values[2]
             visits = values[3]
-        });
+        })
         addCustomProperty(providers, "type", "provider")
         addCustomProperty(subjects, "type", "subject")
         addCustomProperty(locations, "type", "location")

@@ -1,12 +1,12 @@
 import { CRUD, Resource } from "./enums"
-import Calendar from "./calendar";
-import RedCap from "./redcap";
+import Calendar from "./calendar"
+import RedCap from "./redcap"
 import { DateTime } from "luxon"
 
 const req_msg = "Missing required keys in payload object for API call"
 class API {
 
-    static _time_fields = ["start", "end"];
+    static _time_fields = ["start", "end"]
 
     // Cache and throttle these gets
     static cache = {

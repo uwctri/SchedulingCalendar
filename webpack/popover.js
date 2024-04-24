@@ -7,17 +7,16 @@ import html_appointment from "./html/appointment_popup.html"
 import html_details from "./html/details_popup.html"
 import Calendar from "./calendar"
 import Page from "./page"
-import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils";
+import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils"
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
 const loadingDots = `<div class="loading-dots"></div>`
 class PopOver {
 
-    static _date = null;
-    static _setup = false;
-    static _open = false;
-    static _animationInterval = null;
+    static _date = null
+    static _setup = false
+    static _open = false
 
     static timeMask12 = {
         mask: "hh:mm aa",
@@ -193,15 +192,13 @@ class PopOver {
         PopOver.setup()
         PopOver.close()
         PopOver._open = true
-        while (!$.querySelector(".popover")) {
-            RedCap.popover(target, {
-                title: title,
-                content: content,
-                html: true,
-                sanitize: false,
-                container: "body",
-            }).popover("show")
-        }
+        RedCap.popover(target, {
+            title: title,
+            content: content,
+            html: true,
+            sanitize: false,
+            container: "body",
+        }).popover("show")
     }
 
     static isOpen() {
@@ -210,10 +207,6 @@ class PopOver {
 
     static close() {
         PopOver._open = false
-        if (PopOver._animationInterval) {
-            clearInterval(PopOver._animationInterval)
-            PopOver._animationInterval = null
-        }
         $.querySelectorAll(".popover").forEach(e => e.remove())
     }
 

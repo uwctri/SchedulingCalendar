@@ -36,7 +36,7 @@ class UserConfig {
         // Setup toggles for the week bar 
         $.addEventListener("click", (event) => {
             let classList = event.target.classList
-            if (!classList.contains("configWeek")) return;
+            if (!classList.contains("configWeek")) return
             event.target.classList.toggle("btn-primary")
             event.target.classList.toggle("btn-danger")
         })
