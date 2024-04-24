@@ -181,12 +181,10 @@ class PopOver {
         const props = info.event.extendedProps
         const start = DateTime.fromISO(info.event.startStr).toFormat("hh:mm a")
         const end = DateTime.fromISO(info.event.endStr).toFormat("hh:mm a")
-        let html = html_details.replace("Example Time", `${start} - ${end}`)
+        const html = html_details.replace("Example Time", `${start} - ${end}`)
             .replace("Example Subject", props.record_display).replace("Example Visit", props.visit_display)
             .replace("Example Provider", props.user_display).replace("Example Location", props.location_display)
-            .replace("Example Notes", props.notes)
-        if (!props.notes)
-            html = html.replace("PopNotes", "PopNotes d-none")
+            .replace("Example Notes", props.notes).replace("d-none", props.notes ? "" : "d-none")
         PopOver.openPopover(title, html, info.jsEvent.target)
         PopOver._date = null
     }
@@ -195,13 +193,15 @@ class PopOver {
         PopOver.setup()
         PopOver.close()
         PopOver._open = true
-        RedCap.popover(target, {
-            title: title,
-            content: content,
-            html: true,
-            sanitize: false,
-            container: "body",
-        }).popover("show")
+        while (!$.querySelector(".popover")) {
+            RedCap.popover(target, {
+                title: title,
+                content: content,
+                html: true,
+                sanitize: false,
+                container: "body",
+            }).popover("show")
+        }
     }
 
     static isOpen() {

@@ -6,6 +6,9 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
+* Issue w/ Appt details only opening every 2nd click
+* Make titles looks nicer and not overflow container
+
 * Admin tools (Started)
   * Cleanup Remove all future data for withdrawn subject & Purge old availability
   * ICS Export calendar (with optional cron for backups) (with config for extra data)

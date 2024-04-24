@@ -179,7 +179,6 @@ class Calendar {
                 }
             },
             select: (selectionInfo) => {
-                console.log(selectionInfo)
                 if (["singleWeek", "singleDay"].includes(Calendar.getView())) {
                     if (Page.type == "edit") {
                         PopOver.openAvailability(selectionInfo)
