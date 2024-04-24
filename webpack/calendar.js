@@ -6,6 +6,7 @@ import listPlugin from "@fullcalendar/list"
 import { DateTime } from "luxon"
 import BulkEdit from "./bulkEdit"
 import PopOver from "./popover"
+import { genRowCol } from "./utils"
 import ContextMenu from "./contextMenu"
 import UserConfig from "./userConfig"
 import ICS from "./ics"
@@ -200,13 +201,16 @@ class Calendar {
                 const props = arg.event.extendedProps
                 arg.el.setAttribute('data-internal-id', props.internal_id)
                 if (["singleDay", "singleWeek", "agenda"].includes(Calendar.getView())) {
-                    if (Page.type == "edit") {
-                        ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
-                    } else if (Page.type == "schedule" && props.is_appointment) {
-                        ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
-                    } else if (Page.type == "my") {
-                        ContextMenu.attachContextMenu(arg.el, ContextMenu.readMenu)
-                    }
+                    // if (Page.type == "edit") {
+                    //     ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
+                    // } else if (Page.type == "schedule" && props.is_appointment) {
+                    //     ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
+                    // } else if (Page.type == "my") {
+                    //     ContextMenu.attachContextMenu(arg.el, ContextMenu.readMenu)
+                    // }
+                }
+                if (["singleDay", "singleWeek"].includes(Calendar.getView()) && Page.type) {
+                    arg.el.classList.add("overflow-hidden")
                 }
             },
             loading: (isLoading) => {
@@ -252,15 +256,15 @@ class Calendar {
                 let title = {
                     "availability": {
                         "edit":
-                            `${info.timeText}<br>${props.availability_code_display}<br>${props.user_display}<br>${props.location_display}`,
+                            genRowCol([info.timeText, props.availability_code_display, props.user_display, props.location_display], 2),
                         "schedule":
                             `${props.user_display}<br>${props.location_display}`,
                     },
                     "appointment": {
                         "my":
-                            `${info.timeText}<br>${props.record_display}<br>${props.visit_display}<br>${props.location_display}`,
+                            genRowCol([info.timeText, props.record_display, props.visit_display, props.location_display], 2),
                         "schedule":
-                            `${info.timeText}<br>${props.record_display}<br>${props.visit_display}<br>${props.user_display}<br>${props.location_display}`,
+                            genRowCol([info.timeText, props.record_display, props.visit_display, props.user_display, props.location_display], 2)
                     },
                 }[type][Page.type]
 

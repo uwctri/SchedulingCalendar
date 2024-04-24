@@ -100,3 +100,17 @@ export const savingAnimation = (el) => {
     el.style.width = getComputedStyle(el).width
     el.innerHTML = loadingDots
 }
+
+export const genRowCol = (arr, width) => {
+    let t = ""
+    let size = 0
+    while (size * width < arr.length) {
+        t = t + `<div class="row g-0">`
+        arr.slice(width * size, width * (size + 1)).forEach(el => {
+            t = t + `<div class="col">${el}</div>`
+        });
+        t = t + `</div>`
+        size = size + 1
+    }
+    return t
+}
