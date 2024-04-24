@@ -8,6 +8,7 @@ const defaultSlotSize = "30"
 const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
 const defaultLimitAvailability = true
+const defaultLineHeight = "1.5"
 
 const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 class UserConfig {
@@ -27,6 +28,7 @@ class UserConfig {
             hiddenDays: hiddenDays || defaultHiddenDays,
             slotSize: localStorage.getItem("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows,
+            lineHeight: localStorage.getItem("lineHeight") || defaultLineHeight,
             limitAvailability: typeof limitAvailability === "string" ? limitAvailability === "true" : defaultLimitAvailability
         }
     }
@@ -45,13 +47,14 @@ class UserConfig {
 
     static open() {
 
-        const { start, end, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
+        const { start, end, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability } = UserConfig.get()
         UserConfig.init()
 
         // Modify the html with current values
         const newHtml = html.replace("START-TIME", start).replace("END-TIME", end).
             replace("SLOT-SIZE", slotSize).replace("CHECKED-EXPAND", expandRows ? "checked" : "").
-            replace("CHECKED-LIMIT", limitAvailability ? "checked" : "")
+            replace("CHECKED-LIMIT", limitAvailability ? "checked" : "").
+            replace("LINE-HEIGHT", lineHeight)
 
         PopOver.close()
         Swal.fire({
@@ -72,6 +75,7 @@ class UserConfig {
             localStorage.setItem("configEnd", $.getElementById("configEnd").value)
             localStorage.setItem("slotSize", $.getElementById("slotSize").value)
             localStorage.setItem("expandRows", $.getElementById("expandRows").checked)
+            localStorage.setItem("lineHeight", $.getElementById("lineHeight").value)
             localStorage.setItem("limitAvailability", $.getElementById("limitAvailability").checked)
             const els = $.getElementsByClassName("configWeek")
             let saveDays = []

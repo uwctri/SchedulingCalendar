@@ -103,7 +103,7 @@ class Calendar {
         Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["cleanup", "ics"] : Calendar.toolbars.bottomLeft
 
         // Grab user settings
-        const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, limitAvailability } = UserConfig.get()
+        const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability } = UserConfig.get()
 
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
@@ -200,17 +200,26 @@ class Calendar {
             eventDidMount: (arg) => {
                 const props = arg.event.extendedProps
                 arg.el.setAttribute('data-internal-id', props.internal_id)
+
+                // Context Menus (Right clicks)
                 if (["singleDay", "singleWeek", "agenda"].includes(Calendar.getView())) {
-                    // if (Page.type == "edit") {
-                    //     ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
-                    // } else if (Page.type == "schedule" && props.is_appointment) {
-                    //     ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
-                    // } else if (Page.type == "my") {
-                    //     ContextMenu.attachContextMenu(arg.el, ContextMenu.readMenu)
-                    // }
+                    if (Page.type == "edit") {
+                        ContextMenu.attachContextMenu(arg.el, ContextMenu.availabilityMenu)
+                    } else if (Page.type == "schedule" && props.is_appointment) {
+                        ContextMenu.attachContextMenu(arg.el, ContextMenu.appointmentMenu)
+                    } else if (Page.type == "my") {
+                        ContextMenu.attachContextMenu(arg.el, ContextMenu.readMenu)
+                    }
                 }
-                if (["singleDay", "singleWeek"].includes(Calendar.getView()) && Page.type) {
-                    arg.el.classList.add("overflow-hidden")
+
+                // Adjust line height to user settings for non-background events
+                if (["singleDay", "singleWeek"].includes(Calendar.getView()) && arg.event.display !== "background") {
+                    arg.el.style.lineHeight = lineHeight
+
+                    // Stop overflow on the scheduling cal, it's hard to read
+                    if (Page.type == "schedule") {
+                        arg.el.classList.add("overflow-hidden")
+                    }
                 }
             },
             loading: (isLoading) => {

@@ -1,4 +1,4 @@
-<div class="container userConfigModal">
+<div class="container">
 
     <div class="form-group">
         <label class="float-left" for="configStart">Start Time</label>
@@ -33,6 +33,21 @@
             <input id="slotSize" name="slotSize" type="number" min="5" max="30" value="SLOT-SIZE" class="form-control">
             <div class="input-group-append">
                 <div class="input-group-text">minutes</div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="float-left" for="lineHeight">Event Line Height</label>
+        <div class="input-group">
+            <div class="input-group-prepend">
+                <div class="input-group-text">
+                    <i class="fa-solid fa-grip-lines"></i>
+                </div>
+            </div>
+            <input id="lineHeight" name="lineHeight" type="number" min="0.1" max="5" value="LINE-HEIGHT"
+                class="form-control">
+            <div class="input-group-append">
+                <div class="input-group-text">em</div>
             </div>
         </div>
     </div>
