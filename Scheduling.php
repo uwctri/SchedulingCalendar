@@ -37,11 +37,10 @@ class Scheduling extends AbstractExternalModule
     public function redcap_every_page_top($project_id)
     {
         if ($this->isPage("ExternalModules/manager/project.php") && $project_id) {
-            $url = $this->getUrl('docs.php');
-            echo "<link rel='stylesheet' href='{$this->getUrl('style.css')}'>";
-            echo "<script>
+            echo "<link rel='stylesheet' href='{$this->getUrl('style.css')}'>
+            <script>
             document.addEventListener('DOMContentLoaded', () => {
-                document.querySelector('tr[data-module=scheduling_calendar] a').href = '$url'
+                document.querySelector('tr[data-module=scheduling_calendar] a').href = '{$this->getUrl('docs.php')}'
             })
             </script>";
         }
@@ -222,7 +221,9 @@ class Scheduling extends AbstractExternalModule
             }
             foreach ($data as $pid => $records) {
                 $nameField = $this->getProjectSetting($pid, "name-field");
-                $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
+                $locationField = $this->getProjectSetting($pid, "location-field");
+                $withdrawField = $this->getProjectSetting($pid, "withdraw-field");
+                $projectData = $this->getSingleEventFields([$nameField, $locationField, $withdrawField], $records, $pid);
                 foreach ($projectData as $record_id => $record_data) {
                     $loc = $records[$record_id];
                     $name = $record_data[$nameField];
@@ -276,16 +277,18 @@ class Scheduling extends AbstractExternalModule
 
     private function getLocationStructure($flatten = false)
     {
-        $locations = $this->getSystemSetting("locations-json");
+        $sot = $this->getProjectSetting("location-sot");
+        $pid = $sot == "json" ? null : $this->getProjectSetting("location-pid");
+        $locations = $this->getProjectSetting("location-json", $pid);
         $locations = json_decode($locations, true) ?? [];
         if ($flatten) {
             $flat_locations = [];
             foreach ($locations as $code => $data) {
-                $sites = $data["sites"];
-                unset($data["sites"]);
+                $sites = $data["sub"];
+                unset($data["sub"]);
                 $flat_locations[$code] = $data;
                 foreach ($sites as $site_code => $site) {
-                    $flat_locations[$site_code] = $site;
+                    $flat_locations[$site_code] = array_merge($site, ["parent" => $code]);
                 }
             }
             return $flat_locations;
