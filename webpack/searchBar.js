@@ -40,6 +40,26 @@ class SearchBar {
             }
         }
 
+        const flattenLocations = (locations, parent = null) => {
+            let flatLocs = []
+            for (const id in locations) {
+                const data = locations[id]
+                if (data.sub) {
+                    flatLocs = flatLocs.concat(flattenLocations(data.sub, id))
+                    delete data.sub
+                }
+                flatLocs.push({
+                    value: id,
+                    label: data["name"],
+                    parent: parent,
+                    customProperties: {
+                        ...data
+                    }
+                })
+            }
+            return flatLocs
+        }
+
         let centerEl = $.getElementsByClassName(centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
 
@@ -58,6 +78,7 @@ class SearchBar {
             locations = values[2]
             visits = values[3]
         })
+        locations = flattenLocations(locations)
         addCustomProperty(providers, "type", "provider")
         addCustomProperty(subjects, "type", "subject")
         addCustomProperty(locations, "type", "location")
@@ -130,26 +151,11 @@ class SearchBar {
     }
 
     static filterLocations(locations) {
-        let locs = []
-        for (const id in locations) {
-            let data = locations[id]
-            // TODO for the edit Avail cal we should show all active locs that the user has access to
-            // TODO for the my calednar only show ... something
-            if (data.active && (!data.projects || !data.projects.length || data.projects.includes(project_code))) {
-                locs.push({
-                    value: id,
-                    label: data["name"],
-                    customProperties: {
-                        ...data
-                    }
-                })
-            }
-            if (data.sites) {
-                locs = locs.concat(SearchBar.filterLocations(data.sites))
-            }
-        }
-        return locs
+        // TODO for the edit Avail cal we should show all active locs that the user has access to
+        // TODO for the my calednar only show ... something
+        return locations.filter(loc => loc.customProperties.active)
     }
+
 
     static filterProviders(providers) {
         providers = SearchBar.formatCustomProps(providers)
@@ -166,7 +172,6 @@ class SearchBar {
 
     static formatCustomProps(raw) {
         let result = []
-        console.log(raw)
         for (const id in raw) {
             const data = raw[id]
             result.push({
@@ -181,14 +186,13 @@ class SearchBar {
     }
 
     static getPicked(valueOnly = false, filterType = null) {
-        if (SearchBar.choices == null) return []
+        if (SearchBar.choices == null)
+            return []
         let picked = SearchBar.choices.getValue()
-        if (filterType) {
+        if (filterType)
             picked = picked.filter(item => item.customProperties.type == filterType)
-        }
-        if (valueOnly) {
+        if (valueOnly)
             picked = picked.map(x => x.value)
-        }
         return picked
     }
 

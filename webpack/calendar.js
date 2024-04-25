@@ -285,6 +285,7 @@ class Calendar {
                 return { html: title }
             },
             events: (info, successCallback, failureCallback) => {
+                console.log(SearchBar.getPickedLocations(true))
                 let paramsCommon = {
                     start: info.start.toISOString(),
                     end: info.end.toISOString(),
