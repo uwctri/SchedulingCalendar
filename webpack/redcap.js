@@ -1,5 +1,5 @@
 // This class is used to wrap interfacing with native RC functions and
-// libraries that ship with RC. 
+// libraries that ship with RC. We also use the FontAwesome that ships with RC
 
 class RedCap {
 

@@ -63,8 +63,8 @@
             "type": "field-list"
         },
         {
-            "key": "location-field",
-            "name": "<b>Location Field:</b><br>Subject's home clinic. Should use the same coded value used in the location JSON",
+            "key": "withdraw-field",
+            "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
             "type": "field-list"
         },
         {
@@ -77,19 +77,49 @@
                     "name": "Blank"
                 },
                 {
-                    "value": "clinic",
-                    "name": "Assigned Clinic"
+                    "value": "field",
+                    "name": "Field"
                 },
                 {
                     "value": "static",
-                    "name": "Static Location"
+                    "name": "Static"
                 }
             ]
         },
         {
-            "key": "withdraw-field",
-            "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
+            "key": "location-field",
+            "name": "<b>Location Field:</b><br>Subject's home clinic. Should use the same coded value used in the location JSON",
             "type": "field-list"
+        },
+        {
+            "key": "location-static",
+            "name": "<b>Location Value:</b><br>Coded value for the default location from the JSON",
+            "type": "text"
+        },
+        {
+            "key": "location-sot",
+            "name": "<b>Default Location</b><br>Location auto-selected when scheduling a new appointment",
+            "type": "radio",
+            "choices": [
+                {
+                    "value": "json",
+                    "name": "Local JSON"
+                },
+                {
+                    "value": "pid",
+                    "name": "Another Project"
+                }
+            ]
+        },
+        {
+            "key": "location-json",
+            "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
+            "type": "textarea"
+        },
+        {
+            "key": "location-pid",
+            "name": "<b>Location Project:</b><br>Use this project's location JSON",
+            "type": "project-id"
         },
         {
             "key": "visit-group",
@@ -151,11 +181,6 @@
         }
     ],
     "system-settings": [
-        {
-            "key": "locations-json",
-            "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
-            "type": "textarea"
-        },
         {
             "key": "availability-groups",
             "name": "<b>Availability Group</b>",

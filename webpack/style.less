@@ -386,50 +386,84 @@
 
 }
 
-table:has(tr[field=scheduling-and-availability]) {
+.modal-content {
 
-    thead {
-        display: none;
+    table:has(input[name=location-default][value=static]:checked) {
+        tr[field=location-static] {
+            display: contents;
+        }
     }
 
-    .external-modules-instance-label {
-        display: none;
+    table:has(input[name=location-default][value=field]:checked) {
+        tr[field=location-field] {
+            display: contents;
+        }
     }
 
-    .sub_start td {
-        background-color: var(--redcap-dark-grey)
+    table:has(input[name=location-sot][value=json]:checked) {
+        tr[field=location-json] {
+            display: contents;
+        }
     }
 
-    tr[field=scheduling-and-availability] {
-        display: none;
+    table:has(input[name=location-sot][value=pid]:checked) {
+        tr[field=location-pid] {
+            display: contents;
+        }
     }
 
-    tr[field=visit-branch-logic-field] label,
-    tr[field=visit-branch-logic-value] label {
-        display: none;
-    }
+    table:has(tr[field=scheduling-and-availability]) {
 
-    tr[field=visit-branch-logic-event] td,
-    tr[field=visit-branch-logic-field] td {
-        border: none;
-        padding-top: 0.15rem;
-        padding-bottom: 0.15rem;
-    }
+        tr[field=location-field],
+        tr[field=location-static],
+        tr[field=location-json],
+        tr[field=location-pid] {
+            display: none;
+        }
 
-    tr[field=visit-branch-logic-value] {
+        thead {
+            display: none;
+        }
 
-        td {
+        .external-modules-instance-label {
+            display: none;
+        }
+
+        .sub_start td {
+            background-color: var(--redcap-dark-grey)
+        }
+
+        tr[field=scheduling-and-availability] {
+            display: none;
+        }
+
+        tr[field=visit-branch-logic-field] label,
+        tr[field=visit-branch-logic-value] label {
+            display: none;
+        }
+
+        tr[field=visit-branch-logic-event] td,
+        tr[field=visit-branch-logic-field] td {
+            border: none;
             padding-top: 0.15rem;
             padding-bottom: 0.15rem;
         }
 
-        .external-modules-input-td {
-            &::before {
-                content: "= ";
+        tr[field=visit-branch-logic-value] {
+
+            td {
+                padding-top: 0.15rem;
+                padding-bottom: 0.15rem;
             }
 
-            input {
-                width: 94%;
+            .external-modules-input-td {
+                &::before {
+                    content: "= ";
+                }
+
+                input {
+                    width: 94%;
+                }
             }
         }
     }
