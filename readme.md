@@ -6,9 +6,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* Config for line height
-* UserConfig modal broken
-
 * Admin tools (Started)
   * Cleanup Remove all future data for withdrawn subject & Purge old availability
   * ICS Export calendar (with optional cron for backups) (with config for extra data)

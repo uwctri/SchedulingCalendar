@@ -12,8 +12,8 @@ new MutationObserver((mutations) => {
             return
 
         let className = el.classList[1].replace("fc-icon-", "")
-        $.querySelector(`${head} .${className}`)?.remove()
-        $.querySelectorAll(`${head} [class*=${className}-]`).forEach(el => el.remove())
+        $.querySelector(`${head} .${className}, ${foot} .${className}`)?.remove()
+        $.querySelectorAll(`${head} [class*=${className}-], ${foot} [class*=${className}-]`).forEach(el => el.remove())
         let newEl = $.createElement("i")
 
         // Make sure the toggle icon doesn't gett reset
