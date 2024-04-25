@@ -11,11 +11,11 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
   * ICS Export calendar (with optional cron for backups) (with config for extra data)
 
 * Sort out what the location json should look, update the API. Pull from Project now.
-* USe the default location given in settings
+* Use the default location given in settings
 * Filter Location dropdowns and search bar
 
 * Right side subject summary
-* Add docs to config.json
+* Write the docs page
 * My Calendar Page - Visit names and Display names aren't going to pull correctly as the methods for getting the info assume PID
 
 ### Questions
