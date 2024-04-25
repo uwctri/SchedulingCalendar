@@ -24,8 +24,8 @@ export const buildLocationDropdown = (el, stillOpenFn) => {
         const select = $.getElementById(el)
         const loopOver = (obj) => {
             for (const code in obj) {
-                if (obj[code].sites)
-                    loopOver(obj[code].sites)
+                if (obj[code].sub)
+                    loopOver(obj[code].sub)
                 if (!obj[code].active)
                     continue
                 let option = $.createElement("option")

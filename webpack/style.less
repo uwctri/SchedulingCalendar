@@ -129,6 +129,7 @@
 
 }
 
+.cleanupModal,
 .userConfigModal {
 
     padding: 0;
@@ -136,14 +137,17 @@
     .swal2-modal {
         width: max-content;
 
+        .withdrawnAppts,
+        .removeAvailability,
         .expandRowsGroup,
         .limitAvailabilityGroup {
             font-size: 11pt;
         }
 
-        .swal2-html-container {
-            width: 17.75em; // Arbitrary width that looks good
-        }
+    }
+
+    .blurb {
+        font-size: 11pt;
     }
 
     .btn,
@@ -155,20 +159,12 @@
     }
 }
 
-.cleanupModal {
+.cleanupModal .swal2-html-container {
+    width: 24em; // Arbitrary width that looks good
+}
 
-    padding: 0;
-
-    .swal2-modal {
-        width: max-content;
-
-        .expandRowsGroup,
-        .limitAvailabilityGroup {
-            font-size: 11pt;
-        }
-
-    }
-
+.userConfigModal .swal2-html-container {
+    width: 17.75em; // Arbitrary width that looks good
 }
 
 .detailsPopOver {

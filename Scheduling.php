@@ -204,26 +204,22 @@ class Scheduling extends AbstractExternalModule
         $project_id = $payload["pid"];
         $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
-        $locationField = $this->getProjectSetting("location-field");
-        $withdrawField = $this->getProjectSetting("withdraw-field");
         $subjects = [];
 
-        if (empty($nameField)) {
+        if (empty($nameField))
             return [];
-        }
 
+        // Used only for filtering on My Calendar
         if (!empty($providers)) {
-            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?'", $providers);
+            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?' AND record IS NOT NULL", $providers);
 
             $data = [];
             while ($row = db_fetch_assoc($sql)) {
                 $data[$row["project_id"]][$row["record"]] = $row["location"];
             }
             foreach ($data as $pid => $records) {
-                $nameField = $this->getProjectSetting($pid, "name-field");
-                $locationField = $this->getProjectSetting($pid, "location-field");
-                $withdrawField = $this->getProjectSetting($pid, "withdraw-field");
-                $projectData = $this->getSingleEventFields([$nameField, $locationField, $withdrawField], $records, $pid);
+                $nameField = $this->getProjectSetting("name-field", $pid);
+                $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
                 foreach ($projectData as $record_id => $record_data) {
                     $loc = $records[$record_id];
                     $name = $record_data[$nameField];
@@ -240,11 +236,23 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
+        // Used for all subjects on a project
         if (empty($providers)) {
+            $locDefault = $this->getProjectSetting("location-default");
+            $locationField = $this->getProjectSetting("location-field");
+            $locationStatic = ""; // Blank
+            if ($locDefault == "static") {
+                $locationField = null;
+                $locationStatic = $this->getProjectSetting("location-static");
+            } elseif ($locDefault == "blank" || empty($locDefault)) {
+                $locationField = null;
+            }
+
+            $withdrawField = $this->getProjectSetting("withdraw-field");
             $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField]);
             foreach ($data as $record_id => $recordData) {
                 $name = $recordData[$nameField];
-                $loc = $recordData[$locationField];
+                $loc = $recordData[$locationField] ?? $locationStatic;
                 $withdraw = boolval($recordData[$withdrawField]);
                 $subjects[$record_id] = [
                     "value" => $record_id,
@@ -534,7 +542,7 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteAvailability($payload)
     {
-        if ((isset($payload["start"]) && isset($payload["end"])) || (isset($payload["purge"]) && isset($payload["end"]))) {
+        if (isset($payload["start"]) && isset($payload["end"])) {
             return $this->deleteRangeAvailability($payload);
         }
         if (isset($payload["id"])) {
@@ -548,14 +556,13 @@ class Scheduling extends AbstractExternalModule
         $codes = $payload["group"]; // Could be * for all
         $start = $payload["start"];
         $end = $payload["end"];
-        $providers = $payload["providers"];
+        $providers = $payload["providers"]; // Could be * for all
         $locations = $payload["locations"]; // Could be * for all
-        $purge = boolval($payload["purge"]);
 
-        if (!$purge && (empty($start) || empty($end))) {
+        if (empty($start) || empty($end)) {
             return ["msg" => "No start or end time provided"];
         }
-        if (!$purge && empty($providers)) {
+        if (empty($providers)) {
             return ["msg" => "No providers provided"];
         }
 
@@ -566,7 +573,7 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND")->addInClause("availability_code", $codes);
         }
 
-        if (!empty($providers)) {
+        if (!empty($providers) && $providers[0] != "*") {
             $query->add("AND")->addInClause("user", $providers);
         }
 
@@ -574,12 +581,7 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND")->addInClause("location", $locations);
         }
 
-        if ($purge) {
-            $query->add("AND project_id = ? AND time_end <= ?", [$project_id, $end]);
-        } else {
-            $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
-        }
-
+        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
         return [];

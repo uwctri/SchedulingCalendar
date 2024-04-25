@@ -1,35 +1,27 @@
-<div class="container mx-0 cleanupModal">
-
-    <div class="form-group">
-        <label class="float-left" for="cleanUpEnd">Availability Time</label>
-        <div class="input-group">
-            <div class="input-group-prepend">
-                <div class="input-group-text">
-                    <i class="fa-solid fa-clock"></i>
-                </div>
-            </div>
-            <input id="cleanUpEnd" name="cleanUpEnd" type="time" value="END-TIME" class="form-control">
-        </div>
+<div class="container">
+    <div class="row mb-4 blurb">
+        These options exist to free space in the table used for this external module, clean up the apperance of
+        calendar, and easily perform repetitive tasks. Verify that you have no need to retain any of the below before
+        continuing.
     </div>
     <div class="form-group">
-        <div class="row">
+        <div class="row removeAvailability">
             <div class="custom-control custom-checkbox col-1">
                 <input name="removeAvailability" id="removeAvailability" type="checkbox" class="custom-control-input"
                     value="1">
             </div>
             <div class="col-11">
-                <label for="removeAvailability" class="custom-control-label">Remove all availability before the above
-                    date.</label>
+                <label for="removeAvailability" class="custom-control-label">Delete all past
+                    availability.</label>
             </div>
         </div>
-        <div class="row limitAvailabilityGroup">
+        <div class="row withdrawnAppts">
             <div class="custom-control custom-checkbox col-1">
-                <input name="limitAvailability" id="limitAvailability" type="checkbox" CHECKED-LIMIT
-                    class="custom-control-input" value="1">
+                <input name="withdrawnAppts" id="withdrawnAppts" type="checkbox" class="custom-control-input" value="1">
             </div>
             <div class="col-11">
-                <label for="limitAvailability" class="custom-control-label">Show only availability that can used in this
-                    project</label>
+                <label for="withdrawnAppts" class="custom-control-label">Cancel all appointments for withdrawn
+                    subjects.</label>
             </div>
         </div>
     </div>

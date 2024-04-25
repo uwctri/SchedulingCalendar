@@ -14,30 +14,48 @@ class CleanUp {
             title: "Admin Tools",
             html: html,
             confirmButtonText: "Clean Up!",
+            customClass: {
+                container: 'cleanupModal'
+            },
             didOpen: CleanUp.initModal,
             preConfirm: () => {
                 const btnEl = "swal2-confirm"
+                const removeAvail = $.getElementById("removeAvailability").value
+                const removeAppts = $.getElementById("withdrawnAppts").value
 
-                // TODO
-                // Check if box was checked
-                // Grab end date
+                let delAvail = Promise.resolve([])
+                if (removeAvail) {
+                    delAvail = API.deleteAvailability({
+                        "providers": "*",
+                        "locations": "*",
+                        "group": "*",
+                        "start": DateTime.now().minus({ years: 100 }).toISO(),
+                        "end": DateTime.now().minus({ days: 1 }).toISO()
+                    })
+                }
 
-                API.deleteAvailability({
-                    "purge": true,
-                    "end": DateTime.now().toISO()
-                }).then(data => {
+                let delAppts = Promise.resolve([])
+                if (removeAppts) {
+                    const subjects = API.cache.subjects.data
+                    const withdrawn = Object.keys(subjects).filter(record => subjects[record].is_withdrawn)
+                    if (withdrawn.length) {
+                        delAppts = API.deleteAppointments({
+                            "subjects": withdrawn,
+                            "start": DateTime.now().plus({ days: 1 }).toISO(),
+                            "end": DateTime.now().plus({ years: 100 }).toISO()
+                        })
+                    }
+                }
+
+                Promise.all([delAvail, delAppts]).then(values => {
                     Calendar.refresh()
                 })
 
                 savingAnimation(btnEl)
-                setTimeout(Swal.close, 2000)
+                setTimeout(Swal.close, 4000)
                 return false
             },
         })
-    }
-
-    static initModal() {
-
     }
 }
 

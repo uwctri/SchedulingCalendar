@@ -6,13 +6,8 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* Use the default location given in settings
 * Filter Location dropdowns and search bar - Loc should be where the provider is or a sub loc
 * Send rejections back from PHP and show user
-
-* Admin tools (Started)
-  * Cleanup Remove all future data for withdrawn subject & Purge old availability
-  * ICS Export calendar (with optional cron for backups) (with config for extra data)
 
 * Setup all event logic (Branching, Additional Time, Linked Event)
 * Right side subject summary
@@ -22,8 +17,8 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 ### Questions
 
 * What issues might occur regarding dags and pulling subject names? Need to make sure we can't see those names
-* Do we need a quick way to filter only availaiblity of the current provider?
 * Consider Locations as providers? Obvious work around for this already.
+* Do we need an "Assigned Clinc" for anything? Maybe just a generic "show this data in Subject Summary" option?
 
 ## Local Development & Build
 

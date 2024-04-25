@@ -220,7 +220,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, [["start", "end", "providers", "locations", "group"], ["id"], ["end", "purge"]])
+        API.requiredKeys(data, [["start", "end", "providers", "locations", "group"], ["id"]])
         API.expireAvailabilityCache()
         return await API.post(data)
     }
@@ -282,7 +282,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, [["start", "time", "subjects"], ["id"]])
+        API.requiredKeys(data, [["start", "end", "subjects"], ["id"]])
         API.expireAppointmentsCache()
         return await API.post(data)
     }

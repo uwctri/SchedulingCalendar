@@ -98,7 +98,7 @@
         },
         {
             "key": "location-sot",
-            "name": "<b>Default Location</b><br>Location auto-selected when scheduling a new appointment",
+            "name": "<b>Location Source</b><br>Current or another project",
             "type": "radio",
             "choices": [
                 {

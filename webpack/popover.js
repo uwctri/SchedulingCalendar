@@ -162,17 +162,24 @@ class PopOver {
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
-        // When the subject changes update the list of visits
         $.getElementById("aPopSubject").addEventListener("change", () => {
+            const subject = $.getElementById("aPopSubject").value
+
+            // Rebuild the visit list with only those visits the subject hasn't had
             const selEl = $.getElementById("aPopVisit")
             const visit = selEl.value;
             [...selEl.options].slice(1).forEach(e => e.remove())
-            buildVisitDropdown("aPopVisit", $.getElementById("aPopSubject").value, visit, PopOver.isOpen)
+            buildVisitDropdown("aPopVisit", subject, visit, PopOver.isOpen)
+
+            // Default the location 
+            const defLoc = API.cache.subjects.data[subject].location // default loc
+            const locs = [...document.getElementById("aPopLocation").options].map(el => el.value)
+            if (locs.includes(defLoc))
+                $.getElementById("aPopLocation").value = defLoc
         })
 
         // When the provider, start, or stop time change update the list of valid providers.
         // TODO - prevent clicking schedule if the provider isn't free at the time (or rebuild provider list)
-        // TODO location validation / warning
     }
 
     static openDetails(info) {
