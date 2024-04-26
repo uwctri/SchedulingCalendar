@@ -6,11 +6,9 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* ICS cron
-* Location when Scheding should be where the provider is or a sub loc. This is checked on backend already
 * Send rejections back from PHP and show user
-* Setup all event logic (Branching, Additional Time, Linked Event)
 * Right side subject summary
+* Setup all event logic (Branching, Additional Time, Linked Event)
 * My Calendar Page - Visit names and Display names aren't going to pull correctly as the methods for getting the info assume PID
 * Write the docs page
 * Swap to translatable text

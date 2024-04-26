@@ -154,7 +154,6 @@ class SearchBar {
         return locations.filter(loc => loc.customProperties.active)
     }
 
-
     static filterProviders(providers) {
         providers = SearchBar.formatCustomProps(providers)
         const allProviders = !UserConfig.get().limitAvailability && (Page.type == 'edit')

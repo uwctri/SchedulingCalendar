@@ -179,7 +179,7 @@ class PopOver {
         })
 
         // When the provider, start, or stop time change update the list of valid providers.
-        // TODO - prevent clicking schedule if the provider isn't free at the time (or rebuild provider list)
+        // TODO - prevent clicking schedule if the provider isn't free at the time (or rebuild provider list). This is already validated on backend
     }
 
     static openDetails(info) {
