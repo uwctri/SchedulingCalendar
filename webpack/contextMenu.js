@@ -23,13 +23,13 @@
 import API from './api.js'
 import Swal from 'sweetalert2'
 import Calendar from './calendar'
-import html from './html/modify_appointment.html'
+import template from './html/modify_appointment.html'
 import RedCap from './redcap'
 import { goToRecord } from './page'
 import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
 
 const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
-const loadingDots = `<div class="loading-dots"></div>`
+const html = RedCap.ttHTML(template)
 class ContextMenu {
 
     static availabilityMenu = [{

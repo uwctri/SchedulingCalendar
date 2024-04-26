@@ -1,7 +1,7 @@
 <div class="container">
 
     <div class="form-group">
-        <label class="float-left" for="configStart">Start Time</label>
+        <label class="float-left" for="configStart">{{start}}</label>
         <div class="input-group">
             <div class="input-group-prepend">
                 <div class="input-group-text">
@@ -12,7 +12,7 @@
         </div>
     </div>
     <div class="form-group">
-        <label class="float-left" for="configEnd">End Time</label>
+        <label class="float-left" for="configEnd">{{end}}</label>
         <div class="input-group">
             <div class="input-group-prepend">
                 <div class="input-group-text">
@@ -23,7 +23,7 @@
         </div>
     </div>
     <div class="form-group">
-        <label class="float-left" for="slotSize">Slot Size</label>
+        <label class="float-left" for="slotSize">{{slot}}</label>
         <div class="input-group">
             <div class="input-group-prepend">
                 <div class="input-group-text">
@@ -32,12 +32,12 @@
             </div>
             <input id="slotSize" name="slotSize" type="number" min="5" max="30" value="SLOT-SIZE" class="form-control">
             <div class="input-group-append">
-                <div class="input-group-text">minutes</div>
+                <div class="input-group-text">{{min}}</div>
             </div>
         </div>
     </div>
     <div class="form-group">
-        <label class="float-left" for="lineHeight">Event Line Height</label>
+        <label class="float-left" for="lineHeight">{{line}}</label>
         <div class="input-group">
             <div class="input-group-prepend">
                 <div class="input-group-text">
@@ -52,16 +52,16 @@
         </div>
     </div>
     <div class="form-group">
-        <label class="float-left" for="hiddenDays">Days to Hide</label>
+        <label class="float-left" for="hiddenDays">{{days}}</label>
         <div class="input-group">
             <div id="hiddenDays" name="hiddenDays" class="btn-group btn-group-sm" role="group">
-                <button type="button" class="btn btn-primary configWeek">Sun</button>
-                <button type="button" class="btn btn-primary configWeek">Mon</button>
-                <button type="button" class="btn btn-primary configWeek">Tue</button>
-                <button type="button" class="btn btn-primary configWeek">Wed</button>
-                <button type="button" class="btn btn-primary configWeek">Thu</button>
-                <button type="button" class="btn btn-primary configWeek">Fri</button>
-                <button type="button" class="btn btn-primary configWeek">Sat</button>
+                <button type="button" class="btn btn-primary configWeek">{{sun}}</button>
+                <button type="button" class="btn btn-primary configWeek">{{mon}}</button>
+                <button type="button" class="btn btn-primary configWeek">{{tue}}</button>
+                <button type="button" class="btn btn-primary configWeek">{{wed}}</button>
+                <button type="button" class="btn btn-primary configWeek">{{thu}}</button>
+                <button type="button" class="btn btn-primary configWeek">{{fri}}</button>
+                <button type="button" class="btn btn-primary configWeek">{{sat}}</button>
             </div>
         </div>
     </div>
@@ -72,7 +72,7 @@
                     value="1">
             </div>
             <div class="col-11">
-                <label for="expandRows" class="custom-control-label">Try to size time slots to fit calendar</label>
+                <label for="expandRows" class="custom-control-label">{{resize}}</label>
             </div>
         </div>
         <div class="row limitAvailabilityGroup">
@@ -81,8 +81,7 @@
                     class="custom-control-input" value="1">
             </div>
             <div class="col-11">
-                <label for="limitAvailability" class="custom-control-label">Show only availability that can used in this
-                    project</label>
+                <label for="limitAvailability" class="custom-control-label">{{limit}}</label>
             </div>
         </div>
     </div>

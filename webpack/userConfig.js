@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2'
-import html from './html/userConfig.html'
+import template from './html/userConfig.html'
 import PopOver from "./popover"
 import RedCap from './redcap'
 
@@ -12,6 +12,7 @@ const defaultLimitAvailability = true
 const defaultLineHeight = "1.5"
 
 const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
+const html = RedCap.ttHTML(template)
 class UserConfig {
 
     static _init = false

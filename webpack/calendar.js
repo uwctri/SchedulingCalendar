@@ -108,7 +108,9 @@ class Calendar {
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
             customButtons: {
-                today: RedCap.tt("btn_today"),
+                today: {
+                    text: RedCap.tt("btn_today")
+                },
                 cleanup: {
                     icon: "fa-broom",
                     hint: RedCap.tt("alt_cleanup"),

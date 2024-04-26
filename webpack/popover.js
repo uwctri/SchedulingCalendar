@@ -2,9 +2,9 @@ import { DateTime } from "luxon"
 import IMask from "imask"
 import API from "./api"
 import RedCap from "./redcap"
-import html_availability from "./html/availability_popup.html"
-import html_appointment from "./html/appointment_popup.html"
-import html_details from "./html/details_popup.html"
+import template_availability from "./html/availability_popup.html"
+import template_appointment from "./html/appointment_popup.html"
+import template_details from "./html/details_popup.html"
 import Calendar from "./calendar"
 import Page from "./page"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils"
@@ -12,6 +12,9 @@ import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, build
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
 const loadingDots = `<div class="loading-dots"></div>`
+const html_availability = RedCap.ttHTML(template_availability)
+const html_appointment = RedCap.ttHTML(template_appointment)
+const html_details = RedCap.ttHTML(template_details)
 class PopOver {
 
     static _date = null

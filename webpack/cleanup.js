@@ -1,12 +1,13 @@
 import PopOver from "./popover"
 import { savingAnimation } from "./utils"
-import html from './html/cleanUp.html'
+import template from './html/cleanUp.html'
 import { DateTime } from 'luxon'
 import Calendar from './calendar'
 import Swal from 'sweetalert2'
 import RedCap from "./redcap"
 import API from "./api"
 
+const html = RedCap.ttHTML(template)
 class CleanUp {
 
     static open() {

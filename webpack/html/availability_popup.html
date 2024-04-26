@@ -4,7 +4,7 @@
             <input class="form-control" id="aPopStartTime" placeholder="" type="text" />
         </div>
         <div class="col-1 g-0 span-to">
-            <span>to</span>
+            <span>{{to}}</span>
         </div>
         <div class="col pl-0">
             <input class="form-control" id="aPopEndTime" placeholder="" type="text" />
@@ -13,25 +13,25 @@
     <div class="row">
         <div class="col">
             <select class="form-control" id="aPopGroup">
-                <option value="">Group:</option>
+                <option value="">{{group}}:</option>
             </select>
         </div>
     </div>
     <div class="row">
         <div class="col">
             <select class="form-control" id="aPopLocation">
-                <option value="">Location:</option>
+                <option value="">{{location}}:</option>
             </select>
         </div>
     </div>
     <div class="row">
         <div class="col">
             <select class="form-control" id="aPopProvider">
-                <option value="">Provider:</option>
+                <option value="">{{provider}}:</option>
             </select>
         </div>
     </div>
     <div class="row">
-        <a id="aPopAddBtn" href="javascript:;" class="btn btn-success" role="button">Add to Calendar</a>
+        <a id="aPopAddBtn" href="javascript:;" class="btn btn-success" role="button">{{add}}</a>
     </div>
 </div>

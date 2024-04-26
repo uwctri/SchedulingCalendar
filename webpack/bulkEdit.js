@@ -1,16 +1,17 @@
 import Swal from 'sweetalert2'
-import html from './html/bulkEdit.html'
+import template from './html/bulkEdit.html'
 import API from "./api"
 import { DateTime } from 'luxon'
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
 import Calendar from './calendar'
 import Litepicker from 'litepicker'
 import PopOver from "./popover"
-import Redcap from "./redcap"
+import RedCap from "./redcap"
 
 const modalWidth = "800px"
 const defaultStart = "08:00"
 const defaultEnd = "17:00"
+const html = RedCap.ttHTML(template)
 class BulkEdit {
 
     static picker = null
@@ -31,13 +32,13 @@ class BulkEdit {
     static open() {
 
         PopOver.close()
-        console.log(Redcap.tt("bulk_remove"))
+        console.log(RedCap.tt("bulk_remove"))
         Swal.fire({
-            title: Redcap.tt("bulk_title"),
+            title: RedCap.tt("bulk_title"),
             html: html,
             showDenyButton: true,
-            denyButtonText: Redcap.tt("bulk_remove"),
-            confirmButtonText: Redcap.tt("bulk_add"), // TODO fix this button color
+            denyButtonText: RedCap.tt("bulk_remove"),
+            confirmButtonText: RedCap.tt("bulk_add"), // TODO fix this button color
             customClass: {
                 container: 'bulkEditModal'
             },
@@ -122,11 +123,11 @@ class BulkEdit {
             $.getElementsByClassName("swal2-confirm")[0].disabled = (a == "*" || b == "*")
         }
 
-        addOption("bulkEditGroup", Redcap.tt("bulk_any_group"))
+        addOption("bulkEditGroup", RedCap.tt("bulk_any_group"))
         buildGroupDropdown("bulkEditGroup", Swal.isVisible)
         $.getElementById("bulkEditGroup").addEventListener("change", checkBothDropdowns)
 
-        addOption("bulkEditLocation", Redcap.tt("bulk_any_loc"))
+        addOption("bulkEditLocation", RedCap.tt("bulk_any_loc"))
         buildLocationDropdown("bulkEditLocation", Swal.isVisible)
         $.getElementById("bulkEditLocation").addEventListener("change", checkBothDropdowns)
 
