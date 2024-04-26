@@ -1,11 +1,14 @@
 <?php
 $module->initializeJavascriptModuleObject();
 $module->tt_transferToJavascriptModuleObject();
+$jsObj = $module->getJavascriptModuleObjectName();
 $index = $module->getUrl('index.php');
 ?>
 <script>
-    <?= $module->getJavascriptModuleObjectName(); ?>.router = "<?= $module->getUrl('router.php'); ?>"
-    <?= $module->getJavascriptModuleObjectName(); ?>.user = <?= json_encode($module->currentUser()); ?>
+    <?= $jsObj; ?>.project_name = "<?= $module->getProjectName(); ?>"
+    <?= $jsObj; ?>.router = "<?= $module->getUrl('router.php'); ?>"
+    <?= $jsObj; ?>.email = "<?= $module->getContactEmail(); ?>"
+    <?= $jsObj; ?>.user = <?= json_encode($module->currentUser()); ?>
 </script>
 <link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
 <script src="<?= $module->getUrl('index.js'); ?>" defer></script>

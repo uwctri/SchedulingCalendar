@@ -5,6 +5,8 @@ class RedCap {
 
     static router = ExternalModules.UWMadison.Scheduling?.router
     static user = ExternalModules.UWMadison.Scheduling?.user
+    static project_name = ExternalModules.UWMadison.Scheduling?.project_name
+    static email = ExternalModules.UWMadison.Scheduling?.email
 
     static tt = ExternalModules.UWMadison.Scheduling?.tt // Redcap EM translate func
     static csrf = get_csrf_token // Redcap function

@@ -138,6 +138,18 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
+    public function getProjectName()
+    {
+        $sql = $this->query("SELECT app_title FROM redcap.redcap_projects WHERE project_id = ?", [$this->getProjectId()]);
+        return db_fetch_assoc($sql)["app_title"];
+    }
+
+    public function getContactEmail()
+    {
+        $sql = $this->query("SELECT value FROM redcap.redcap_config where field_name = 'homepage_contact_email'", []);
+        return db_fetch_assoc($sql)["value"];
+    }
+
     /*
     Get all providers that exist in the project or any other
     */

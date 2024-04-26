@@ -6,7 +6,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* ICS export feature
+* ICS cron
 * Location when Scheding should be where the provider is or a sub loc. This is checked on backend already
 * Send rejections back from PHP and show user
 * Setup all event logic (Branching, Additional Time, Linked Event)
