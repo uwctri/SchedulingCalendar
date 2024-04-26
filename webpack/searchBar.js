@@ -151,8 +151,6 @@ class SearchBar {
     }
 
     static filterLocations(locations) {
-        // TODO for the edit Avail cal we should show all active locs that the user has access to
-        // TODO for the my calednar only show ... something
         return locations.filter(loc => loc.customProperties.active)
     }
 

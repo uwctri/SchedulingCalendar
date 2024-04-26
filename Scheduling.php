@@ -552,7 +552,6 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteRangeAvailability($payload)
     {
-        $project_id = $payload["pid"];
         $codes = $payload["group"]; // Could be * for all
         $start = $payload["start"];
         $end = $payload["end"];
@@ -749,7 +748,7 @@ class Scheduling extends AbstractExternalModule
         );
 
         // TODO should we update availability or make sure that the provider is available?
-        // TODO probably have a checkbox for override.
+        // TODO probably have a checkbox for ignoring availability, currently just have text warning.
 
         return [];
     }
