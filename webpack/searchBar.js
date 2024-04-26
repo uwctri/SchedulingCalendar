@@ -3,11 +3,12 @@ import API from "./api"
 import UserConfig from "./userConfig"
 import Calendar from './calendar'
 import Page from "./page"
+import RedCap from "./redcap"
 
 const centerClassName = "fc-toolbar-chunk"
 const titleClassName = "fc-toolbar-title"
 const searchID = "search-bar"
-const placeholder = "Search or Filter by Provider, Subject, Location, or Visit"
+const placeholder = RedCap.tt("search_placeholder")
 const choicesSelector = ".choices__inner .choices__list"
 
 class SearchBar {

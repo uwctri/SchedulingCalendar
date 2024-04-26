@@ -108,37 +108,38 @@ class Calendar {
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
             customButtons: {
+                today: RedCap.tt("btn_today"),
                 cleanup: {
                     icon: "fa-broom",
-                    hint: "Clean Up old availability & withdrawn subjects",
+                    hint: RedCap.tt("alt_cleanup"),
                     click: CleanUp.open
                 },
                 ics: {
                     text: ".ICS",
-                    hint: "Setup ICS exports",
+                    hint: RedCap.tt("alt_ics"),
                     click: ICS.open
                 },
                 config: {
                     icon: "fa-gear",
-                    hint: "User configuration",
+                    hint: RedCap.tt("alt_user"),
                     click: UserConfig.open
                 },
                 search: {
                     icon: "fa-magnifying-glass",
-                    hint: "Search",
+                    hint: RedCap.tt("alt_search"),
                     click: SearchBar.toggle
                 },
                 refer: {
-                    text: "Return to Workflow",
+                    text: RedCap.tt("btn_return"),
                     click: () => location.href = Page.refer
                 },
                 bulk: {
-                    text: "Bulk Edit",
+                    text: RedCap.tt("btn_bulk"),
                     click: BulkEdit.open
                 },
                 availability: {
                     icon: "fa-eye",
-                    hint: "Toggle Availability",
+                    hint: RedCap.tt("btn_tog"),
                     click: () => {
                         const o = Calendar._showAvailability ? ["fa-eye", "fa-eye-slash"] : ["fa-eye-slash", "fa-eye"]
                         Calendar._showAvailability = !Calendar._showAvailability
@@ -229,15 +230,17 @@ class Calendar {
             views: {
                 singleMonth: {
                     type: "dayGridMonth",
+                    buttonText: RedCap.tt("btn_month"),
                 },
                 singleDay: {
                     allDaySlot: false,
                     type: "timeGridDay",
+                    buttonText: RedCap.tt("btn_day"),
                 },
                 singleWeek: {
                     type: "timeGridWeek",
                     hiddenDays: hiddenDays,
-                    buttonText: "week",
+                    buttonText: RedCap.tt("btn_week"),
                     allDaySlot: false
                 },
                 agenda: {
@@ -256,7 +259,7 @@ class Calendar {
                         day: "numeric",
                         weekday: "long"
                     },
-                    buttonText: "agenda"
+                    buttonText: RedCap.tt("btn_agenda")
                 }
             },
             eventContent: (info) => {

@@ -3,7 +3,8 @@
     "tt_name": "module_name",
     "description": "Manage availability, appoitments, and calendars",
     "tt_description": "module_desc",
-    "documentation": "README.md",
+    "documentation": "docs.php",
+    "tt_documentation": "doc_path",
     "namespace": "UWMadison\\Scheduling",
     "authors": [
         {
@@ -13,16 +14,11 @@
         }
     ],
     "framework-version": 12,
-    "no-auth-pages": [
-        "api"
-    ],
-    "no-csrf-pages": [
-        "api"
-    ],
     "links": {
         "project": [
             {
                 "name": "Scheduling & Availability",
+                "tt_name": "link_name",
                 "icon": "fa fa-calendar",
                 "url": "index.php",
                 "show-header-and-footer": true
@@ -38,118 +34,141 @@
         {
             "key": "calendar-admin",
             "name": "<b>Calendar Admin</b><br>May edit any user's calendar and has access to additional tools",
+            "tt_name": "config_admins",
             "type": "user-list",
             "repeatable": true
         },
         {
             "key": "unschedulable",
             "name": "<b>Unschedulable</b><br>Users that have availability, but shouldn't be listed in this project",
+            "tt_name": "config_unschedulable",
             "type": "user-list",
             "repeatable": true
         },
         {
             "key": "fire-det",
             "name": "<b>Trigger DET:</b><br>Send a POST to the Data Entry Trigger on calendar save",
+            "tt_name": "config_det",
             "type": "checkbox"
         },
         {
             "key": "availability-codes",
             "name": "<b>Availability Code(s):</b><br>Comma delimited list of valid availability codes",
+            "tt_name": "config_codes",
             "type": "text"
         },
         {
             "key": "name-field",
             "name": "<b>Name Field:</b><br>Variable to index, search, and display as the subject's name",
+            "tt_name": "config_name_field",
             "type": "field-list"
         },
         {
             "key": "withdraw-field",
             "name": "<b>Withdraw Flag:</b><br>Exclude Subject ID from search if truthy",
+            "tt_name": "config_withdraw_field",
             "type": "field-list"
         },
         {
             "key": "location-default",
             "name": "<b>Default Location</b><br>Location auto-selected when scheduling a new appointment",
+            "tt_name": "config_loc_default",
             "type": "radio",
             "choices": [
                 {
                     "value": "blank",
-                    "name": "Blank"
+                    "name": "Blank",
+                    "tt_name": "config_choice_blank"
                 },
                 {
                     "value": "field",
-                    "name": "Field"
+                    "name": "Field",
+                    "tt_name": "config_choice_field"
                 },
                 {
                     "value": "static",
-                    "name": "Static"
+                    "name": "Static",
+                    "tt_name": "config_choice_static"
                 }
             ]
         },
         {
             "key": "location-field",
             "name": "<b>Location Field:</b><br>Subject's home clinic. Should use the same coded value used in the location JSON",
+            "tt_name": "config_loc_field",
             "type": "field-list"
         },
         {
             "key": "location-static",
             "name": "<b>Location Value:</b><br>Coded value for the default location from the JSON",
+            "tt_name": "config_loc_static",
             "type": "text"
         },
         {
             "key": "location-sot",
             "name": "<b>Location Source</b><br>Current or another project",
+            "tt_name": "config_loc_source",
             "type": "radio",
             "choices": [
                 {
                     "value": "json",
-                    "name": "Local JSON"
+                    "name": "Local JSON",
+                    "tt_name": "config_choice_json"
                 },
                 {
                     "value": "pid",
-                    "name": "Another Project"
+                    "name": "Another Project",
+                    "tt_name": "config_choice_pid"
                 }
             ]
         },
         {
             "key": "location-json",
             "name": "<b>Location JSON:</b><br>Consult documentation for JSON format",
+            "tt_name": "config_loc_json",
             "type": "textarea"
         },
         {
             "key": "location-pid",
             "name": "<b>Location Project:</b><br>Use this project's location JSON",
+            "tt_name": "config_loc_pid",
             "type": "project-id"
         },
         {
             "key": "visit-group",
             "name": "<b>Schedulable Visit</b>",
+            "tt_name": "config_sch_group",
             "type": "sub_settings",
             "repeatable": true,
             "sub_settings": [
                 {
                     "key": "visit-display-name",
                     "name": "<b>Display Name</b>",
+                    "tt_name": "config_sch_display",
                     "type": "text"
                 },
                 {
                     "key": "visit-linked-event",
                     "name": "<b>Linked Event</b>",
+                    "tt_name": "config_sch_event",
                     "type": "event-list"
                 },
                 {
                     "key": "visit-code",
                     "name": "<b>Internal Coded Value</b>",
+                    "tt_name": "config_sch_code",
                     "type": "text"
                 },
                 {
                     "key": "visit-notes",
                     "name": "<b>Notes</b>",
+                    "tt_name": "config_sch_notes",
                     "type": "text"
                 },
                 {
                     "key": "visit-branch-logic-event",
                     "name": "<b>Branching Logic</b>",
+                    "tt_name": "config_sch_branch",
                     "type": "event-list"
                 },
                 {
@@ -165,16 +184,19 @@
                 {
                     "key": "visit-duration",
                     "name": "<b>Duration:</b><br>In minutes",
+                    "tt_name": "config_sch_duration",
                     "type": "text"
                 },
                 {
                     "key": "visit-extendable",
                     "name": "<b>Allow Additional Time:</b><br>Should 'duration' be only a minimum length?",
+                    "tt_name": "config_sch_extend",
                     "type": "checkbox"
                 },
                 {
                     "key": "visit-location-free",
                     "name": "<b>Allow Any Location</b><br>Is this a phone call or other location-free event",
+                    "tt_name": "config_sch_free",
                     "type": "checkbox"
                 }
             ]

@@ -36,14 +36,8 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_every_page_top($project_id)
     {
-        if ($this->isPage("ExternalModules/manager/project.php") && $project_id) {
-            echo "<link rel='stylesheet' href='{$this->getUrl('style.css')}'>
-            <script>
-            document.addEventListener('DOMContentLoaded', () => {
-                document.querySelector('tr[data-module=scheduling_calendar] a').href = '{$this->getUrl('docs.php')}'
-            })
-            </script>";
-        }
+        if ($this->isPage("ExternalModules/manager/project.php") && $project_id)
+            echo "<link rel='stylesheet' href='{$this->getUrl('style.css')}'>";
     }
 
     /*

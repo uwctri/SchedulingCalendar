@@ -123,7 +123,7 @@ class PopOver {
     }
 
     static openAvailability(info) {
-        const title = `Adding New Availability ${closeBtn}`
+        const title = `${RedCap.tt("pop_new_avail")} ${closeBtn}`
         PopOver.openPopover(title, html_availability, info.jsEvent.target)
         PopOver._date = DateTime.fromISO(info.startStr)
 
@@ -143,7 +143,7 @@ class PopOver {
     }
 
     static openScheduleVisit(info) {
-        const title = `Schedule A New Visit ${closeBtn}`
+        const title = `${RedCap.tt("pop_new_sch")} ${closeBtn}`
         PopOver.openPopover(title, html_appointment, info.jsEvent.target)
         PopOver._date = DateTime.fromISO(info.startStr)
 
@@ -183,7 +183,7 @@ class PopOver {
     }
 
     static openDetails(info) {
-        const title = `Appointment Details ${closeBtn}`
+        const title = `${RedCap.tt("pop_details")} ${closeBtn}`
         const props = info.event.extendedProps
         const start = DateTime.fromISO(info.event.startStr).toFormat("hh:mm a")
         const end = DateTime.fromISO(info.event.endStr).toFormat("hh:mm a")

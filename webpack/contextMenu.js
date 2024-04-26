@@ -24,7 +24,8 @@ import API from './api.js'
 import Swal from 'sweetalert2'
 import Calendar from './calendar'
 import html from './html/modify_appointment.html'
-import { goToRecord } from './page.js'
+import RedCap from './redcap'
+import { goToRecord } from './page'
 import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
 
 const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
@@ -32,7 +33,7 @@ const loadingDots = `<div class="loading-dots"></div>`
 class ContextMenu {
 
     static availabilityMenu = [{
-        label: "Delete Availability",
+        label: RedCap.tt("context_del_av"),
         action(o) {
             const id = o.target.getAttribute('data-internal-id')
             o.target.remove()
@@ -46,7 +47,7 @@ class ContextMenu {
 
     static appointmentMenu = [
         {
-            label: "Open Record",
+            label: RedCap.tt("context_open"),
             action(el) {
                 const id = el.target.getAttribute('data-internal-id')
                 const details = Calendar.getEvent(id)
@@ -54,19 +55,19 @@ class ContextMenu {
             },
         },
         {
-            label: "Delete Appointment",
+            label: RedCap.tt("context_del_ap"),
             action(el) {
                 ContextMenu.deleteModal(el)
             },
         },
         {
-            label: "Change Provider",
+            label: RedCap.tt("context_ch_prov"),
             action(el) {
                 ContextMenu.modifyModal(el, "provider")
             },
         },
         {
-            label: "Change Location",
+            label: RedCap.tt("context_ch_loc"),
             action(el) {
                 ContextMenu.modifyModal(el, "location")
             },
@@ -75,7 +76,7 @@ class ContextMenu {
 
     static readMenu = [
         {
-            label: "Open Record",
+            label: RedCap.tt("context_open"),
             action(el) {
                 const id = el.target.getAttribute('data-internal-id')
                 const details = Calendar.getEvent(id)
@@ -88,9 +89,9 @@ class ContextMenu {
         const id = el.target.getAttribute('data-internal-id')
         Swal.fire({
             icon: "warning",
-            title: "Are you sure?",
-            text: "Do you want to delete this appointment?",
-            confirmButtonText: "Delete",
+            title: RedCap.tt("context_sure"),
+            text: RedCap.tt("context_sure_txt"),
+            confirmButtonText: RedCap.tt("context_del_btn"),
             confirmButtonColor: "#dc3741" //swal-deny color
         }).then((result) => {
             if (!result.isConfirmed)
@@ -111,10 +112,10 @@ class ContextMenu {
         let modalUser = null
         let modalLoc = null
         Swal.fire({
-            title: `Change ${title}`,
+            title: `${RedCap.tt("context_change")} ${title}`,
             html: html,
             confirmButtonColor: rcBtnColor,
-            confirmButtonText: "Update",
+            confirmButtonText: RedCap.tt("context_update"),
             didOpen: () => {
                 $.getElementById(`aPop${title}`).classList.remove('hidden')
                 buildProviderDropdown("aPopProvider", Swal.isVisible)

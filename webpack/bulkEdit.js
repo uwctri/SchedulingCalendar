@@ -6,6 +6,7 @@ import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, savin
 import Calendar from './calendar'
 import Litepicker from 'litepicker'
 import PopOver from "./popover"
+import Redcap from "./redcap"
 
 const modalWidth = "800px"
 const defaultStart = "08:00"
@@ -30,12 +31,13 @@ class BulkEdit {
     static open() {
 
         PopOver.close()
+        console.log(Redcap.tt("bulk_remove"))
         Swal.fire({
-            title: "Bulk Availability Edit",
+            title: Redcap.tt("bulk_title"),
             html: html,
             showDenyButton: true,
-            denyButtonText: "Remove",
-            confirmButtonText: "Add", // TODO fix this button color
+            denyButtonText: Redcap.tt("bulk_remove"),
+            confirmButtonText: Redcap.tt("bulk_add"), // TODO fix this button color
             customClass: {
                 container: 'bulkEditModal'
             },
@@ -120,11 +122,11 @@ class BulkEdit {
             $.getElementsByClassName("swal2-confirm")[0].disabled = (a == "*" || b == "*")
         }
 
-        addOption("bulkEditGroup", "Any Group (Remove Only)")
+        addOption("bulkEditGroup", Redcap.tt("bulk_any_group"))
         buildGroupDropdown("bulkEditGroup", Swal.isVisible)
         $.getElementById("bulkEditGroup").addEventListener("change", checkBothDropdowns)
 
-        addOption("bulkEditLocation", "Any Location (Remove Only)")
+        addOption("bulkEditLocation", Redcap.tt("bulk_any_loc"))
         buildLocationDropdown("bulkEditLocation", Swal.isVisible)
         $.getElementById("bulkEditLocation").addEventListener("change", checkBothDropdowns)
 

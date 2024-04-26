@@ -1,4 +1,4 @@
-import Page from "./page"
+import { Page, makeRecordUrl } from "./page"
 import { DateTime } from "luxon"
 import RedCap from "./redcap"
 import API from "./api"
@@ -12,6 +12,13 @@ class ICS {
 
     static export() {
 
+        const cal = RedCap.tt("ics_cal")
+        const study = RedCap.tt("ics_study")
+        const provider = RedCap.tt("ics_provider")
+        const subject = RedCap.tt("ics_subject")
+        const visit = RedCap.tt("ics_visit")
+        const link = RedCap.tt("ics_link")
+
         const downloadString = (filename, text) => {
             let el = $.createElement('a');
             el.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -20,10 +27,6 @@ class ICS {
             $.body.appendChild(el);
             el.click();
             $.body.removeChild(el);
-        }
-
-        const makeUrl = (record) => {
-            return location.href.split("ExternalModules")[0] + `record_home.php?pid={Page.pid}&id=${record}`
         }
 
         let ics = `
@@ -44,7 +47,7 @@ class ICS {
         }).then((appts) => {
             appts.forEach(data => {
                 let extra = "" // TODO
-                let link = makeUrl(data.record)
+                const url = makeRecordUrl(data.record)
                 ics += `
                     BEGIN:VEVENT
                     UID:${data.user}-${data.record}-${data.visit}
@@ -53,12 +56,12 @@ class ICS {
                     DTSTART:${data.start}
                     DTEND:${data.end}
                     SUMMARY:${RedCap.project_name}-${data.user_display}
-                    DESCRIPTION:Study: ${RedCap.project_name}\\nProvider: ${data.user_display}\\nSubject: ${data.record_display}\\nVisit: ${data.visit_display}\\n${extra}Link: ${link}
+                    DESCRIPTION:${study}: ${RedCap.project_name}\\n${provider}: ${data.user_display}\\n${subject}: ${data.record_display}\\n${visit}: ${data.visit_display}\\n${extra}${link}: ${url}
                     END:VEVENT`;
             });
 
             ics += `\nEND:VCALENDAR`;
-            downloadString(`${RedCap.project_name} Calendar.ics`, ics.replace(/ {4}/g, ''));
+            downloadString(`${RedCap.project_name} ${cal}.ics`, ics.replace(/ {4}/g, ''));
         })
     }
 }

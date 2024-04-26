@@ -11,7 +11,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Setup all event logic (Branching, Additional Time, Linked Event)
 * My Calendar Page - Visit names and Display names aren't going to pull correctly as the methods for getting the info assume PID
 * Write the docs page
-* Swap to translatable text
 
 ### Questions
 

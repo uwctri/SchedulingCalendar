@@ -1,6 +1,7 @@
 import Swal from 'sweetalert2'
 import html from './html/userConfig.html'
 import PopOver from "./popover"
+import RedCap from './redcap'
 
 const defaultStart = "05:00"
 const defaultEnd = "18:00"
@@ -58,10 +59,10 @@ class UserConfig {
 
         PopOver.close()
         Swal.fire({
-            title: "User Configuration",
+            title: RedCap.tt("user_title"),
             html: newHtml,
             confirmButtonColor: rcBtnColor,
-            confirmButtonText: "Save",
+            confirmButtonText: RedCap.tt("user_save"),
             customClass: {
                 container: 'userConfigModal'
             }

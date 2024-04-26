@@ -16,9 +16,9 @@ $index = $module->getUrl('index.php');
 <div class="projhdr">
     <i class="fas fa-calendar"></i> <?= $module->tt('module_name'); ?>
     <div id="pageMenu" class="btn-group float-right d-none">
-        <a href="<?= "$index&type=edit" ?>" class="btn btn-sm btn-secondary type-edit">Edit Availability</a>
-        <a href="<?= "$index&type=schedule" ?>" class="btn btn-sm btn-secondary type-schedule">Schedule</a>
-        <a href="<?= "$index&type=my" ?>" class="btn btn-sm btn-secondary type-my">My Calendar</a>
+        <a href="<?= "$index&type=edit" ?>" class="btn btn-sm btn-secondary type-edit"><?= $module->tt('btn_edit'); ?></a>
+        <a href="<?= "$index&type=schedule" ?>" class="btn btn-sm btn-secondary type-schedule"><?= $module->tt('btn_schedule'); ?></a>
+        <a href="<?= "$index&type=my" ?>" class="btn btn-sm btn-secondary type-my"><?= $module->tt('btn_mycal'); ?></a>
     </div>
 </div>
 <div id="content" class="w-100 pr-4 d-none">

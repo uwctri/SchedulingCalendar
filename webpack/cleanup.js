@@ -4,6 +4,7 @@ import html from './html/cleanUp.html'
 import { DateTime } from 'luxon'
 import Calendar from './calendar'
 import Swal from 'sweetalert2'
+import RedCap from "./redcap"
 import API from "./api"
 
 class CleanUp {
@@ -11,9 +12,9 @@ class CleanUp {
     static open() {
         PopOver.close()
         Swal.fire({
-            title: "Admin Tools",
+            title: RedCap.tt("admin_title"),
             html: html,
-            confirmButtonText: "Clean Up!",
+            confirmButtonText: RedCap.tt("admin_clean"),
             customClass: {
                 container: 'cleanupModal'
             },
