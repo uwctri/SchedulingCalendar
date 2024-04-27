@@ -8,8 +8,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 * Send rejections back from PHP and show user
 * Right side subject summary
-* Setup all event logic (Branching, Additional Time, Linked Event)
-* My Calendar Page - Visit names and Display names aren't going to pull correctly as the methods for getting the info assume PID
+* Setup all event logic (Branching, Additional Time, Duration, Linked Event)
 * Write the docs page
 
 ### Questions

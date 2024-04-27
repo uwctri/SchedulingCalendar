@@ -201,87 +201,82 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
-    Get all subjects that exist in the current project or 
-    all subjects that have an appointment with the given 
-    provider (for My Calendar page)
+    Get all subjects that exist in the current project
     */
-    private function getSubjects($payload = null)
+    private function getSubjects($payload)
     {
         $project_id = $payload["pid"];
-        $providers = $payload["providers"];
         $nameField = $this->getProjectSetting("name-field");
         $subjects = [];
 
         if (empty($nameField))
             return [];
 
-        // Used only for filtering on My Calendar
-        if (!empty($providers)) {
-            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?' AND record IS NOT NULL", $providers);
-
-            $data = [];
-            while ($row = db_fetch_assoc($sql)) {
-                $data[$row["project_id"]][$row["record"]] = $row["location"];
-            }
-            foreach ($data as $pid => $records) {
-                $nameField = $this->getProjectSetting("name-field", $pid);
-                $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
-                foreach ($projectData as $record_id => $record_data) {
-                    $loc = $records[$record_id];
-                    $name = $record_data[$nameField];
-                    $subjects["$pid:$record_id"] = [
-                        "value" => $record_id,
-                        "label" => $name ?? $record_id,
-                        "location" => $loc,
-                        "name" => $name,
-                        "record_id" => $record_id,
-                        "project_id" => $pid,
-                        "is_withdrawn" => false
-                    ];
-                }
-            }
+        // Used for all subjects on a project
+        $locDefault = $this->getProjectSetting("location-default", $project_id);
+        $locationField = $this->getProjectSetting("location-field", $project_id);
+        $locationStatic = ""; // Blank
+        if ($locDefault == "static") {
+            $locationField = null;
+            $locationStatic = $this->getProjectSetting("location-static", $project_id);
+        } elseif ($locDefault == "blank" || empty($locDefault)) {
+            $locationField = null;
         }
 
-        // Used for all subjects on a project
-        if (empty($providers)) {
-            $locDefault = $this->getProjectSetting("location-default");
-            $locationField = $this->getProjectSetting("location-field");
-            $locationStatic = ""; // Blank
-            if ($locDefault == "static") {
-                $locationField = null;
-                $locationStatic = $this->getProjectSetting("location-static");
-            } elseif ($locDefault == "blank" || empty($locDefault)) {
-                $locationField = null;
-            }
+        $withdrawField = $this->getProjectSetting("withdraw-field", $project_id);
+        $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField], null, $project_id);
+        foreach ($data as $record_id => $recordData) {
+            $name = $recordData[$nameField];
+            $loc = $recordData[$locationField] ?? $locationStatic;
+            $withdraw = boolval($recordData[$withdrawField]);
+            $subjects[$record_id] = [
+                "value" => $record_id,
+                "label" => $name ?? $record_id,
+                "location" => $loc,
+                "name" => $name,
+                "record_id" => $record_id,
+                "is_withdrawn" => $withdraw,
+                "visits" => []
+            ];
+        }
 
-            $withdrawField = $this->getProjectSetting("withdraw-field");
-            $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField]);
-            foreach ($data as $record_id => $recordData) {
-                $name = $recordData[$nameField];
-                $loc = $recordData[$locationField] ?? $locationStatic;
-                $withdraw = boolval($recordData[$withdrawField]);
-                $subjects[$record_id] = [
+        // Perform a second query to get all scheduled visits for the subjects
+        $query = $this->createQuery();
+        $query->add("SELECT record, visit from em_scheduling_calendar WHERE project_id = ?", $project_id);
+        $query->add("AND")->addInClause("record", array_keys($subjects));
+        $result = $query->execute();
+        while ($row = $result->fetch_assoc()) {
+            $subjects[$row["record"]]["visits"][] = $row["visit"];
+        }
+
+        return $subjects;
+    }
+
+    private function getGlobalSubjects($provider)
+    {
+        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?' AND record IS NOT NULL", $provider);
+
+        $data = [];
+        while ($row = db_fetch_assoc($sql)) {
+            $data[$row["project_id"]][$row["record"]] = $row["location"];
+        }
+        foreach ($data as $pid => $records) {
+            $nameField = $this->getProjectSetting("name-field", $pid);
+            $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
+            foreach ($projectData as $record_id => $record_data) {
+                $loc = $records[$record_id];
+                $name = $record_data[$nameField];
+                $subjects["$pid:$record_id"] = [
                     "value" => $record_id,
                     "label" => $name ?? $record_id,
                     "location" => $loc,
                     "name" => $name,
                     "record_id" => $record_id,
-                    "is_withdrawn" => $withdraw,
-                    "visits" => []
+                    "project_id" => $pid,
+                    "is_withdrawn" => false
                 ];
             }
-
-            // Perform a second query to get all scheduled visits for the subjects
-            $query = $this->createQuery();
-            $query->add("SELECT record, visit from em_scheduling_calendar WHERE project_id = ?", $project_id);
-            $query->add("AND")->addInClause("record", array_keys($subjects));
-            $result = $query->execute();
-            while ($row = $result->fetch_assoc()) {
-                $subjects[$row["record"]]["visits"][] = $row["visit"];
-            }
         }
-
-        return $subjects;
     }
 
     private function getLocations($payload = null)
@@ -327,8 +322,9 @@ class Scheduling extends AbstractExternalModule
         return $result;
     }
 
-    private function getVisits($payload = null)
+    private function getVisits($payload)
     {
+        $project_id = $payload["pid"];
         $names = [
             "display-name" => "label",
             "linked-event" => "link",
@@ -342,8 +338,8 @@ class Scheduling extends AbstractExternalModule
             "location-free" => "isLocationFree",
         ];
 
-        $values = array_map(function ($setting) {
-            return $this->getProjectSetting("visit-$setting");
+        $values = array_map(function ($setting) use ($project_id) {
+            return $this->getProjectSetting("visit-$setting", $project_id);
         }, array_keys($names));
 
         $visits = [];
@@ -617,9 +613,14 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
 
         $allUsers = $this->getAllUsers();
-        $allLocations = $this->getLocationStructure(true);
-        $allVisits = $this->getVisits();
-        $allSubjects = $this->getSubjects();
+        $allLocations = $this->getLocationStructure(true); // TODO we won't have all visits for My Cal Page
+        $allVisits = $this->getVisits($payload); // TODO we won't have all visits for My Cal Page
+        $allSubjects = null;
+        if ($allFlag) {
+            $allSubjects = $this->getSubjects($payload);
+        } else {
+            $allSubjects = $this->getGlobalSubjects($providers);
+        }
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
