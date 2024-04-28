@@ -708,7 +708,7 @@ class Scheduling extends AbstractExternalModule
 
         if (empty($project_id) || empty($visit) || empty($start) || empty($end) || empty($provider) || empty($location) || empty($record)) {
             return [
-                "msg" => "Unable to add Appointment, missing required info",,
+                "msg" => "Unable to add Appointment, missing required info",
                 "success" => false
             ];
         }

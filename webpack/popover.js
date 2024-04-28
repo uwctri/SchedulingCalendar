@@ -165,6 +165,8 @@ class PopOver {
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
+        // TODO if one subject is in the filter list then default to that subject
+
         $.getElementById("aPopSubject").addEventListener("change", () => {
             const subject = $.getElementById("aPopSubject").value
 
@@ -175,6 +177,7 @@ class PopOver {
             buildVisitDropdown("aPopVisit", subject, visit, PopOver.isOpen)
 
             // Default the location 
+            console.log(API.cache.subjects.data)
             const defLoc = API.cache.subjects.data[subject].location // default loc
             const locs = [...document.getElementById("aPopLocation").options].map(el => el.value)
             if (locs.includes(defLoc))
