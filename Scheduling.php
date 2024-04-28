@@ -45,7 +45,7 @@ class Scheduling extends AbstractExternalModule
     */
     public function process()
     {
-        $request = RestUtility::processRequest();
+        $request = RestUtility::processRequest(false);
         $payload = $request->getRequestVars();
         $project_id = $payload["projectid"] ?? $_GET["pid"];
         $payload["pid"] = $project_id;
@@ -610,9 +610,9 @@ class Scheduling extends AbstractExternalModule
         $allVisits = $this->getVisits($payload); // TODO we won't have all visits for My Cal Page
         $allSubjects = null;
         if ($allFlag) {
-            $allSubjects = $this->getSubjects($payload);
-        } else {
             $allSubjects = $this->getGlobalSubjects($providers);
+        } else {
+            $allSubjects = $this->getSubjects($payload);
         }
 
         $query = $this->createQuery();
