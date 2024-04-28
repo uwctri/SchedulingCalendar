@@ -267,26 +267,33 @@ class Calendar {
             eventContent: (info) => {
                 const props = info.event.extendedProps
                 const type = props.is_availability ? "availability" : "appointment"
-                let title = {
-                    "availability": {
-                        "edit":
-                            genRowCol([info.timeText, props.availability_code_display, props.user_display, props.location_display], 2),
-                        "schedule":
-                            `${props.user_display}<br>${props.location_display}`,
-                    },
-                    "appointment": {
-                        "my":
-                            genRowCol([info.timeText, props.record_display, props.visit_display, props.location_display], 2),
-                        "schedule":
-                            genRowCol([info.timeText, props.record_display, props.visit_display, props.user_display, props.location_display], 2)
-                    },
-                }[type][Page.type]
+                const view = Calendar.getView()
+                let title = "Missing Title"
 
-                // Agenda view, change title
-                if (Calendar.getView() == "agenda") {
+
+                if (view == "agenda") {
+                    // Agenda view, only on Scheduling/My page, won't show anything but appts
                     title = `${props.record_display} - ${props.visit_display}<br>${props.user_display}<br>${props.location_display}`
+                } else if (view == "singleMonth") {
+                    // Month, appointments only
+                    title = `${info.timeText} ${props.record_display}<br>${props.visit_display} | ${props.user_display}<br>${props.location_display}`
+                } else {
+                    // Week and Day format
+                    title = {
+                        "availability": {
+                            "edit":
+                                genRowCol([info.timeText, props.availability_code_display, props.user_display, props.location_display], 2),
+                            "schedule":
+                                `${props.user_display}<br>${props.location_display}`,
+                        },
+                        "appointment": {
+                            "my":
+                                genRowCol([info.timeText, props.record_display, props.visit_display, props.location_display], 2),
+                            "schedule":
+                                genRowCol([info.timeText, props.record_display, props.visit_display, props.user_display, props.location_display], 2)
+                        },
+                    }[type][Page.type]
                 }
-
                 return { html: title }
             },
             events: (info, successCallback, failureCallback) => {
