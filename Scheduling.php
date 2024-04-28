@@ -5,7 +5,6 @@ namespace UWMadison\Scheduling;
 use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
-use Project;
 
 class Scheduling extends AbstractExternalModule
 {
@@ -421,6 +420,13 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
 
+        if (empty($code) || empty($start) || empty($end) || empty($provider) || empty($location)) {
+            return [
+                "msg" => "Unable to set Availability, missing required info",
+                "success" => false
+            ];
+        }
+
         $msg = "Modified existing availability";
         $mergeOccured = $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code, null, [
             "start" => $start,
@@ -434,7 +440,10 @@ class Scheduling extends AbstractExternalModule
                 [$project_id, $code, $provider, $location, $start, $end]
             );
         }
-        return ["msg" => $msg];
+        return [
+            "msg" => $msg,
+            "success" => true
+        ];
     }
 
     private function cleanupAvailabiltiy($dateStr, $provider, $location, $code, $existing = null, $working = null)
@@ -532,7 +541,11 @@ class Scheduling extends AbstractExternalModule
         $query->add(implode(',', $conditions), $params);
         $query->add("WHERE id = ?", [$id]);
         $query->execute();
-        return []; // TODO return something?
+        $msg = "Availabiltiy $id updated to range $newStart to $newEnd";
+        return [
+            "msg" => $msg,
+            "success" => true
+        ];
     }
 
     private function deleteAvailability($payload)
@@ -554,10 +567,16 @@ class Scheduling extends AbstractExternalModule
         $locations = $payload["locations"]; // Could be * for all
 
         if (empty($start) || empty($end)) {
-            return ["msg" => "No start or end time provided"];
+            return [
+                "msg" => "No start or end time provided",
+                "success" => false
+            ];
         }
         if (empty($providers)) {
-            return ["msg" => "No providers provided"];
+            return [
+                "msg" => "No providers provided",
+                "success" => false
+            ];
         }
 
         $query = $this->createQuery();
@@ -578,7 +597,10 @@ class Scheduling extends AbstractExternalModule
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
-        return []; // TODO return something?
+        return [
+            "msg" => "Range delete ran with no issues",
+            "success" => true
+        ];
     }
 
     private function deleteEntry($id)
@@ -587,10 +609,16 @@ class Scheduling extends AbstractExternalModule
             $id = $id["internal_id"] ?? $id["id"];
         }
         if (empty($id)) {
-            return ["msg" => "No id provided"];
+            return [
+                "msg" => "No id provided",
+                "success" => true
+            ];
         }
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
-        return []; // TODO return something?
+        return [
+            "msg" => "Entry $id was deleted",
+            "success" => true
+        ];
     }
 
     private function getAppointments($payload)
@@ -679,57 +707,67 @@ class Scheduling extends AbstractExternalModule
         $notes = empty($notes) ? null : $notes; // If empty note then store null, not empty string
 
         if (empty($project_id) || empty($visit) || empty($start) || empty($end) || empty($provider) || empty($location) || empty($record)) {
-            return [];
+            return [
+                "msg" => "Unable to add Appointment, missing required info",,
+                "success" => false
+            ];
         }
 
         // Search for availability that overflows the start/end
         $payload["allow_overflow"] = true;
         $existing = $this->getAvailability($payload);
 
-        if (count($existing) > 0) {
-            $existing = $existing[0];
-            $id = $existing["internal_id"];
-            $exStart = $existing["start"];
-            $exEnd = $existing["end"];
+        if (count($existing) == 0) {
+            return [
+                "msg" => "Unable to add appontment, valid matching availability not found",
+                "success" => false
+            ];
+        }
+        $existing = $existing[0];
+        $id = $existing["internal_id"];
+        $exStart = $existing["start"];
+        $exEnd = $existing["end"];
 
-            if (($exStart == $start) && ($exEnd == $end)) {
-                // Delete the availability, its a perfect overlap
-                $this->deleteEntry($id);
-            } elseif (($exStart == $start) || ($exEnd == $end)) {
-                // Modify the availability
-                $newStart = ($exStart == $start) ? $end : $exStart;
-                $newEnd = ($exEnd == $end) ? $start : $exEnd;
-                $this->modifyAvailabiltiy($id, $newStart, $newEnd);
-            } else {
-                // In the middle, modify and create new availability
-                $this->modifyAvailabiltiy($id, $exStart, $start);
-                $this->setAvailability([
-                    "pid" => $project_id,
-                    "start" => $end,
-                    "end" => $exEnd,
-                    "group" => $existing["availability_code"],
-                    "providers" => $existing["user"],
-                    "locations" => $existing["location"],
-                ]);
-            }
-
-            // Create JSON with info for resotring avail if deleted
-            $meta = json_encode([
-                "restore" => [
-                    "pid" => $project_id,
-                    "group" => $existing["availability_code"],
-                    "providers" => $existing["user"],
-                    "locations" => $existing["location"],
-                ]
+        if (($exStart == $start) && ($exEnd == $end)) {
+            // Delete the availability, its a perfect overlap
+            $this->deleteEntry($id);
+        } elseif (($exStart == $start) || ($exEnd == $end)) {
+            // Modify the availability
+            $newStart = ($exStart == $start) ? $end : $exStart;
+            $newEnd = ($exEnd == $end) ? $start : $exEnd;
+            $this->modifyAvailabiltiy($id, $newStart, $newEnd);
+        } else {
+            // In the middle, modify and create new availability
+            $this->modifyAvailabiltiy($id, $exStart, $start);
+            $this->setAvailability([
+                "pid" => $project_id,
+                "start" => $end,
+                "end" => $exEnd,
+                "group" => $existing["availability_code"],
+                "providers" => $existing["user"],
+                "locations" => $existing["location"],
             ]);
-
-            $this->query(
-                "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end, notes, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                [$project_id, $visit, $provider, $record, $location, $start, $end, $notes, $meta]
-            );
         }
 
-        return []; // TODO return something?
+        // Create JSON with info for resotring avail if deleted
+        $meta = json_encode([
+            "restore" => [
+                "pid" => $project_id,
+                "group" => $existing["availability_code"],
+                "providers" => $existing["user"],
+                "locations" => $existing["location"],
+            ]
+        ]);
+
+        $this->query(
+            "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end, notes, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            [$project_id, $visit, $provider, $record, $location, $start, $end, $notes, $meta]
+        );
+
+        return [
+            "msg" => "Appointment scheduled",
+            "success" => true
+        ];
     }
 
     private function modifyAppointments($payload)
@@ -739,7 +777,10 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
 
         if (empty($id) || empty($provider) || empty($location)) {
-            return []; // TODO return something?
+            return [
+                "msg" => "Unable to modify appontment, missing required fields",
+                "success" => false
+            ];
         }
 
         $this->query(
@@ -750,7 +791,10 @@ class Scheduling extends AbstractExternalModule
         // TODO should we update availability or make sure that the provider is available?
         // TODO probably have a checkbox for ignoring availability, currently just have text warning.
 
-        return []; // TODO return something?
+        return [
+            "msg" => "Appointment provider and/or location updated",
+            "success" => true
+        ];
     }
 
     private function deleteAppointments($payload)
@@ -782,19 +826,23 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $subjects = $payload["subjects"];
 
-        $query = $this->createQuery();
-        $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");
-
         if (empty($subjects)) {
-            return []; // TODO return something?
+            return [
+                "msg" => "Unable to delete appointment range, missing subject(s)",
+                "success" => false
+            ];
         }
 
+        $query = $this->createQuery();
+        $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");
         $query->add("AND")->addInClause("record", $subjects);
-
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
-        return []; // TODO return something?
+        return [
+            "msg" => "Deleted range of appointments",
+            "success" => true
+        ];
     }
 
     private function getRowMetadata($id)
@@ -808,7 +856,7 @@ class Scheduling extends AbstractExternalModule
         return $meta;
     }
 
-    private function fireDataEntryTrigger($saveParams)
+    private function fireDataEntryTrigger($payload)
     {
         // Chunks of this function are lifted from the DataEntry class
         global $data_entry_trigger_url, $data_entry_trigger_enabled;
@@ -827,7 +875,7 @@ class Scheduling extends AbstractExternalModule
         );
 
         // Add in stuff from save
-        $params = array_merge($params, $saveParams);
+        $params = array_merge($params, $payload);
 
         // Set timeout value for http request
         $timeout = 10; // seconds
