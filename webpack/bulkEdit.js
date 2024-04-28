@@ -38,7 +38,7 @@ class BulkEdit {
             html: html,
             showDenyButton: true,
             denyButtonText: RedCap.tt("bulk_remove"),
-            confirmButtonText: RedCap.tt("bulk_add"), // TODO fix this button color
+            confirmButtonText: RedCap.tt("bulk_add"),
             customClass: {
                 container: 'bulkEditModal'
             },

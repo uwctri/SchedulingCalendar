@@ -41,23 +41,16 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
-    Process a post request from API or router
+    Process a post request from router
     */
-    public function process($tokenRequired)
+    public function process()
     {
-        global $Proj;
-
-        $request = RestUtility::processRequest($tokenRequired);
+        $request = RestUtility::processRequest();
         $payload = $request->getRequestVars();
         $project_id = $payload["projectid"] ?? $_GET["pid"];
         $payload["pid"] = $project_id;
         $err_msg = "Not supported";
         $result = null;
-
-        // API calls need to have a new project instance created
-        if (!isset($Proj)) {
-            $Proj = new Project($project_id);
-        }
 
         $funcs = [
             "availabilitycode" => [
@@ -134,13 +127,13 @@ class Scheduling extends AbstractExternalModule
 
     public function getProjectName()
     {
-        $sql = $this->query("SELECT app_title FROM redcap.redcap_projects WHERE project_id = ?", [$this->getProjectId()]);
+        $sql = $this->query("SELECT app_title FROM redcap_projects WHERE project_id = ?", [$this->getProjectId()]);
         return db_fetch_assoc($sql)["app_title"];
     }
 
     public function getContactEmail()
     {
-        $sql = $this->query("SELECT value FROM redcap.redcap_config where field_name = 'homepage_contact_email'", []);
+        $sql = $this->query("SELECT value FROM redcap_config WHERE field_name = 'homepage_contact_email'", []);
         return db_fetch_assoc($sql)["value"];
     }
 
@@ -539,7 +532,7 @@ class Scheduling extends AbstractExternalModule
         $query->add(implode(',', $conditions), $params);
         $query->add("WHERE id = ?", [$id]);
         $query->execute();
-        return [];
+        return []; // TODO return something?
     }
 
     private function deleteAvailability($payload)
@@ -585,7 +578,7 @@ class Scheduling extends AbstractExternalModule
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
-        return [];
+        return []; // TODO return something?
     }
 
     private function deleteEntry($id)
@@ -597,7 +590,7 @@ class Scheduling extends AbstractExternalModule
             return ["msg" => "No id provided"];
         }
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
-        return [];
+        return []; // TODO return something?
     }
 
     private function getAppointments($payload)
@@ -736,7 +729,7 @@ class Scheduling extends AbstractExternalModule
             );
         }
 
-        return [];
+        return []; // TODO return something?
     }
 
     private function modifyAppointments($payload)
@@ -746,7 +739,7 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
 
         if (empty($id) || empty($provider) || empty($location)) {
-            return [];
+            return []; // TODO return something?
         }
 
         $this->query(
@@ -757,7 +750,7 @@ class Scheduling extends AbstractExternalModule
         // TODO should we update availability or make sure that the provider is available?
         // TODO probably have a checkbox for ignoring availability, currently just have text warning.
 
-        return [];
+        return []; // TODO return something?
     }
 
     private function deleteAppointments($payload)
@@ -793,7 +786,7 @@ class Scheduling extends AbstractExternalModule
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");
 
         if (empty($subjects)) {
-            return [];
+            return []; // TODO return something?
         }
 
         $query->add("AND")->addInClause("record", $subjects);
@@ -801,7 +794,7 @@ class Scheduling extends AbstractExternalModule
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
-        return [];
+        return []; // TODO return something?
     }
 
     private function getRowMetadata($id)

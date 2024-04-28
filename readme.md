@@ -6,7 +6,6 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* Send rejections back from PHP and show user
 * Right side subject summary
 * Setup all event logic (Branching, Additional Time, Duration, Linked Event)
 * Write the docs page
