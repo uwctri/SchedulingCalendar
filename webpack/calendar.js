@@ -270,13 +270,15 @@ class Calendar {
                 const view = Calendar.getView()
                 let title = "Missing Title"
 
-
                 if (view == "agenda") {
                     // Agenda view, only on Scheduling/My page, won't show anything but appts
                     title = `${props.record_display} - ${props.visit_display}<br>${props.user_display}<br>${props.location_display}`
-                } else if (view == "singleMonth") {
+                } else if (view == "singleMonth" && Page.type != "edit") {
                     // Month, appointments only
                     title = `${info.timeText} ${props.record_display}<br>${props.visit_display} | ${props.user_display}<br>${props.location_display}`
+                } else if (view == "singleMonth" && Page.type == "edit") {
+                    // Month, availability on the edit page only
+                    title = `${info.timeText} ${props.user_display}<br>${props.location_display}`
                 } else {
                     // Week and Day format
                     title = {
