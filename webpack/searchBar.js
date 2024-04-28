@@ -14,15 +14,52 @@ const choicesSelector = ".choices__inner .choices__list"
 class SearchBar {
 
     static choices = null
-    static _ready = false
+    static ready = false
 
-    static async build() {
+    static async init() {
+
+        const filterLocations = (locations) => {
+            locations = formatCustomProps(locations)
+            return locations.filter(loc => loc.customProperties.active)
+        }
+
+        const filterVisits = (visits) => {
+            return formatCustomProps(visits)
+        }
+
+        const filterProviders = (providers) => {
+            providers = formatCustomProps(providers)
+            const allProviders = !UserConfig.get().limitAvailability && (Page.type == 'edit')
+            providers = providers.filter((provider) => provider.customProperties.is_local || allProviders)
+            return providers
+        }
+
+        const filterSubjects = (subjects) => {
+            subjects = formatCustomProps(subjects)
+            subjects = subjects.filter((subject) => !subject.customProperties.is_withdrawn)
+            return subjects
+        }
+
+        const formatCustomProps = (raw) => {
+            let result = []
+            for (const id in raw) {
+                const data = raw[id]
+                result.push({
+                    value: data.value,
+                    label: data.label,
+                    customProperties: {
+                        ...data
+                    }
+                })
+            }
+            return result
+        }
 
         const keyEvent = (event) => {
-            if (event.key != "Enter" || SearchBar.isVisible() || !SearchBar.isReady())
+            if (event.key != "Enter" || SearchBar.isVisible() || !SearchBar.ready)
                 return
             $.getElementsByClassName("fc-search-button")[0].click()
-            SearchBar.focus()
+            $.querySelector(`.${centerClassName} input`).focus()
         }
 
         const changeEvent = (event) => {
@@ -34,29 +71,28 @@ class SearchBar {
             el.style.width = `${text.length}ch`
         }
 
-        const addCustomProperty = (data, key, value) => {
+        const addProperty = (data, key, value) => {
             for (const id in data) {
-                data[id].customProperties = data[id].customProperties || {}
-                data[id].customProperties[key] = value
+                data[id][key] = value
             }
         }
 
         const flattenLocations = (locations, parent = null) => {
-            let flatLocs = []
+            let flatLocs = {}
             for (const id in locations) {
                 const data = locations[id]
                 if (data.sub) {
-                    flatLocs = flatLocs.concat(flattenLocations(data.sub, id))
+                    flatLocs = Object.assign(flatLocs, flattenLocations(data.sub, id))
                     delete data.sub
                 }
-                flatLocs.push({
+                flatLocs[id] = {
                     value: id,
                     label: data["name"],
                     parent: parent,
                     customProperties: {
                         ...data
                     }
-                })
+                }
             }
             return flatLocs
         }
@@ -80,10 +116,10 @@ class SearchBar {
             visits = values[3]
         })
         locations = flattenLocations(locations)
-        addCustomProperty(providers, "type", "provider")
-        addCustomProperty(subjects, "type", "subject")
-        addCustomProperty(locations, "type", "location")
-        addCustomProperty(visits, "type", "visit")
+        addProperty(providers, "type", "provider")
+        addProperty(subjects, "type", "subject")
+        addProperty(locations, "type", "location")
+        addProperty(visits, "type", "visit")
 
         // Init the picker object
         SearchBar.choices = new Choices(searchBarEl, {
@@ -95,19 +131,19 @@ class SearchBar {
                 [
                     {
                         label: "Locations",
-                        choices: SearchBar.filterLocations(locations)
+                        choices: filterLocations(locations)
                     },
                     {
                         label: "Visits (Events)",
-                        choices: SearchBar.formatCustomProps(visits)
+                        choices: filterVisits(visits)
                     },
                     {
                         label: "Providers",
-                        choices: SearchBar.filterProviders(providers)
+                        choices: filterProviders(providers)
                     },
                     {
                         label: "Subjects",
-                        choices: SearchBar.filterSubjects(subjects)
+                        choices: filterSubjects(subjects)
                     }
                 ]
         })
@@ -116,7 +152,7 @@ class SearchBar {
         searchBarEl.style.display = ""
         searchBarEl.addEventListener('change', changeEvent)
         $.addEventListener("keyup", keyEvent)
-        SearchBar._ready = true
+        SearchBar.ready = true
     }
 
     static show() {
@@ -130,8 +166,7 @@ class SearchBar {
     }
 
     static toggle() {
-        if (!SearchBar._ready) return
-        console.log(SearchBar.getPicked())
+        if (!SearchBar.ready) return
         if (SearchBar.isVisible()) {
             SearchBar.hide()
         } else {
@@ -143,50 +178,11 @@ class SearchBar {
         return $.getElementsByClassName(titleClassName)[0].classList.contains("d-none")
     }
 
-    static isReady() {
-        return SearchBar._ready
-    }
-
-    static focus() {
-        $.querySelector(`.${centerClassName} input`).focus()
-    }
-
-    static filterLocations(locations) {
-        return locations.filter(loc => loc.customProperties.active)
-    }
-
-    static filterProviders(providers) {
-        providers = SearchBar.formatCustomProps(providers)
-        const allProviders = !UserConfig.get().limitAvailability && (Page.type == 'edit')
-        providers = providers.filter((provider) => provider.customProperties.is_local || allProviders)
-        return providers
-    }
-
-    static filterSubjects(subjects) {
-        subjects = SearchBar.formatCustomProps(subjects)
-        subjects = subjects.filter((subject) => !subject.customProperties.is_withdrawn)
-        return subjects
-    }
-
-    static formatCustomProps(raw) {
-        let result = []
-        for (const id in raw) {
-            const data = raw[id]
-            result.push({
-                value: data.value,
-                label: data.label,
-                customProperties: {
-                    ...data
-                }
-            })
-        }
-        return result
-    }
-
     static getPicked(valueOnly = false, filterType = null) {
         if (SearchBar.choices == null)
             return []
         let picked = SearchBar.choices.getValue()
+        console.log(picked)
         if (filterType)
             picked = picked.filter(item => item.customProperties.type == filterType)
         if (valueOnly)

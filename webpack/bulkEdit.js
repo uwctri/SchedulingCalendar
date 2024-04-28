@@ -32,7 +32,6 @@ class BulkEdit {
     static open() {
 
         PopOver.close()
-        console.log(RedCap.tt("bulk_remove"))
         Swal.fire({
             title: RedCap.tt("bulk_title"),
             html: html,
@@ -42,7 +41,7 @@ class BulkEdit {
             customClass: {
                 container: 'bulkEditModal'
             },
-            didOpen: BulkEdit.initModal,
+            didOpen: BulkEdit.init,
             width: modalWidth,
             preConfirm: () => {
                 if (!BulkEdit.validate)
@@ -100,7 +99,7 @@ class BulkEdit {
         })
     }
 
-    static initModal() {
+    static init() {
         BulkEdit.picker = new Litepicker({
             element: $.getElementById('litepicker'),
             inlineMode: true,
