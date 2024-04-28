@@ -19,8 +19,7 @@ class SearchBar {
     static async init() {
 
         const filterLocations = (locations) => {
-            locations = formatCustomProps(locations)
-            return locations.filter(loc => loc.customProperties.active)
+            return Object.values(locations).filter(loc => loc.customProperties.active)
         }
 
         const filterVisits = (visits) => {
@@ -88,9 +87,10 @@ class SearchBar {
                 flatLocs[id] = {
                     value: id,
                     label: data["name"],
-                    parent: parent,
                     customProperties: {
-                        ...data
+                        ...data,
+                        type: "location",
+                        parent: parent
                     }
                 }
             }
@@ -118,7 +118,6 @@ class SearchBar {
         locations = flattenLocations(locations)
         addProperty(providers, "type", "provider")
         addProperty(subjects, "type", "subject")
-        addProperty(locations, "type", "location")
         addProperty(visits, "type", "visit")
 
         // Init the picker object
@@ -182,7 +181,6 @@ class SearchBar {
         if (SearchBar.choices == null)
             return []
         let picked = SearchBar.choices.getValue()
-        console.log(picked)
         if (filterType)
             picked = picked.filter(item => item.customProperties.type == filterType)
         if (valueOnly)

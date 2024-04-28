@@ -177,7 +177,6 @@ class PopOver {
             buildVisitDropdown("aPopVisit", subject, visit, PopOver.isOpen)
 
             // Default the location 
-            console.log(API.cache.subjects.data)
             const defLoc = API.cache.subjects.data[subject].location // default loc
             const locs = [...document.getElementById("aPopLocation").options].map(el => el.value)
             if (locs.includes(defLoc))
