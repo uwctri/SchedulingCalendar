@@ -4,6 +4,11 @@ class ICS {
 
     static export() {
 
+        const toggleICS = () => {
+            const el = $.querySelector(".fc-ics-button")
+            el.disabled = !el.disabled
+        }
+
         const downloadString = (filename, text) => {
             let el = $.createElement('a');
             el.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
@@ -13,6 +18,9 @@ class ICS {
             el.click();
             $.body.removeChild(el);
         }
+
+        toggleICS()
+        setTimeout(toggleICS, 10 * 1000)
 
         const cal = RedCap.tt("ics_cal")
         API.post({
