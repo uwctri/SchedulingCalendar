@@ -376,7 +376,7 @@ class Scheduling extends AbstractExternalModule
             "branch-logic-event" => "blEvent",
             "branch-logic-field" => "blField",
             "branch-logic-value" => "blValue",
-            "duration" => "durantion",
+            "duration" => "duration",
             "extendable" => "isExtendable",
             "location-free" => "isLocationFree",
         ];

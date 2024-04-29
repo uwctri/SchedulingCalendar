@@ -171,6 +171,9 @@ class PopOver {
             let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, "hh:mm a")
             endTime.disabled = false
 
+            if (!visit)
+                return
+
             // Set duration
             if (config.duration) {
                 endTime.value = start.plus({ minutes: config.duration }).toFormat("hh:mm a")
