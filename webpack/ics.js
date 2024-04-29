@@ -4,24 +4,32 @@ import RedCap from "./redcap"
 import API from "./api"
 class ICS {
 
-    static export() {
+    static downloadString(filename, text) {
+        let el = $.createElement('a');
+        el.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        el.setAttribute('download', filename);
+        el.style.display = 'none';
+        $.body.appendChild(el);
+        el.click();
+        $.body.removeChild(el);
+    }
 
+    static export() {
+        const cal = RedCap.tt("ics_cal")
+        API.post({
+            utility: "ics"
+        }).then(result => {
+            ICS.downloadString(`${RedCap.project_name} ${cal}.ics`, result.data);
+        })
+    }
+
+    static localExport() {
         const cal = RedCap.tt("ics_cal")
         const study = RedCap.tt("ics_study")
         const provider = RedCap.tt("ics_provider")
         const subject = RedCap.tt("ics_subject")
         const visit = RedCap.tt("ics_visit")
         const link = RedCap.tt("ics_link")
-
-        const downloadString = (filename, text) => {
-            let el = $.createElement('a');
-            el.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-            el.setAttribute('download', filename);
-            el.style.display = 'none';
-            $.body.appendChild(el);
-            el.click();
-            $.body.removeChild(el);
-        }
 
         let ics = `
             BEGIN:VCALENDAR
@@ -40,7 +48,7 @@ class ICS {
             all_appointments: false,
         }).then((appts) => {
             appts.forEach(data => {
-                let extra = "" // TODO
+                let extra = "" // Not used in local export
                 const url = makeRecordUrl(data.record)
                 ics += `
                     BEGIN:VEVENT
@@ -55,7 +63,7 @@ class ICS {
             });
 
             ics += `\nEND:VCALENDAR`;
-            downloadString(`${RedCap.project_name} ${cal}.ics`, ics.replace(/ {4}/g, ''));
+            ICS.downloadString(`${RedCap.project_name} ${cal}.ics`, ics.replace(/ {4}/g, ''));
         })
     }
 }
