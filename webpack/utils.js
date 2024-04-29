@@ -1,6 +1,7 @@
 import API from "./api"
 import UserConfig from "./userConfig"
 import RedCap from "./redcap"
+import SearchBar from "./searchBar"
 
 export const buildGroupDropdown = (el, stillOpenFn) => {
     API.availabilityCodes({
@@ -90,6 +91,12 @@ export const buildSubjectDropdown = (el, stillOpenFn) => {
             option.value = subjectData[k].value
             option.text = subjectData[k].label
             select.add(option)
+        }
+
+        // If one subject is in the filter list then default to that subject
+        const selSub = SearchBar.getPickedSubjects()
+        if (selSub.length == 1) {
+            $.getElementById("aPopSubject").value = selSub[0].customProperties.record_id
         }
     })
 }

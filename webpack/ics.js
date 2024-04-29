@@ -4,12 +4,6 @@ import RedCap from "./redcap"
 import API from "./api"
 class ICS {
 
-    static open() {
-        // TODO open a real modal for Cron Sched
-        // TODO have option for extra info in the export
-        ICS.export()
-    }
-
     static export() {
 
         const cal = RedCap.tt("ics_cal")

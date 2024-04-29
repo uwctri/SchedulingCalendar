@@ -29,7 +29,7 @@
         {
             "key": "scheduling-and-availability",
             "name": "Used for CSS matching. Ignore",
-            "type": "text"
+            "type": "descriptive"
         },
         {
             "key": "calendar-admin",
@@ -200,6 +200,77 @@
                     "type": "checkbox"
                 }
             ]
+        },
+        {
+            "key": "ics-export-title",
+            "name": "<b>ICS Export Configuration</b>",
+            "type": "descriptive"
+        },
+        {
+            "key": "ics-export-field",
+            "name": "<b>Additional Field</b><br>Extra info added to the ICS export per appointment",
+            "type": "field-list",
+            "repeatable": true
+        },
+        {
+            "key": "ics-cron",
+            "name": "<b>Auto Export Frequency</b>",
+            "type": "radio",
+            "choices": [
+                {
+                    "value": "off",
+                    "name": "Off"
+                },
+                {
+                    "value": "day",
+                    "name": "Daily"
+                },
+                {
+                    "value": "week",
+                    "name": "Weekly"
+                }
+            ]
+        },
+        {
+            "key": "ics-day",
+            "name": "<b>Export Day</b>",
+            "type": "dropdown",
+            "choices": [
+                {
+                    "value": "mon",
+                    "name": "Monday"
+                },
+                {
+                    "value": "tue",
+                    "name": "Tuesday"
+                },
+                {
+                    "value": "wed",
+                    "name": "Wednesday"
+                },
+                {
+                    "value": "thu",
+                    "name": "Thursday"
+                },
+                {
+                    "value": "fri",
+                    "name": "Friday"
+                },
+                {
+                    "value": "sat",
+                    "name": "Saturday"
+                },
+                {
+                    "value": "sun",
+                    "name": "Sunday"
+                }
+            ]
+        },
+        {
+            "key": "ics-user",
+            "name": "<b>Send Export to</b>",
+            "type": "user-list",
+            "repeatable": true
         }
     ],
     "system-settings": [

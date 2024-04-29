@@ -165,8 +165,6 @@ class PopOver {
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
-        // TODO if one subject is in the filter list then default to that subject
-
         $.getElementById("aPopSubject").addEventListener("change", () => {
             const subject = $.getElementById("aPopSubject").value
 

@@ -119,7 +119,7 @@ class Calendar {
                 ics: {
                     text: ".ICS",
                     hint: RedCap.tt("alt_ics"),
-                    click: ICS.open
+                    click: ICS.export
                 },
                 config: {
                     icon: "fa-gear",

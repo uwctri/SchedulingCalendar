@@ -413,12 +413,24 @@
         }
     }
 
+    table:has(input[name=ics-cron][value=week]:checked) {
+        tr[field=ics-day] {
+            display: contents;
+        }
+    }
+
     table:has(tr[field=scheduling-and-availability]) {
+
+        tr[field=ics-export-title] td {
+            background-color: var(--redcap-dark-grey);
+            text-align: right;
+        }
 
         tr[field=location-field],
         tr[field=location-static],
         tr[field=location-json],
-        tr[field=location-pid] {
+        tr[field=location-pid],
+        tr[field=ics-day] {
             display: none;
         }
 
@@ -431,7 +443,7 @@
         }
 
         .sub_start td {
-            background-color: var(--redcap-dark-grey)
+            background-color: var(--redcap-dark-grey);
         }
 
         tr[field=scheduling-and-availability] {
