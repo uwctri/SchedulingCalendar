@@ -69,7 +69,7 @@ class Scheduling extends AbstractExternalModule
 
             if ((($freq == "day") && ($now > $time)) || (($freq == "week") && ($now > $time) && ($day == date("w")))) {
                 $ics = $this->makeICS($extraFields, $pid);
-                $this->sendICS($ics, $users);
+                $this->sendICS($ics, $users, $pid);
                 $this->setProjectSetting("ics-time", date("Y-m-d"));
             }
         }
@@ -92,23 +92,16 @@ class Scheduling extends AbstractExternalModule
         $err_msg = "Not supported";
         $result = null;
 
-        if (!empty($payload["utility"])) {
-            $task = [
-                "ics" => "makeICS"
-            ][$payload["utility"]];
+        // Check if its the non-CRUD utility function
+        if (!empty($payload["utility"]) && $payload["utility"] == "ics") {
             $result = [
-                "data" => [],
-                "success" => false
+                "data" => $this->utilityICS($payload),
+                "success" => true
             ];
-            if (!empty($task)) {
-                $result = [
-                    "data" => $this->$task([], $project_id), // TODO format?
-                    "success" => true
-                ];
-            }
             return json_encode($result);
         }
 
+        // CRUD functions
         $task = [
             "availabilitycode" => [
                 "read" => "getAvailabilityCodes",
@@ -181,9 +174,10 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
-    public function getProjectName()
+    public function getProjectName($project_id = null)
     {
-        $sql = $this->query("SELECT app_title FROM redcap_projects WHERE project_id = ?", [$this->getProjectId()]);
+        $project_id = $project_id ?? $this->getProjectId();
+        $sql = $this->query("SELECT app_title FROM redcap_projects WHERE project_id = ?", [$project_id]);
         return db_fetch_assoc($sql)["app_title"];
     }
 
@@ -913,7 +907,13 @@ class Scheduling extends AbstractExternalModule
         return $meta;
     }
 
-    // TODO make sure this works
+    private function utilityICS($payload)
+    {
+        $project_id = $payload["pid"];
+        $extraFields = $this->getProjectSetting("ics-field") ?? [];
+        return $this->makeICS($extraFields, $project_id);
+    }
+
     private function makeICS($extaFields, $project_id)
     {
         $project_name = $this->getProjectName();
@@ -927,13 +927,14 @@ class Scheduling extends AbstractExternalModule
             "visits" => [],
             "all_appointments" => false
         ]);
-        $ics = "
-            BEGIN:VCALENDAR
-            VERSION:2.0
-            PRODID:-//CTRI/REDCap Schedule//NONSGML v1.0//EN
-            X-WR-CALNAME:REDCap Schedule Export - $project_id";
+        $ics = "BEGIN:VCALENDAR
+                VERSION:2.0
+                PRODID:-//CTRI/REDCap Schedule//NONSGML v1.0//EN
+                X-WR-CALNAME:REDCap Schedule Export - $project_id";
 
-        $url = explode($this->getUrl("index.php"), "ExternalModules")[0] . "DataEntry/record_home.php?";
+        $url = explode("ExternalModules", $this->getUrl("index.php"))[0] . "DataEntry/record_home.php";
+        $data = $this->getSingleEventFields($extaFields, null, $project_id);
+        $dd = REDCap::getDataDictionary($project_id, 'array', false, $extaFields);
 
         foreach ($appts as $a) {
             $desc = [
@@ -941,29 +942,60 @@ class Scheduling extends AbstractExternalModule
                 $this->tt('ics_provider') => $a['user_display'],
                 $this->tt('ics_subject') => $a['record_display'],
                 $this->tt('ics_visit') => $a['visit_display'],
-                // Extra stuff goes here TODO
-                $this->tt('ics_link') => $url . "pid=$project_id&id={$a['record']}"
             ];
-            $desc = str_replace("=", ": ", http_build_query($desc, "", "\\n"));
+
+            foreach ($extaFields as $field) {
+                $desc[$dd[$field]["field_label"]] = $data[$a["record"]][$field];
+            }
+
+            $desc[$this->tt('ics_link')] = "$url?pid=$project_id&id={$a['record']}";
+
+            $text = "";
+            foreach ($desc as $title => $value) {
+                $text = "{$text}{$title}: $value\\n";
+            }
+
+            $start = preg_replace("/[-:]/", "", str_replace(" ", "T", $a['start']));
+            $end = preg_replace("/[-:]/", "", str_replace(" ", "T", $a['end']));
+            $id = uniqid();
 
             $ics = "$ics
             BEGIN:VEVENT
-            UID:{$a['user']}-{$a['record']}-{$a['visit']}
-            DTSTAMP:{$a['start']}
+            UID:$id
+            DTSTAMP:$start
             ORGANIZER;CN=REDCap:MAILTO:{$this->getContactEmail()}
-            DTSTART:{$a['start']}
-            DTEND:{$a['end']}
+            DTSTART:$start
+            DTEND:$end
             SUMMARY:$project_name-{$a['user_display']}
-            DESCRIPTION:$desc
+            DESCRIPTION:$text
             END:VEVENT";
         }
 
         return preg_replace("/ {4}/", "", "$ics\nEND:VCALENDAR");
     }
 
-    private function sendICS($ics, $users)
+    private function sendICS($ics, $users, $project_id)
     {
-        // Todo send the string as an attachment to the users
+        $from = $this->getContactEmail();
+        $project_name = $this->getProjectName($project_id);
+        $subject = "[REDCap] ICS Backup - $project_id";
+        $msg = "Attached is the ICS backup for project \"$project_name\" (PID $project_id)";
+        $fileName = $project_name . $this->tt("ics_cal");
+        $temp = tmpfile();
+        fwrite($temp, $ics);
+        $attachments = [
+            $fileName => stream_get_meta_data($temp)['uri']
+        ];
+
+        foreach ($users as $user) {
+            $userObj = $this->getUser($user);
+            $to = $userObj->getEmail();
+            if (!empty($to)) {
+                REDCap::email($to, $from, $subject, $msg, null, null, null, $attachments);
+            }
+        }
+
+        fclose($temp);
     }
 
     private function fireDataEntryTrigger($payload)
