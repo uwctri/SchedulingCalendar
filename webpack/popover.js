@@ -165,6 +165,35 @@ class PopOver {
         buildProviderDropdown("aPopProvider", PopOver.isOpen)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
+        const enforceDuration = () => {
+            const visit = $.getElementById("aPopVisit").value
+            const config = API.cache.visits.data[visit]
+            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, "hh:mm a")
+            endTime.disabled = false
+
+            // Set duration
+            if (config.duration) {
+                endTime.value = start.plus({ minutes: config.duration }).toFormat("hh:mm a")
+
+                // Not Extendable
+                if (!config.isExtendable)
+                    endTime.disabled = true
+            }
+        }
+
+        $.getElementById("aPopStartTime").addEventListener("change", () => {
+            enforceDuration()
+            // TODO is provider still available at that time?
+        })
+
+        $.getElementById("aPopEndTime").addEventListener("change", () => {
+            // TODO is provider still available at that time?
+        })
+
+        $.getElementById("aPopVisit").addEventListener("change", () => {
+            enforceDuration()
+        })
+
         $.getElementById("aPopSubject").addEventListener("change", () => {
             const subject = $.getElementById("aPopSubject").value
 
@@ -180,9 +209,6 @@ class PopOver {
             if (locs.includes(defLoc))
                 $.getElementById("aPopLocation").value = defLoc
         })
-
-        // When the provider, start, or stop time change update the list of valid providers.
-        // TODO - prevent clicking schedule if the provider isn't free at the time (or rebuild provider list). This is already validated on backend
     }
 
     static openDetails(info) {

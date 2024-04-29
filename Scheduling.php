@@ -990,9 +990,9 @@ class Scheduling extends AbstractExternalModule
         foreach ($users as $user) {
             $userObj = $this->getUser($user);
             $to = $userObj->getEmail();
-            if (!empty($to)) {
-                REDCap::email($to, $from, $subject, $msg, null, null, null, $attachments);
-            }
+            if (empty($to))
+                continue;
+            REDCap::email($to, $from, $subject, $msg, null, null, null, $attachments);
         }
 
         fclose($temp);

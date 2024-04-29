@@ -40,6 +40,7 @@ export const buildLocationDropdown = (el, stillOpenFn) => {
 }
 
 export const buildProviderDropdown = (el, stillOpenFn) => {
+    // TODO only list the providers that are available?
     const select = $.getElementById(el)
     if (!RedCap.user.isCalendarAdmin) {
         let option = $.createElement("option")
