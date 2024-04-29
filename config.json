@@ -25,6 +25,15 @@
             }
         ]
     },
+    "crons": [
+        {
+            "cron_name": "ics_export",
+            "cron_description": "Check if an automated ICS export needs to occur",
+            "method": "ics_cron",
+            "cron_frequency": "21600",
+            "cron_max_run_time": "3600"
+        }
+    ],
     "project-settings": [
         {
             "key": "scheduling-and-availability",
@@ -203,11 +212,11 @@
         },
         {
             "key": "ics-export-title",
-            "name": "<b>ICS Export Configuration</b>",
+            "name": "<b>ICS Export</b>",
             "type": "descriptive"
         },
         {
-            "key": "ics-export-field",
+            "key": "ics-field",
             "name": "<b>Additional Field</b><br>Extra info added to the ICS export per appointment",
             "type": "field-list",
             "repeatable": true
@@ -237,32 +246,32 @@
             "type": "dropdown",
             "choices": [
                 {
-                    "value": "mon",
+                    "value": "0",
+                    "name": "Sunday"
+                },
+                {
+                    "value": "1",
                     "name": "Monday"
                 },
                 {
-                    "value": "tue",
+                    "value": "2",
                     "name": "Tuesday"
                 },
                 {
-                    "value": "wed",
+                    "value": "3",
                     "name": "Wednesday"
                 },
                 {
-                    "value": "thu",
+                    "value": "4",
                     "name": "Thursday"
                 },
                 {
-                    "value": "fri",
+                    "value": "5",
                     "name": "Friday"
                 },
                 {
-                    "value": "sat",
+                    "value": "6",
                     "name": "Saturday"
-                },
-                {
-                    "value": "sun",
-                    "name": "Sunday"
                 }
             ]
         },
