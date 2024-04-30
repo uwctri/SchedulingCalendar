@@ -834,13 +834,19 @@ class Scheduling extends AbstractExternalModule
             ];
         }
 
+        $sql = $this->query("SELECT location, user FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+        $row = db_fetch_assoc($sql);
+        $oldProvider = $row["user"];
+        $oldLocation = $row["location"];
+
+        if ($provider != $oldProvider) {
+            $this->restoreAvailability($id);
+        }
+
         $this->query(
-            "UPDATE em_scheduling_calendar SET user = ?, location = ? WHERE id = ?",
+            "UPDATE em_scheduling_calendar SET user = ?, location = ?, metadata = NULL WHERE id = ?",
             [$provider, $location, $id]
         );
-
-        // TODO should we update availability or make sure that the provider is available?
-        // TODO probably have a checkbox for ignoring availability, currently just have text warning.
 
         return [
             "msg" => "Appointment provider and/or location updated",
@@ -855,20 +861,25 @@ class Scheduling extends AbstractExternalModule
             return $this->deleteRangeAppointments($payload);
         }
         if (isset($payload["id"])) {
-            $meta = $this->getRowMetadata($id);
-            if (isset($meta["restore"])) {
-                $this->setAvailability(
-                    array_merge(
-                        $meta["restore"],
-                        [
-                            "start" => $meta["start"],
-                            "end" => $meta["end"]
-                        ]
-                    )
-                );
-            }
+            $this->restoreAvailability($id);
             return $this->deleteEntry($id);
         }
+    }
+
+    private function restoreAvailability($id)
+    {
+        $meta = $this->getRowMetadata($id);
+        if (empty($meta["restore"]))
+            return;
+        $this->setAvailability(
+            array_merge(
+                $meta["restore"],
+                [
+                    "start" => $meta["start"],
+                    "end" => $meta["end"]
+                ]
+            )
+        );
     }
 
     private function deleteRangeAppointments($payload)

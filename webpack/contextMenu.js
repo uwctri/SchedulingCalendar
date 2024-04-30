@@ -30,6 +30,7 @@ import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from ".
 
 const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 const html = RedCap.ttHTML(template)
+const swalDenyColor = "#dc3741"
 class ContextMenu {
 
     static availabilityMenu = [{
@@ -92,7 +93,7 @@ class ContextMenu {
             title: RedCap.tt("context_sure"),
             text: RedCap.tt("context_sure_txt"),
             confirmButtonText: RedCap.tt("context_del_btn"),
-            confirmButtonColor: "#dc3741" //swal-deny color
+            confirmButtonColor: swalDenyColor
         }).then((result) => {
             if (!result.isConfirmed)
                 return
@@ -117,9 +118,9 @@ class ContextMenu {
             confirmButtonColor: rcBtnColor,
             confirmButtonText: RedCap.tt("context_update"),
             didOpen: () => {
+                $.getElementById(`aPopText${title}`).classList.remove('hidden')
                 $.getElementById(`aPop${title}`).classList.remove('hidden')
-                buildProviderDropdown("aPopProvider", Swal.isVisible)
-                buildLocationDropdown("aPopLocation", Swal.isVisible)
+                buildProviderDropdown(`aPop${title}`, Swal.isVisible)
             },
             preConfirm: () => {
                 const btnEl = "swal2-confirm"
