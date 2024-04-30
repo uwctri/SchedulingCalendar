@@ -29,3 +29,11 @@ cd webpack
 npm install
 npm run build
 ```
+
+Publish for distribution
+
+Note: We assume Windows with WSL in the publish script, drop the "WSL -e" if on linux
+
+```sh
+npm run publish
+```

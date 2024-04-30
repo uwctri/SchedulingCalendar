@@ -4,12 +4,10 @@
   "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "webpack",
-    "watch": "webpack --watch --progress"
+    "build": "webpack --config webpack.dev.js",
+    "watch": "webpack --watch --progress --config webpack.dev.js",
+    "publish": "webpack --config webpack.prod.js && cd .. && wsl -e zip dist config.json docs.php index.js license readme.md style.css index.js.LICENSE.txt router.php Scheduling.php"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devDependencies": {
     "css-loader": "^6.10.0",
     "html-loader": "^5.0.0",
@@ -18,7 +16,8 @@
     "mini-css-extract-plugin": "^2.8.1",
     "style-loader": "^3.3.4",
     "webpack": "^5.91.0",
-    "webpack-cli": "^5.1.4"
+    "webpack-cli": "^5.1.4",
+    "webpack-merge": "^5.10.0"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.11",
@@ -26,12 +25,10 @@
     "@fullcalendar/interaction": "^6.1.11",
     "@fullcalendar/list": "^6.1.11",
     "@fullcalendar/timegrid": "^6.1.11",
-    "@sweetalert2/theme-bootstrap-4": "^5.0.16",
     "choices.js": "^10.2.0",
     "imask": "^7.5.0",
     "litepicker": "^2.0.12",
     "luxon": "^3.4.4",
-    "remove": "^0.1.5",
     "sweetalert2": "^11.10.7"
   },
   "main": "index.js",

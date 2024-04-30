@@ -18,8 +18,8 @@ class BulkEdit {
 
     static get() {
         return {
-            startDay: DateTime.fromJSDate(BulkEdit.picker.getStartDate().toJSDate()),
-            endDay: DateTime.fromJSDate(BulkEdit.picker.getEndDate().toJSDate()),
+            startDay: DateTime.fromJSDate(BulkEdit.picker.getStartDate()?.toJSDate()),
+            endDay: DateTime.fromJSDate(BulkEdit.picker.getEndDate()?.toJSDate()),
             start: $.getElementById("bulkEditStart").value,
             end: $.getElementById("bulkEditEnd").value,
             group: $.getElementById("bulkEditGroup").value,
@@ -44,7 +44,7 @@ class BulkEdit {
             didOpen: BulkEdit.init,
             width: modalWidth,
             preConfirm: () => {
-                if (!BulkEdit.validate)
+                if (!BulkEdit.validate())
                     return false
 
                 const btnEl = "swal2-confirm"
@@ -76,7 +76,7 @@ class BulkEdit {
                 return false
             },
             preDeny: () => {
-                if (!BulkEdit.validate)
+                if (!BulkEdit.validate())
                     return false;
 
                 const btnEl = "swal2-deny"
