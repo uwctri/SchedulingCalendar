@@ -29,10 +29,10 @@ $index = $module->getUrl('index.php');
     <div class="col d-none" id="subjectSummary">
         <div class="card">
             <div class="card-header">
-                <div class="subjectName"></div>
+                <div id="subjectName"></div>
                 <!-- TODO show some configurable summary of info here -->
             </div>
-            <div class="card-body">
+            <div id="eventTemplate" class="card-body d-none">
                 <div class="row no-gutters">
                     <div class="col card-title eventName"></div>
                     <div class="col no-gutters">

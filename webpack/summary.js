@@ -1,4 +1,5 @@
 import SearchBar from "./searchBar"
+import API from "./api"
 
 class Summary {
 
@@ -11,8 +12,23 @@ class Summary {
         const subject = subjects[0]
         if (subject == Summary._current)
             return
-        // TODO build the box
-        $.getElementById("subjectSummary").classList.remove("d-none")
+        const template = $.getElementById("eventTemplate")
+        const subjectData = API.cache.subjects.data[subject]
+        $.getElementById("subjectName").innerText = subjectData.name
+        API.visits().then(vData => {
+            for (const v in vData) {
+                let clone = template.cloneNode(true)
+                clone.id = ""
+                clone.getElementsByClassName("eventName")[0].innerText = vData[v].label
+                clone.classList.remove("d-none")
+                template.after(clone)
+            }
+            // TODO need dates / not scheduled (make clickable)
+            // TODO need branching logic
+            // TODO dot
+            $.getElementById("subjectSummary").classList.remove("d-none")
+        })
+
     }
 
     static close() {
