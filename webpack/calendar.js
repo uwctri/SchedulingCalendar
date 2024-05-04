@@ -90,12 +90,12 @@ class Calendar {
 
     static init() {
 
-        // Every 30 seconds check to see if a hard pull has occured in the past N minutes
+        // Every 60 seconds check to see if a hard pull has occured in the past N minutes
         // and pull if not
         setInterval(() => {
             if (DateTime.now().diff(Calendar._refreshTime).seconds >= autoRefreshTime)
                 Calendar.refresh()
-        }, 1000 * 30)
+        }, 1000 * 60)
 
         // Modify toolbars
         Calendar.toolbars = Calendar.toolbars[Page.type]
@@ -358,6 +358,9 @@ class Calendar {
                 })
             }
         })
+
+        if (Page.date)
+            Calendar._fc.gotoDate(Page.date)
     }
 }
 

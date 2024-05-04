@@ -13,7 +13,7 @@ const choicesSelector = ".choices__inner .choices__list"
 
 class SearchBar {
 
-    static choices = null
+    static _choices = null
     static ready = false
 
     static async init() {
@@ -44,7 +44,7 @@ class SearchBar {
             for (const id in raw) {
                 const data = raw[id]
                 result.push({
-                    value: data.value,
+                    value: String(data.value),
                     label: data.label,
                     customProperties: {
                         ...data
@@ -121,7 +121,7 @@ class SearchBar {
         addProperty(visits, "type", "visit")
 
         // Init the picker object
-        SearchBar.choices = new Choices(searchBarEl, {
+        SearchBar._choices = new Choices(searchBarEl, {
             allowHTML: false,
             removeItems: true,
             removeItemButton: true,
@@ -152,6 +152,9 @@ class SearchBar {
         searchBarEl.addEventListener('change', changeEvent)
         $.addEventListener("keyup", keyEvent)
         SearchBar.ready = true
+
+        if (Page.id || Page.record)
+            SearchBar._choices.setChoiceByValue(Page.id || Page.record)
     }
 
     static show() {
@@ -178,9 +181,9 @@ class SearchBar {
     }
 
     static getPicked(valueOnly = false, filterType = null) {
-        if (SearchBar.choices == null)
+        if (SearchBar._choices == null)
             return []
-        let picked = SearchBar.choices.getValue()
+        let picked = SearchBar._choices.getValue()
         if (filterType)
             picked = picked.filter(item => item.customProperties.type == filterType)
         if (valueOnly)
