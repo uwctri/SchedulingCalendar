@@ -2,7 +2,8 @@ let Page = Object.fromEntries(new URLSearchParams(location.search))
 Page.type = Page.type || "schedule"
 
 export const goToRecord = (record, pid) => {
-    location = makeRecordUrl(record, pid)
+    const url = makeRecordUrl(record, pid)
+    window.open(url, '_blank').focus();
 }
 
 export const makeRecordUrl = (record, pid = Page.pid) => {

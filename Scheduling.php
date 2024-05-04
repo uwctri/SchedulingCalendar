@@ -279,6 +279,7 @@ class Scheduling extends AbstractExternalModule
                 "name" => $name,
                 "record_id" => $record_id,
                 "is_withdrawn" => $withdraw,
+                "project_id" => $project_id,
                 "visits" => []
             ];
         }
@@ -723,7 +724,7 @@ class Scheduling extends AbstractExternalModule
         while ($row = $result->fetch_assoc()) {
             $appt[] = [
                 "internal_id" => $row["id"],
-                "project_id" => $row["pid"],
+                "project_id" => $row["project_id"],
                 "title" => "Default Title",
                 "start" => $row["time_start"],
                 "end" => $row["time_end"],
