@@ -4,6 +4,7 @@ import UserConfig from "./userConfig"
 import Calendar from './calendar'
 import Page from "./page"
 import RedCap from "./redcap"
+import Summary from "./summary"
 
 const centerClassName = "fc-toolbar-chunk"
 const titleClassName = "fc-toolbar-title"
@@ -68,6 +69,7 @@ class SearchBar {
             const el = $.querySelector(`.${centerClassName} input`)
             el.placeholder = text
             el.style.width = `${text.length}ch`
+            Summary.update()
         }
 
         const addProperty = (data, key, value) => {

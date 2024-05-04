@@ -13,6 +13,8 @@
 
 #content {
     padding-top: 0.25em;
+    display: flex;
+    width: 100%;
 }
 
 #center {
@@ -41,6 +43,30 @@
 
     #calendarColumn {
         width: var(--calendar-content-width);
+    }
+}
+
+#subjectSummary {
+
+    margin-top: 4em;
+
+    .card {
+        border-top-left-radius: 0px;
+        border-bottom-left-radius: 0px;
+    }
+
+    .subjectName {
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .eventName {
+        font-size: 1rem;
+    }
+
+    .dot {
+        line-height: 1rem;
+        font-size: 2em;
     }
 }
 

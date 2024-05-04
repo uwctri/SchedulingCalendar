@@ -21,9 +21,28 @@ $index = $module->getUrl('index.php');
         <a href="<?= "$index&type=my" ?>" class="btn btn-sm btn-secondary type-my"><?= $module->tt('btn_mycal'); ?></a>
     </div>
 </div>
-<div id="content" class="w-100 pr-4 d-none">
+<div id="content" class="d-none">
     <div id="calendarColumn">
         <div id="calendar"></div>
         <div id="loader"></div>
+    </div>
+    <div class="col d-none" id="subjectSummary">
+        <div class="card">
+            <div class="card-header">
+                <div class="subjectName"></div>
+                <!-- TODO show some configurable summary of info here -->
+            </div>
+            <div class="card-body">
+                <div class="row no-gutters">
+                    <div class="col card-title eventName"></div>
+                    <div class="col no-gutters">
+                        <div class="row no-gutters">
+                            <div class="text-right"><span class="dot">●</span></div>
+                        </div>
+                    </div>
+                </div>
+                <p class="card-text eventNotes d-none"></p>
+            </div>
+        </div>
     </div>
 </div>
