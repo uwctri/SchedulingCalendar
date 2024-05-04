@@ -371,8 +371,10 @@ class Scheduling extends AbstractExternalModule
         $project_id = $payload["pid"];
         $names = [
             "display-name" => "label",
-            "linked-event" => "link",
             "code" => "code",
+            "linked-event" => "link",
+            "wb-datetime" => "wbDateTimes",
+            "wb-user" => "wbUser",
             "notes" => "notes",
             "branch-logic-event" => "blEvent",
             "branch-logic-field" => "blField",
@@ -389,7 +391,7 @@ class Scheduling extends AbstractExternalModule
         $visits = [];
         for ($i = 0; $i < count($values[0]); $i++) {
             $tmp = array_combine(array_values($names), array_column($values, $i));
-            $tmp["value"] = $tmp["code"];
+            $tmp["value"] = $tmp["code"]; // Duplicate one item
             $visits[$tmp["code"]] = $tmp;
         }
 
@@ -811,6 +813,28 @@ class Scheduling extends AbstractExternalModule
             ]
         ]);
 
+        // Writeback data to events
+        $write = [];
+        $vSet = $this->getVisits($payload)[$visit];
+        $dd = Redcap::getDataDictionary();
+        foreach ($vSet["wbDateTimes"] ?? [] as $dt) {
+            $validation = $dd[$dt]["field_validation_type"];
+            $hasSeconds = str_contains($validation, "_ss") || str_contains($validation, "_seconds");
+            list($date, $time) = explode(" ", $start);
+            $tmp = "";
+            if (substr($validation, 0, 4) == "time")
+                $tmp = $time;
+            elseif (substr($validation, 0, 8) == "datetime")
+                $tmp = $start;
+            elseif (substr($validation, 0, 4) == "date")
+                $tmp = $date;
+            $write[$dt] = $hasSeconds ? $tmp . ":00" : $tmp;
+        }
+        if ($vSet["wbUser"])
+            $write[$vSet["wbUser"]] = $provider;
+        if (!empty($write))
+            REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]]);
+
         $this->query(
             "INSERT INTO em_scheduling_calendar (project_id, visit, user, record, location, time_start, time_end, notes, metadata) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [$project_id, $visit, $provider, $record, $location, $start, $end, $notes, $meta]
@@ -1021,12 +1045,12 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Build HTTP Post request parameters to send
-        $params = array(
+        $params = [
             'redcap_url' => APP_PATH_WEBROOT_FULL,
             'project_url' => APP_PATH_WEBROOT_FULL . "redcap_v" . REDCAP_VERSION . "/index.php?pid=" . PROJECT_ID,
             'project_id' => PROJECT_ID,
             'username' => USERID
-        );
+        ];
 
         // Add in stuff from save
         $params = array_merge($params, $payload);
