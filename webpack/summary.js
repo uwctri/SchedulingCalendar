@@ -20,6 +20,11 @@ class Summary {
                 let clone = template.cloneNode(true)
                 clone.id = ""
                 clone.getElementsByClassName("eventName")[0].innerText = vData[v].label
+                if (vData[v].notes) {
+                    const notes = clone.getElementsByClassName("eventNotes")[0]
+                    notes.innerText = vData[v].notes
+                    notes.classList.remove("d-none")
+                }
                 clone.classList.remove("d-none")
                 template.after(clone)
             }

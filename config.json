@@ -157,20 +157,33 @@
                     "type": "text"
                 },
                 {
-                    "key": "visit-linked-event",
-                    "name": "<b>Linked Event</b>",
-                    "tt_name": "config_sch_event",
-                    "type": "event-list"
-                },
-                {
                     "key": "visit-code",
                     "name": "<b>Internal Coded Value</b>",
                     "tt_name": "config_sch_code",
                     "type": "text"
                 },
                 {
+                    "key": "visit-linked-event",
+                    "name": "<b>Linked Event</b>",
+                    "tt_name": "config_sch_event",
+                    "type": "event-list"
+                },
+                {
+                    "key": "visit-wb-datetime",
+                    "name": "<b>Date/Time Writeback</b><br>This field will be populated with the scheudled date/time, based on validation settings",
+                    "tt_name": "config_sch_datetime",
+                    "type": "field-list",
+                    "repeatable": true
+                },
+                {
+                    "key": "visit-wb-user",
+                    "name": "<b>Provider Writeback</b><br>This field will be populated with the scheudled provider username",
+                    "tt_name": "config_sch_user",
+                    "type": "field-list"
+                },
+                {
                     "key": "visit-notes",
-                    "name": "<b>Notes</b>",
+                    "name": "<b>Notes</b><br>Shown in subject summary",
                     "tt_name": "config_sch_notes",
                     "type": "text"
                 },
@@ -213,71 +226,86 @@
         {
             "key": "ics-export-title",
             "name": "<b>ICS Export</b>",
+            "tt_name": "config_ics_export_title",
             "type": "descriptive"
         },
         {
             "key": "ics-field",
             "name": "<b>Additional Field</b><br>Extra info added to the ICS export per appointment",
+            "tt_name": "config_ics_field",
             "type": "field-list",
             "repeatable": true
         },
         {
             "key": "ics-cron",
             "name": "<b>Auto Export Frequency</b>",
+            "tt_name": "config_ics_cron",
             "type": "radio",
             "choices": [
                 {
                     "value": "off",
-                    "name": "Off"
+                    "name": "Off",
+                    "tt_name": "config_choice_off"
                 },
                 {
                     "value": "day",
-                    "name": "Daily"
+                    "name": "Daily",
+                    "tt_name": "config_choice_day"
                 },
                 {
                     "value": "week",
-                    "name": "Weekly"
+                    "name": "Weekly",
+                    "tt_name": "config_choice_week"
                 }
             ]
         },
         {
             "key": "ics-day",
             "name": "<b>Export Day</b>",
+            "tt_name": "config_ics_export_day",
             "type": "dropdown",
             "choices": [
                 {
                     "value": "0",
-                    "name": "Sunday"
+                    "name": "Sunday",
+                    "tt_name": "config_choice_sunday"
                 },
                 {
                     "value": "1",
-                    "name": "Monday"
+                    "name": "Monday",
+                    "tt_name": "config_choice_monday"
                 },
                 {
                     "value": "2",
-                    "name": "Tuesday"
+                    "name": "Tuesday",
+                    "tt_name": "config_choice_tuesday"
                 },
                 {
                     "value": "3",
-                    "name": "Wednesday"
+                    "name": "Wednesday",
+                    "tt_name": "config_choice_wednesday"
                 },
                 {
                     "value": "4",
-                    "name": "Thursday"
+                    "name": "Thursday",
+                    "tt_name": "config_choice_thursday"
                 },
                 {
                     "value": "5",
-                    "name": "Friday"
+                    "name": "Friday",
+                    "tt_name": "config_choice_friday"
                 },
                 {
                     "value": "6",
-                    "name": "Saturday"
+                    "name": "Saturday",
+                    "tt_name": "config_choice_saturday"
                 }
             ]
         },
         {
             "key": "ics-user",
             "name": "<b>Send Export to</b>",
+            "tt_name": "config_ics_user",
             "type": "user-list",
             "repeatable": true
         }
