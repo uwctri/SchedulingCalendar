@@ -822,10 +822,10 @@ class Scheduling extends AbstractExternalModule
             $hasSeconds = str_contains($validation, "_ss") || str_contains($validation, "_seconds");
             list($date, $time) = explode(" ", $start);
             $tmp = "";
-            if (substr($validation, 0, 4) == "time")
-                $tmp = $time;
-            elseif (substr($validation, 0, 8) == "datetime")
+            if (substr($validation, 0, 8) == "datetime")
                 $tmp = $start;
+            elseif (substr($validation, 0, 4) == "time")
+                $tmp = $time;
             elseif (substr($validation, 0, 4) == "date")
                 $tmp = $date;
             $write[$dt] = $hasSeconds ? $tmp . ":00" : $tmp;
@@ -849,6 +849,7 @@ class Scheduling extends AbstractExternalModule
     private function modifyAppointments($payload)
     {
         $id = $payload["id"];
+        $project_id = $payload["pid"];
         $provider = $payload["providers"];
         $location = $payload["locations"];
 
@@ -859,13 +860,20 @@ class Scheduling extends AbstractExternalModule
             ];
         }
 
-        $sql = $this->query("SELECT location, user FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+        $sql = $this->query("SELECT visit, user, record, location FROM em_scheduling_calendar WHERE id = ? ", [$id]);
         $row = db_fetch_assoc($sql);
         $oldProvider = $row["user"];
         $oldLocation = $row["location"];
+        $record = $row["record"];
+        $visit = $row["visit"];
 
+        // If provider is changed, restore old provider's Availability
+        // and update the writeback if any is set
         if ($provider != $oldProvider) {
             $this->restoreAvailability($id);
+            $vSet = $this->getVisits($payload)[$visit];
+            if ($vSet["wbUser"])
+                REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => [$vSet["wbUser"] => $provider]]]);
         }
 
         $this->query(
@@ -887,6 +895,7 @@ class Scheduling extends AbstractExternalModule
         }
         if (isset($payload["id"])) {
             $this->restoreAvailability($id);
+            // TODO blank out writebacks
             return $this->deleteEntry($id);
         }
     }
@@ -919,6 +928,8 @@ class Scheduling extends AbstractExternalModule
                 "success" => false
             ];
         }
+
+        // TODO should we edit the writeback user and date/time to blank?
 
         $query = $this->createQuery();
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");

@@ -9,7 +9,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 * Finish basic subject summary
 * Allow arbitary data to be displayed for the summary
 * Setup all event logic for summary (Branching, Linked Event)
-* When an event is scheduled write the time back to event (do delete and modify)
+* When an event is scheduled write the time back to event (do delete)
 * Write the docs page
 * What issues might occur regarding dags and pulling subject names? Need to make sure we can't see those names
 

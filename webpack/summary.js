@@ -14,11 +14,13 @@ class Summary {
             return
         const template = $.getElementById("eventTemplate")
         const subjectData = API.cache.subjects.data[subject]
+        // TODO add in configurable static info
         $.getElementById("subjectName").innerText = subjectData.name
         API.visits().then(vData => {
             for (const v in vData) {
                 let clone = template.cloneNode(true)
                 clone.id = ""
+                clone.classList.add("cardEvent")
                 clone.getElementsByClassName("eventName")[0].innerText = vData[v].label
                 if (vData[v].notes) {
                     const notes = clone.getElementsByClassName("eventNotes")[0]
@@ -37,8 +39,10 @@ class Summary {
     }
 
     static close() {
-        // TODO hide and clear info in the summary box
+        [...$.getElementsByClassName("cardEvent")].forEach(el => el.remove())
+        $.getElementById("subjectName").innerText = ""
         $.getElementById("subjectSummary").classList.add("d-none")
+        // TODO remove configurable static info
     }
 
 }
