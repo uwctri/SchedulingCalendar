@@ -832,7 +832,7 @@ class Scheduling extends AbstractExternalModule
         }
         if ($vSet["wbUser"])
             $write[$vSet["wbUser"]] = $provider;
-        if (!empty($write))
+        if (!empty($write) && $vSet["link"])
             REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]]);
 
         $this->query(
@@ -860,6 +860,7 @@ class Scheduling extends AbstractExternalModule
             ];
         }
 
+        // Grab needed info
         $sql = $this->query("SELECT visit, user, record, location FROM em_scheduling_calendar WHERE id = ? ", [$id]);
         $row = db_fetch_assoc($sql);
         $oldProvider = $row["user"];
@@ -872,10 +873,11 @@ class Scheduling extends AbstractExternalModule
         if ($provider != $oldProvider) {
             $this->restoreAvailability($id);
             $vSet = $this->getVisits($payload)[$visit];
-            if ($vSet["wbUser"])
+            if ($vSet["wbUser"] && $vSet["link"])
                 REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => [$vSet["wbUser"] => $provider]]]);
         }
 
+        // Do the update
         $this->query(
             "UPDATE em_scheduling_calendar SET user = ?, location = ?, metadata = NULL WHERE id = ?",
             [$provider, $location, $id]
@@ -889,13 +891,28 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteAppointments($payload)
     {
+        $project_id = $payload["pid"];
         $id = $payload["id"];
         if (isset($payload["start"]) && isset($payload["end"])) {
             return $this->deleteRangeAppointments($payload);
         }
         if (isset($payload["id"])) {
             $this->restoreAvailability($id);
-            // TODO blank out writebacks
+
+            // Blank out any write back
+            $sql = $this->query("SELECT visit, record FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+            $row = db_fetch_assoc($sql);
+            $visit = $row["visit"];
+            $record = $row["record"];
+            $vSet = $this->getVisits($payload)[$visit];
+            $write = [];
+            if ($vSet["wbUser"])
+                $write[$vSet["wbUser"]] = "";
+            foreach ($vSet["wbDateTimes"] ?? [] as $dt)
+                $write[$dt] = "";
+            if (!empty($write) && $vSet["link"])
+                REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]], "overwrite");
+
             return $this->deleteEntry($id);
         }
     }

@@ -109,7 +109,8 @@ class Calendar {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
             customButtons: {
                 today: {
-                    text: RedCap.tt("btn_today")
+                    text: RedCap.tt("btn_today"),
+                    click: () => Calendar._fc.today()
                 },
                 cleanup: {
                     icon: "fa-broom",
