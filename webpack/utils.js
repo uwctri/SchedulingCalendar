@@ -69,7 +69,7 @@ export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) =
         if (!stillOpenFn()) return
         const select = $.getElementById(el)
         for (const k in visitData) {
-            if (subject && subjectData && subjectData["visits"].includes(visitData[k].value))
+            if (subject && subjectData && Object.keys(subjectData["visits"]).includes(visitData[k].value))
                 continue
             let option = $.createElement("option")
             option.value = visitData[k].value

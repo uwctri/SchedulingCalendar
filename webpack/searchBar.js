@@ -155,8 +155,10 @@ class SearchBar {
         $.addEventListener("keyup", keyEvent)
         SearchBar.ready = true
 
-        if (Page.id || Page.record)
+        if (Page.id || Page.record) {
             SearchBar._choices.setChoiceByValue(Page.id || Page.record)
+            Summary.update()
+        }
     }
 
     static show() {

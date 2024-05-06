@@ -32,16 +32,14 @@ $index = $module->getUrl('index.php');
                 <div id="subjectName"></div>
                 <!-- TODO show some configurable summary of info here -->
             </div>
-            <div id="eventTemplate" class="card-body d-none">
-                <div class="row no-gutters">
-                    <div class="col card-title eventName"></div>
-                    <div class="col no-gutters">
-                        <div class="row no-gutters">
-                            <div class="text-right"><span class="dot">●</span></div>
-                        </div>
-                    </div>
+            <div id="eventTemplate" class="card-body p-3 d-none">
+                <div class="row col no-gutters">
+                    <div class="card-title m-0 eventName"></div>
                 </div>
-                <p class="card-text eventNotes d-none"></p>
+                <div class="row col no-gutters">
+                    <div class="text-right"><span class="eventDate"></span></div>
+                </div>
+                <p class="card-text eventNotes m-0 d-none"></p>
             </div>
         </div>
     </div>

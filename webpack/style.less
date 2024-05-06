@@ -49,6 +49,8 @@
 #subjectSummary {
 
     margin-top: 4em;
+    margin-right: 1.2em;
+    max-width: 30em;
 
     .card {
         border-top-left-radius: 0px;
@@ -62,11 +64,20 @@
 
     .eventName {
         font-size: 1rem;
+
+        &::before {
+            content: "\A";
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: red;
+            display: inline-block;
+            margin-right: 10px;
+        }
     }
 
-    .dot {
-        line-height: 1rem;
-        font-size: 2em;
+    .scheduledEvent::before {
+        background: green !important;
     }
 }
 

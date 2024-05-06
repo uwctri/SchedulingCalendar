@@ -6,8 +6,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* subject summary (Branching, dates, config data)
-* Write the docs page
+* subject summary (Branching, date range for scheduling, config data)
 * What issues might occur regarding dags and pulling subject names? Need to make sure we can't see those names
 
 ## Local Development & Build
@@ -31,7 +30,7 @@ npm run build
 
 Publish for distribution
 
-Note: We assume Windows with WSL in the publish script, drop the "WSL -e" if on linux
+Note: We assume Windows with WSL in the publish script, drop the "WSL -e" if on linux. You may need to install 'zip' via your package manager.
 
 ```sh
 npm run publish

@@ -280,17 +280,20 @@ class Scheduling extends AbstractExternalModule
                 "record_id" => $record_id,
                 "is_withdrawn" => $withdraw,
                 "project_id" => $project_id,
-                "visits" => []
+                "visits" => [
+                    "scheduled" => [],
+                    "range" => []
+                ]
             ];
         }
 
         // Perform a second query to get all scheduled visits for the subjects
         $query = $this->createQuery();
-        $query->add("SELECT record, visit from em_scheduling_calendar WHERE project_id = ?", $project_id);
+        $query->add("SELECT record, visit, time_start from em_scheduling_calendar WHERE project_id = ?", $project_id);
         $query->add("AND")->addInClause("record", array_keys($subjects));
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
-            $subjects[$row["record"]]["visits"][] = $row["visit"];
+            $subjects[$row["record"]]["visits"]["scheduled"][$row["visit"]][] = $row["time_start"];
         }
 
         return $subjects;
