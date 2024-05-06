@@ -97,7 +97,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
         <div class="card my-4 card-primary">
             <div class="card-header text-white fw-bold bg-primary bg-gradient">Query Parameters</div>
             <div class="card-body">
-                Go over every tab, scheduling, availability, my. And how to use.
+                date, id or record, refer
             </div>
         </div>
     </div>

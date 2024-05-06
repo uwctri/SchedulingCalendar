@@ -160,6 +160,7 @@ class Calendar {
                 left: Calendar.toolbars.bottomLeft.join(" "),
                 right: Calendar.toolbars.bottomRight.join(" ")
             },
+            initialDate: Page.date,
             slotDuration: `00:${slotSize}:00`,
             navLinks: true,
             editable: false,
@@ -359,9 +360,6 @@ class Calendar {
                 })
             }
         })
-
-        if (Page.date)
-            Calendar._fc.gotoDate(Page.date)
     }
 }
 
