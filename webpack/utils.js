@@ -69,7 +69,7 @@ export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) =
         if (!stillOpenFn()) return
         const select = $.getElementById(el)
         for (const k in visitData) {
-            if (subject && subjectData && Object.keys(subjectData["visits"]).includes(visitData[k].value))
+            if (subject && subjectData && subjectData.visits[k].scheduled)
                 continue
             let option = $.createElement("option")
             option.value = visitData[k].value
@@ -97,7 +97,9 @@ export const buildSubjectDropdown = (el, stillOpenFn) => {
         // If one subject is in the filter list then default to that subject
         const selSub = SearchBar.getPickedSubjects()
         if (selSub.length == 1) {
-            $.getElementById("aPopSubject").value = selSub[0].customProperties.record_id
+            const el = $.getElementById("aPopSubject")
+            el.value = selSub[0].customProperties.record_id
+            el.dispatchEvent(new Event('change'));
         }
     })
 }

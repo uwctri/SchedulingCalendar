@@ -6,7 +6,7 @@ Work in progress project. The Scheduling Calendar is a Redcap EM that tracks pro
 
 ### Missing Features
 
-* subject summary (Branching, date range for scheduling)
+* subject summary (date range for scheduling)
 * What issues might occur regarding dags and pulling subject names? Need to make sure we can't see those names
 
 ## Local Development & Build

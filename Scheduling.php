@@ -282,19 +282,41 @@ class Scheduling extends AbstractExternalModule
                 "project_id" => $project_id,
                 "summary_fields" => [],
                 "visits" => [
-                    "scheduled" => [],
-                    "range" => [] // TODO we don't even have config for this yet
+                    // "visit_code" = [
+                    // "branching_logic" => true,
+                    // "scheduled" => [],
+                    // "range" => [] // TODO we don't even have config for this yet
+                    // ];
                 ]
             ];
         }
 
         // Perform a second query to get all scheduled visits for the subjects
+
         $query = $this->createQuery();
         $query->add("SELECT record, visit, time_start from em_scheduling_calendar WHERE project_id = ?", $project_id);
         $query->add("AND")->addInClause("record", array_keys($subjects));
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
-            $subjects[$row["record"]]["visits"]["scheduled"][$row["visit"]][] = $row["time_start"];
+            $record = $row["record"];
+            $visit = $row["visit"];
+            $subjects[$record]["visits"][$visit]["scheduled"][] = $row["time_start"];
+        }
+
+        // Pull data needed for Branching Logic eval
+        $visitSettings = $this->getVisits($payload);
+        $blFields = $this->getProjectSetting("visit-branch-logic-field");
+        $blData = $blFields ? REDCap::getData($project_id, "array", null, $blFields) : [];
+        foreach ($visitSettings as $visit => $vSet) {
+            $blValue = $vSet["blValue"];
+            $blEvent = $vSet["blEvent"];
+            $blField = $vSet["blField"];
+            $subjects[$record]["visits"][$visit]["branching_logic"] = true;
+            if ($blData && $blEvent && $blField) {
+                $not = (count($blValue) > 0) && ($blValue[0] == "!");
+                $v = $blData[$record][$blEvent][$blField];
+                $subjects[$record]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
+            }
         }
 
         // Check if any exta info is on the subject summary
@@ -311,6 +333,8 @@ class Scheduling extends AbstractExternalModule
                 }
             }
         }
+
+
 
         return $subjects;
     }
