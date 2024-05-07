@@ -224,6 +224,19 @@
             ]
         },
         {
+            "key": "subject-summary-title",
+            "name": "<b>Subject Summary</b>",
+            "tt_name": "config_ss_title",
+            "type": "descriptive"
+        },
+        {
+            "key": "ss-field",
+            "name": "<b>Additional Field</b><br>Extra info to show on the subject summary",
+            "tt_name": "config_ss_field",
+            "type": "field-list",
+            "repeatable": true
+        },
+        {
             "key": "ics-export-title",
             "name": "<b>ICS Export</b>",
             "tt_name": "config_ics_export_title",

@@ -280,9 +280,10 @@ class Scheduling extends AbstractExternalModule
                 "record_id" => $record_id,
                 "is_withdrawn" => $withdraw,
                 "project_id" => $project_id,
+                "summary_fields" => [],
                 "visits" => [
                     "scheduled" => [],
-                    "range" => []
+                    "range" => [] // TODO we don't even have config for this yet
                 ]
             ];
         }
@@ -294,6 +295,21 @@ class Scheduling extends AbstractExternalModule
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
             $subjects[$row["record"]]["visits"]["scheduled"][$row["visit"]][] = $row["time_start"];
+        }
+
+        // Check if any exta info is on the subject summary
+        $extaFields = $this->getProjectSetting("ss-field");
+        if (!empty($extaFields)) {
+            $dd = Redcap::getDataDictionary($project_id, 'array', false, $extaFields);
+            $eData = $this->getSingleEventFields($extaFields, null, $project_id);
+            foreach ($eData as $record => $recordData) {
+                foreach ($recordData as $field => $val) {
+                    $subjects[$record]["summary_fields"][$field] = [
+                        "value" => $val,
+                        "label" => $dd[$field]["field_label"]
+                    ];
+                }
+            }
         }
 
         return $subjects;
@@ -819,19 +835,21 @@ class Scheduling extends AbstractExternalModule
         // Writeback data to events
         $write = [];
         $vSet = $this->getVisits($payload)[$visit];
-        $dd = Redcap::getDataDictionary();
-        foreach ($vSet["wbDateTimes"] ?? [] as $dt) {
-            $validation = $dd[$dt]["field_validation_type"];
-            $hasSeconds = str_contains($validation, "_ss") || str_contains($validation, "_seconds");
-            list($date, $time) = explode(" ", $start);
-            $tmp = "";
-            if (substr($validation, 0, 8) == "datetime")
-                $tmp = $start;
-            elseif (substr($validation, 0, 4) == "time")
-                $tmp = $time;
-            elseif (substr($validation, 0, 4) == "date")
-                $tmp = $date;
-            $write[$dt] = $hasSeconds ? $tmp . ":00" : $tmp;
+        if (!empty($vSet["wbDateTimes"])) {
+            $dd = Redcap::getDataDictionary($project_id, 'array', false, $vSet["wbDateTimes"]);
+            foreach ($vSet["wbDateTimes"] as $dt) {
+                $validation = $dd[$dt]["field_validation_type"];
+                $hasSeconds = str_contains($validation, "_ss") || str_contains($validation, "_seconds");
+                list($date, $time) = explode(" ", $start);
+                $tmp = "";
+                if (substr($validation, 0, 8) == "datetime")
+                    $tmp = $start;
+                elseif (substr($validation, 0, 4) == "time")
+                    $tmp = $time;
+                elseif (substr($validation, 0, 4) == "date")
+                    $tmp = $date;
+                $write[$dt] = $hasSeconds ? $tmp . ":00" : $tmp;
+            }
         }
         if ($vSet["wbUser"])
             $write[$vSet["wbUser"]] = $provider;

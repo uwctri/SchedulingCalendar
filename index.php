@@ -30,7 +30,6 @@ $index = $module->getUrl('index.php');
         <div class="card">
             <div class="card-header">
                 <div id="subjectName"></div>
-                <!-- TODO show some configurable summary of info here -->
             </div>
             <div id="eventTemplate" class="card-body p-3 d-none">
                 <div class="row col no-gutters">

@@ -7,6 +7,7 @@ class Summary {
     static _current = null
 
     static update() {
+        // TODO when a schedule occurs we need to update this info, but for that we need to re-pull subject data
         const subjects = SearchBar.getPickedSubjects(true)
         if (subjects.length != 1)
             Summary.close()
@@ -15,9 +16,15 @@ class Summary {
             return
         const template = $.getElementById("eventTemplate")
         const subjectData = API.cache.subjects.data[subject]
-        // TODO add in configurable static info
-        // TODO when a schedule occurs we need to update this info, but for that we need to re-pull subject data
-        $.getElementById("subjectName").innerText = subjectData.name
+        const nameEl = $.getElementById("subjectName")
+        nameEl.innerText = subjectData.name
+        for (const field in subjectData.summary_fields) {
+            const sf = subjectData.summary_fields[field]
+            const div = $.createElement("div")
+            const val = sf.value.strip(":")
+            div.innerText = `${sf.label}: ${sf.value}`
+            nameEl.after(div)
+        }
         API.visits().then(vData => {
             for (const v in vData) {
                 let clone = template.cloneNode(true)
