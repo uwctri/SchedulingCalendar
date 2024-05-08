@@ -158,6 +158,7 @@ class SearchBar {
         if (Page.id || Page.record) {
             SearchBar._choices.setChoiceByValue(Page.id || Page.record)
             Summary.update()
+            SearchBar.show()
         }
     }
 

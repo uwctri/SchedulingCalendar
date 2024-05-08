@@ -21,6 +21,7 @@ class Summary {
         for (const field in subjectData.summary_fields) {
             const sf = subjectData.summary_fields[field]
             const div = $.createElement("div")
+            div.classList.add("subjectExtraInfo")
             div.innerText = `${sf.label}: ${sf.value.trim()}`
             nameEl.after(div)
         }
@@ -54,10 +55,10 @@ class Summary {
     }
 
     static close() {
+        [...$.getElementsByClassName("subjectExtraInfo")].forEach(el => el.remove());
         [...$.getElementsByClassName("cardEvent")].forEach(el => el.remove())
         $.getElementById("subjectName").innerText = ""
         $.getElementById("subjectSummary").classList.add("d-none")
-        // TODO remove configurable static info
     }
 
 }
