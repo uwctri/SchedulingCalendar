@@ -69,7 +69,7 @@ export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) =
         if (!stillOpenFn()) return
         const select = $.getElementById(el)
         for (const k in visitData) {
-            if (subject && subjectData && subjectData.visits[k].scheduled)
+            if (subject && subjectData && (subjectData.visits[k].scheduled || !subjectData.visits[k].branching_logic))
                 continue
             let option = $.createElement("option")
             option.value = visitData[k].value

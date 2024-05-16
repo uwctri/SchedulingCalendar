@@ -248,6 +248,8 @@ class Scheduling extends AbstractExternalModule
     */
     private function getSubjects($payload)
     {
+        // TODO: What issues might occur regarding dags and pulling subject names? 
+        // Need to make sure we can't see those names
         $project_id = $payload["pid"];
         $nameField = $this->getProjectSetting("name-field");
         $subjects = [];
@@ -424,7 +426,7 @@ class Scheduling extends AbstractExternalModule
             "branch-logic-value" => "blValue",
             "duration" => "duration",
             "extendable" => "isExtendable",
-            "location-free" => "isLocationFree",
+            "location-free" => "isLocationFree", // TODO this isn't used right now
         ];
 
         $values = array_map(function ($setting) use ($project_id) {
