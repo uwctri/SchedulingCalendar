@@ -32,11 +32,9 @@ $index = $module->getUrl('index.php');
                 <div id="subjectName"></div>
             </div>
             <div id="eventTemplate" class="card-body p-3 d-none">
-                <div class="row col no-gutters">
-                    <div class="card-title m-0 eventName"></div>
-                </div>
-                <div class="row col no-gutters">
-                    <div class="text-right"><span class="eventDate"></span></div>
+                <div class="row text-nowrap no-gutters">
+                    <div class="col card-title m-0 eventName"></div>
+                    <div class="col eventDate"></div>
                 </div>
                 <p class="card-text eventNotes m-0 d-none"></p>
             </div>
