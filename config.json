@@ -229,6 +229,18 @@
             "type": "field-list"
         },
         {
+            "key": "range-start",
+            "name": "<b>Visit Range Start</b><br>This field will be used to recommend a range for scheduling the event in the subject summary. Requires a linked event",
+            "tt_name": "config_sch_start",
+            "type": "field-list"
+        },
+        {
+            "key": "range-end",
+            "name": "<b>Visit Range End</b><br>This field will be used to recommend a range for scheduling the event in the subject summary. Requires a linked event",
+            "tt_name": "config_sch_end",
+            "type": "field-list"
+        },
+        {
             "key": "subject-summary-title",
             "name": "<b>Subject Summary</b>",
             "tt_name": "config_ss_title",

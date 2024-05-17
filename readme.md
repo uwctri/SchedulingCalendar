@@ -4,7 +4,7 @@
 
 Work in progress project. The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availaiblity. It is a re-write of an internal-only EM devolped for the UW Center for Tobacco Research and Intervention that we hope to make available via the Vanderbilt Redcap repo in the near future.
 
-* subject summary (date range for scheduling)
+* By default we should assign an availabiltiy code unqie to the project. Only allow admins to add additional codes.
 
 ## Local Development & Build
 

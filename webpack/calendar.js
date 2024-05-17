@@ -75,6 +75,7 @@ class Calendar {
     static render = () => { Calendar._fc.render() }
     static getView = () => { return Calendar._fc.view.type }
     static getEvent = (id) => { return Calendar._fc.getEventById(id) }
+    static gotoDate = (date) => { Calendar._fc.gotoDate(date) }
 
     static showLoading() {
         $.getElementById("loader").classList.remove("d-none")
@@ -173,7 +174,7 @@ class Calendar {
             dateClick: (dateClickInfo) => {
                 if (dateClickInfo.view.type == "singleMonth") {
                     Calendar._fc.changeView("singleWeek")
-                    Calendar._fc.gotoDate(dateClickInfo.date)
+                    Calendar.gotoDate(dateClickInfo.date)
                 }
             },
             eventClick: (eventClickInfo) => {

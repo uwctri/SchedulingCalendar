@@ -294,7 +294,6 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Perform a second query to get all scheduled visits for the subjects
-
         $query = $this->createQuery();
         $query->add("SELECT record, visit, time_start from em_scheduling_calendar WHERE project_id = ?", $project_id);
         $query->add("AND")->addInClause("record", array_keys($subjects));
@@ -305,19 +304,28 @@ class Scheduling extends AbstractExternalModule
             $subjects[$record]["visits"][$visit]["scheduled"][] = $row["time_start"];
         }
 
-        // Pull data needed for Branching Logic eval
-        $visitSettings = $this->getVisits($payload);
+        // Get all data we need to pull together
+        $visitSettings = $this->getVisits($payload, true);
         $blFields = $this->getProjectSetting("visit-branch-logic-field");
-        $blData = $blFields ? REDCap::getData($project_id, "array", null, $blFields) : [];
-        foreach ($visitSettings as $visit => $vSet) {
+        $allData = REDCap::getData($project_id, "array", null, array_merge($blFields, [$visitSettings["rangeStart"], $visitSettings["rangeEnd"]]));
+
+        // Do Branching logic evaluation
+        $blData = $blFields ? $allData : [];
+        foreach ($visitSettings["visits"] as $visit => $vSet) {
             $blValue = $vSet["blValue"];
             $blEvent = $vSet["blEvent"];
             $blField = $vSet["blField"];
             $subjects[$record]["visits"][$visit]["branching_logic"] = true;
+            $subjects[$record]["visits"][$visit]["range"] = [];
             if ($blData && $blEvent && $blField) {
                 $not = (count($blValue) > 0) && ($blValue[0] == "!");
                 $v = $blData[$record][$blEvent][$blField];
                 $subjects[$record]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
+            }
+            if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
+                $rangeStart = $allData[$record][$vSet["link"]][$vSet["rangeStart"]];
+                $rangeEnd = $allData[$record][$vSet["link"]][$vSet["rangeEnd"]];
+                $subjects[$record]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
             }
         }
 
@@ -442,7 +450,9 @@ class Scheduling extends AbstractExternalModule
             $visits = [
                 "visits" => $visits,
                 "wbDateTimes" => $this->getProjectSetting("wb-datetime"),
-                "wbUser" => $this->getProjectSetting("wb-user")
+                "wbUser" => $this->getProjectSetting("wb-user"),
+                "rangeStart" => $this->getProjectSetting("range-start"),
+                "rangeEnd" => $this->getProjectSetting("range-end"),
             ];
         }
 
