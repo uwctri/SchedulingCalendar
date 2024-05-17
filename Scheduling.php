@@ -411,15 +411,13 @@ class Scheduling extends AbstractExternalModule
         return $result;
     }
 
-    private function getVisits($payload)
+    private function getVisits($payload, $includeSharedConfig = false)
     {
         $project_id = $payload["pid"];
         $names = [
             "display-name" => "label",
             "code" => "code",
             "linked-event" => "link",
-            "wb-datetime" => "wbDateTimes",
-            "wb-user" => "wbUser",
             "notes" => "notes",
             "branch-logic-event" => "blEvent",
             "branch-logic-field" => "blField",
@@ -438,6 +436,14 @@ class Scheduling extends AbstractExternalModule
             $tmp = array_combine(array_values($names), array_column($values, $i));
             $tmp["value"] = $tmp["code"]; // Duplicate one item
             $visits[$tmp["code"]] = $tmp;
+        }
+
+        if ($includeSharedConfig) {
+            $visits = [
+                "visits" => $visits,
+                "wbDateTimes" => $this->getProjectSetting("wb-datetime"),
+                "wbUser" => $this->getProjectSetting("wb-user")
+            ];
         }
 
         return $visits;
@@ -860,10 +866,11 @@ class Scheduling extends AbstractExternalModule
 
         // Writeback data to events
         $write = [];
-        $vSet = $this->getVisits($payload)[$visit];
-        if (!empty($vSet["wbDateTimes"])) {
-            $dd = Redcap::getDataDictionary($project_id, 'array', false, $vSet["wbDateTimes"]);
-            foreach ($vSet["wbDateTimes"] as $dt) {
+        $vShared = $this->getVisits($payload, true);
+        $vSet = $vShared["visits"][$visit];
+        if (!empty($vShared["wbDateTimes"])) {
+            $dd = Redcap::getDataDictionary($project_id, 'array', false, $vShared["wbDateTimes"]);
+            foreach ($vShared["wbDateTimes"] as $dt) {
                 $validation = $dd[$dt]["field_validation_type"];
                 $hasSeconds = str_contains($validation, "_ss") || str_contains($validation, "_seconds");
                 list($date, $time) = explode(" ", $start);
@@ -877,8 +884,8 @@ class Scheduling extends AbstractExternalModule
                 $write[$dt] = $hasSeconds ? $tmp . ":00" : $tmp;
             }
         }
-        if ($vSet["wbUser"])
-            $write[$vSet["wbUser"]] = $provider;
+        if ($vShared["wbUser"])
+            $write[$vShared["wbUser"]] = $provider;
         if (!empty($write) && $vSet["link"])
             REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]]);
 
@@ -919,9 +926,10 @@ class Scheduling extends AbstractExternalModule
         // and update the writeback if any is set
         if ($provider != $oldProvider) {
             $this->restoreAvailability($id);
-            $vSet = $this->getVisits($payload)[$visit];
-            if ($vSet["wbUser"] && $vSet["link"])
-                REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => [$vSet["wbUser"] => $provider]]]);
+            $vShared = $this->getVisits($payload, true);
+            $vSet = $vShared["visits"][$visit];
+            if ($vShared["wbUser"] && $vSet["link"])
+                REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => [$vShared["wbUser"] => $provider]]]);
         }
 
         // Do the update
@@ -951,11 +959,12 @@ class Scheduling extends AbstractExternalModule
             $row = db_fetch_assoc($sql);
             $visit = $row["visit"];
             $record = $row["record"];
-            $vSet = $this->getVisits($payload)[$visit];
+            $vShared = $this->getVisits($payload);
+            $vSet = $vShared["visits"][$visit];
             $write = [];
-            if ($vSet["wbUser"])
-                $write[$vSet["wbUser"]] = "";
-            foreach ($vSet["wbDateTimes"] ?? [] as $dt)
+            if ($vShared["wbUser"])
+                $write[$vShared["wbUser"]] = "";
+            foreach ($vShared["wbDateTimes"] ?? [] as $dt)
                 $write[$dt] = "";
             if (!empty($write) && $vSet["link"])
                 REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]], "overwrite");
