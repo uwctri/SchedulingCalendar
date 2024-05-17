@@ -61,12 +61,6 @@
             "type": "checkbox"
         },
         {
-            "key": "availability-codes",
-            "name": "<b>Availability Code(s):</b><br>Comma delimited list of valid availability codes",
-            "tt_name": "config_codes",
-            "type": "text"
-        },
-        {
             "key": "name-field",
             "name": "<b>Name Field:</b><br>Variable to index, search, and display as the subject's name",
             "tt_name": "config_name_field",
@@ -342,6 +336,35 @@
     ],
     "system-settings": [
         {
+            "key": "global-group",
+            "name": "<b>Allow Global Group</b><br>Any project can add availability using this code if enabled",
+            "type": "checkbox"
+        },
+        {
+            "key": "no-local-group",
+            "name": "<b>Prevent Local Group</b><br>By default any project can add availability using the local group code. This will disable that feature",
+            "type": "checkbox"
+        },
+        {
+            "key": "availability-pids",
+            "name": "<b>Project Availability Codes</b>",
+            "type": "sub_settings",
+            "repeatable": true,
+            "sub_settings": [
+                {
+                    "key": "availability-pid",
+                    "name": "<b>Project</b>",
+                    "type": "project-id"
+                },
+                {
+                    "key": "availability-codes",
+                    "name": "<b>Availability Code(s):</b><br>Comma delimited list of valid availability codes",
+                    "tt_name": "config_codes",
+                    "type": "text"
+                }
+            ]
+        },
+        {
             "key": "availability-groups",
             "name": "<b>Availability Group</b>",
             "type": "sub_settings",
@@ -349,12 +372,12 @@
             "sub_settings": [
                 {
                     "key": "group-name",
-                    "name": "<b>Group Name:</b><br>Display name for availability group",
+                    "name": "<b>Group Name</b><br>Display name for availability group",
                     "type": "text"
                 },
                 {
                     "key": "group-code",
-                    "name": "<b>Group Code:</b><br>Coded value (i.e. availability code)",
+                    "name": "<b>Group Code</b><br>Coded value (i.e. availability code)",
                     "type": "text"
                 }
             ]

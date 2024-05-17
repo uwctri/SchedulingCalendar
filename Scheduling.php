@@ -404,10 +404,28 @@ class Scheduling extends AbstractExternalModule
 
     private function getAvailabilityCodes($payload = null)
     {
-        $localCodes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
+        $project_id = $payload["pid"];
+        $globalFlag = $this->getSystemSetting("global-group");
+        $localFlag = !$this->getSystemSetting("no-local-group");
+        $systemIndex = array_search($project_id, $this->getSystemSetting("availability-pid") ?? []);
+        $localCodes = [];
+        if ($systemIndex !== false)
+            $localCodes = array_map('trim', explode(',', $this->getSystemSetting("availability-codes")[$systemIndex]));
         $allFlag = $payload["all_availability"]; // Defaults to false when payload is null
         $allCodes = array_combine($this->getSystemSetting("group-code"), $this->getSystemSetting("group-name"));
         $result = [];
+        if ($globalFlag) {
+            $result["global"] = [
+                "value" => "global",
+                "label" => "Global"
+            ];
+        }
+        if ($localFlag) {
+            $result[$project_id] = [
+                "value" => $project_id,
+                "label" => "This Project"
+            ];
+        }
         foreach ($allCodes as $code => $name) {
             if ($allFlag || in_array($code, $localCodes)) {
                 $result[$code] = [

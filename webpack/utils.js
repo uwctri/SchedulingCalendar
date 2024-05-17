@@ -15,6 +15,10 @@ export const buildGroupDropdown = (el, stillOpenFn) => {
             option.text = groupData[k].label
             select.add(option)
         }
+        if (Object.keys(groupData).length == 1) {
+            select.value = Object.keys(groupData)[0]
+            // Note: Can't hide the select, we already rendered the dropdown
+        }
     })
 }
 
