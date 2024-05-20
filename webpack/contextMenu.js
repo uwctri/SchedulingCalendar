@@ -120,7 +120,10 @@ class ContextMenu {
             didOpen: () => {
                 $.getElementById(`aPopText${title}`).classList.remove('hidden')
                 $.getElementById(`aPop${title}`).classList.remove('hidden')
-                buildProviderDropdown(`aPop${title}`, Swal.isVisible)
+                let _ = {
+                    "Provider": buildProviderDropdown,
+                    "Location": buildLocationDropdown
+                }[title](`aPop${title}`, Swal.isVisible)
             },
             preConfirm: () => {
                 const btnEl = "swal2-confirm"

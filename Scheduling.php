@@ -516,7 +516,7 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND time_start <= ? AND time_end >= ?", [$start, $end]);
         }
 
-        $codes = $this->getAvailabilityCodes();
+        $codes = $this->getAvailabilityCodes($payload);
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
             $provider = $allUsers[$row["user"]] ?? $row["user"];

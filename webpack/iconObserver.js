@@ -16,7 +16,7 @@ new MutationObserver((mutations) => {
         $.querySelectorAll(`${head} [class*=${className}-], ${foot} [class*=${className}-]`).forEach(el => el.remove())
         let newEl = $.createElement("i")
 
-        // Make sure the toggle icon doesn't gett reset
+        // Make sure the toggle icon doesn't get reset
         if (className == "fa-eye" && !Calendar._showAvailability)
             className = "fa-eye-slash"
 
