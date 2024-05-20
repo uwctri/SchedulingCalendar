@@ -7,6 +7,7 @@ import template_appointment from "./html/appointment_popup.html"
 import template_details from "./html/details_popup.html"
 import Calendar from "./calendar"
 import Page from "./page"
+import Summary from "./summary"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils"
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
@@ -95,6 +96,7 @@ class PopOver {
                     "end": end,
                 }).then(data => {
                     Calendar.refresh()
+                    Summary.update()
                 })
             }
 

@@ -487,7 +487,7 @@ class Scheduling extends AbstractExternalModule
         $allFlag = $payload["all_availability"];
         $overflowFlag = $payload["allow_overflow"]; // Internal param for scheduling
 
-        $codes = array_map('trim', explode(',', $this->getProjectSetting("availability-codes")));
+        $codes = array_keys($this->getAvailabilityCodes($payload));
         if (empty($codes) && !$allFlag) {
             return $availability;
         }

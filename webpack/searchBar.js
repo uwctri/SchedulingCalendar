@@ -69,7 +69,7 @@ class SearchBar {
             const el = $.querySelector(`.${centerClassName} input`)
             el.placeholder = text
             el.style.width = `${text.length}ch`
-            Summary.update()
+            Summary.open()
         }
 
         const addProperty = (data, key, value) => {
@@ -122,31 +122,38 @@ class SearchBar {
         addProperty(subjects, "type", "subject")
         addProperty(visits, "type", "visit")
 
+        let choices = [
+            {
+                label: "Locations",
+                choices: filterLocations(locations)
+            },
+
+            {
+                label: "Providers",
+                choices: filterProviders(providers)
+            },
+        ]
+
+        if (Page.type != "edit") {
+            choices = choices.concat([
+                {
+                    label: "Subjects",
+                    choices: filterSubjects(subjects)
+                },
+                {
+                    label: "Visits (Events)",
+                    choices: filterVisits(visits)
+                }
+            ])
+        }
+
         // Init the picker object
         SearchBar._choices = new Choices(searchBarEl, {
             allowHTML: false,
             removeItems: true,
             removeItemButton: true,
             placeholderValue: placeholder,
-            choices:
-                [
-                    {
-                        label: "Locations",
-                        choices: filterLocations(locations)
-                    },
-                    {
-                        label: "Visits (Events)",
-                        choices: filterVisits(visits)
-                    },
-                    {
-                        label: "Providers",
-                        choices: filterProviders(providers)
-                    },
-                    {
-                        label: "Subjects",
-                        choices: filterSubjects(subjects)
-                    }
-                ]
+            choices: choices
         })
 
         SearchBar.hide()
@@ -157,7 +164,7 @@ class SearchBar {
 
         if (Page.id || Page.record) {
             SearchBar._choices.setChoiceByValue(Page.id || Page.record)
-            Summary.update()
+            Summary.open()
             SearchBar.show()
         }
     }

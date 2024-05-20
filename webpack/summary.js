@@ -20,28 +20,37 @@ class Summary {
     }
 
     static update() {
-        // TODO when a schedule occurs we need to update this info, but for that we need to re-pull subject data
+        Summary.close()
+        API.cache.subjects.expire = null
+        Summary.open()
+    }
+
+    static open() {
         if (!Summary._init)
             Summary.init()
         const subjects = SearchBar.getPickedSubjects(true)
-        if (subjects.length != 1)
+        if (subjects.length != 1) {
             Summary.close()
+            return
+        }
         const subject = subjects[0]
         if (subject == Summary._current)
             return
         const template = $.getElementById("eventTemplate")
-        const subjectData = API.cache.subjects.data[subject]
         const nameEl = $.getElementById("subjectName")
-        nameEl.innerText = subjectData.name
-        for (const field in subjectData.summary_fields) {
-            const sf = subjectData.summary_fields[field]
-            const div = $.createElement("div")
-            div.classList.add("subjectExtraInfo")
-            div.innerText = `${sf.label}: ${sf.value.trim()}`
-            nameEl.after(div)
-        }
-        API.visits().then(vData => {
-            for (const v in vData) {
+
+        Promise.all([API.subjects(), API.visits()]).then(([subjectsData, visitData]) => {
+            const subjectData = subjectsData[subject]
+            nameEl.innerText = subjectData.name
+            for (const field in subjectData.summary_fields) {
+                const sf = subjectData.summary_fields[field]
+                const div = $.createElement("div")
+                div.classList.add("subjectExtraInfo")
+                div.innerText = `${sf.label}: ${sf.value.trim()}`
+                nameEl.after(div)
+            }
+
+            for (const v in visitData) {
                 const vConfig = subjectData.visits[v]
                 if (!vConfig.branching_logic)
                     continue
@@ -50,7 +59,7 @@ class Summary {
                 clone.classList.add("cardEvent")
                 const nameEl = clone.getElementsByClassName("eventName")[0]
                 const dateEl = clone.getElementsByClassName("eventDate")[0]
-                nameEl.innerText = vData[v].label
+                nameEl.innerText = visitData[v].label
                 if (vConfig.scheduled) {
                     const dt = DateTime.fromSQL(vConfig.scheduled[0])
                     dateEl.innerText = dt.toFormat("ccc, d LLL yyyy @ hh:mma")
@@ -62,9 +71,9 @@ class Summary {
                     dateEl.setAttribute("data-date", start.toFormat("yyyy-MM-dd"))
                     dateEl.innerText = `${start.toFormat("MM/dd/yyyy")} - ${end.toFormat("MM/dd/yyyy")}`
                 }
-                if (vData[v].notes) {
+                if (visitData[v].notes) {
                     const notes = clone.getElementsByClassName("eventNotes")[0]
-                    notes.innerText = vData[v].notes
+                    notes.innerText = visitData[v].notes
                     notes.classList.remove("d-none")
                 }
                 clone.classList.remove("d-none")
@@ -72,7 +81,6 @@ class Summary {
             }
             $.getElementById("subjectSummary").classList.remove("d-none")
         })
-
     }
 
     static close() {
@@ -80,6 +88,7 @@ class Summary {
         [...$.getElementsByClassName("cardEvent")].forEach(el => el.remove())
         $.getElementById("subjectName").innerText = ""
         $.getElementById("subjectSummary").classList.add("d-none")
+        Summary._current = null
     }
 
 }
