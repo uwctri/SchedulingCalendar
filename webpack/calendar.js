@@ -138,7 +138,7 @@ class Calendar {
                     click: () => {
                         if (Page.refer.startsWith("http"))
                             location.href = Page.refer
-                        location.href = document.referrer
+                        location.href = $.referrer
                     }
                 },
                 bulk: {

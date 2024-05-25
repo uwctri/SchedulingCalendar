@@ -210,7 +210,7 @@ class PopOver {
 
             // Default the location 
             const defLoc = API.cache.subjects.data[subject]?.location // default loc
-            const locs = [...document.getElementById("aPopLocation").options].map(el => el.value)
+            const locs = [...$.getElementById("aPopLocation").options].map(el => el.value)
             if (locs.includes(defLoc))
                 $.getElementById("aPopLocation").value = defLoc
         })
