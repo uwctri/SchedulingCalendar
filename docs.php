@@ -96,7 +96,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
         <div class="card my-4 card-primary">
             <div class="card-header text-white fw-bold bg-primary bg-gradient">Query Parameters</div>
             <div class="card-body">
-                When linking to the calendar from an external source, you can use a few query parameters to configure the calendar.
+                When linking to the calendar from an an instrument or an external source, you can use a few query parameters to configure the calendar.
                 <table class="table">
                     <tr>
                         <td><b>record</b> or <b>id</b></td>
@@ -108,11 +108,20 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     </tr>
                     <tr>
                         <td><b>refer</b></td>
-                        <td>Show a link </td>
+                        <td>Set to either "true" or an encoded URL. When set a "Return to workflow" button is shown in the bottom right corner that will send the user back to the refering page or two the encoded URL. </td>
                     </tr>
                 </table>
 
-                <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]</code></pre>
+                A typical link might look like this:
+                <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]</code></pre>
+
+                A URL using both date and record might look like the below.
+                <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]&date=[some_date_field]</code></pre>
+
+                A URL using refer can use either "true" or an encoded URL. To do the latter requires some javascript to encode the URL. Consider using the Shazam EM for this.
+                <pre><code>let refer = encodeURIComponent(location.href)
+// Set this URL on a button or link. redcap_version is a global variable set by REDCap. 
+let url = location.href.split(redcap_version)[0] + `${redcap_version}/ExternalModules/?prefix=scheduling_calendar&page=index&pid=${pid}&refer=${refer}`</code></pre>
             </div>
         </div>
     </div>
