@@ -52,6 +52,8 @@ class Scheduling extends AbstractExternalModule
 
         // Check if its the non-CRUD utility function
         // TODO swap this to an API link http://localhost/api/?NOAUTH&type=module&prefix=scheduling_calendar&page=router&__calendar=
+        // ^^ add a copy URL button to the cal page for admins
+        // ^^ note: that URL should be per admin user. Generate a json of hashes for each user
         if (!empty($payload["utility"]) && $payload["utility"] == "ics") {
             $result = [
                 "data" => $this->utilityICS($payload),
