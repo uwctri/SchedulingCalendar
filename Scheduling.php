@@ -5,11 +5,9 @@ namespace UWMadison\Scheduling;
 use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
-use Project;
 
 class Scheduling extends AbstractExternalModule
 {
-
     /*
     Create the core scheduling and availability table on module enable
     */
@@ -40,46 +38,6 @@ class Scheduling extends AbstractExternalModule
             echo "<link rel='stylesheet' href='{$this->getUrl('style.css')}'>";
     }
 
-    public function ics_cron($cronInfo)
-    {
-        // Stash original PID, probably not needed, but docs recommend
-        $originalPid = $_GET['pid'];
-        global $Proj;
-
-        // Loop over every pid using this EM
-        foreach ($this->getProjectsWithModuleEnabled() as $pid) {
-
-            // Act like we are in that project
-            $_GET['pid'] = $pid;
-            $Proj = new Project($pid);
-
-            // Gather a bunch of info
-            $now = date("Y-m-d");
-            $time = $this->getProjectSetting("ics-time", $pid);
-            $extraFields = $this->getProjectSetting('ics-field', $pid);
-            $freq = $this->getProjectSetting('ics-cron', $pid);
-            $day = $this->getProjectSetting('ics-day', $pid);
-            $users = $this->getProjectSetting('ics-user', $pid);
-
-            if (empty($time))
-                $this->setProjectSetting("ics-time", date("Y-m-d"));
-
-            if (in_Array($freq, ["", null, "off"]) || (empty($day) && $freq == "week") || empty($users))
-                return;
-
-            if ((($freq == "day") && ($now > $time)) || (($freq == "week") && ($now > $time) && ($day == date("w")))) {
-                $ics = $this->makeICS($extraFields, $pid);
-                $this->sendICS($ics, $users, $pid);
-                $this->setProjectSetting("ics-time", date("Y-m-d"));
-            }
-        }
-
-        // Put the pid back the way it was before this cron job
-        // likely doesn't matter, but is good housekeeping practice
-        $_GET['pid'] = $originalPid;
-        return "The \"{$cronInfo['cron_name']}\" cron job completed successfully.";
-    }
-
     /*
     Process a post request from router
     */
@@ -93,6 +51,7 @@ class Scheduling extends AbstractExternalModule
         $result = null;
 
         // Check if its the non-CRUD utility function
+        // TODO swap this to an API link http://localhost/api/?NOAUTH&type=module&prefix=scheduling_calendar&page=router&__calendar=
         if (!empty($payload["utility"]) && $payload["utility"] == "ics") {
             $result = [
                 "data" => $this->utilityICS($payload),

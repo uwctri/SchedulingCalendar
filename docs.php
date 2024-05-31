@@ -108,7 +108,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     </tr>
                     <tr>
                         <td><b>refer</b></td>
-                        <td>Set to either "true" or an encoded URL. When set a "Return to workflow" button is shown in the bottom right corner that will send the user back to the refering page or two the encoded URL. </td>
+                        <td>Set to either "true" or an encoded URL. When set a "Return to workflow" button is shown in the bottom right corner that will send the user back to the refering page or to the encoded URL. </td>
                     </tr>
                 </table>
 

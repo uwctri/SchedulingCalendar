@@ -25,15 +25,6 @@
             }
         ]
     },
-    "crons": [
-        {
-            "cron_name": "ics_export",
-            "cron_description": "Check if an automated ICS export needs to occur",
-            "method": "ics_cron",
-            "cron_frequency": "21600",
-            "cron_max_run_time": "3600"
-        }
-    ],
     "project-settings": [
         {
             "key": "scheduling-and-availability",
@@ -258,79 +249,6 @@
             "name": "<b>Additional Field</b><br>Extra info added to the ICS export per appointment",
             "tt_name": "config_ics_field",
             "type": "field-list",
-            "repeatable": true
-        },
-        {
-            "key": "ics-cron",
-            "name": "<b>Auto Export Frequency</b>",
-            "tt_name": "config_ics_cron",
-            "type": "radio",
-            "choices": [
-                {
-                    "value": "off",
-                    "name": "Off",
-                    "tt_name": "config_choice_off"
-                },
-                {
-                    "value": "day",
-                    "name": "Daily",
-                    "tt_name": "config_choice_day"
-                },
-                {
-                    "value": "week",
-                    "name": "Weekly",
-                    "tt_name": "config_choice_week"
-                }
-            ]
-        },
-        {
-            "key": "ics-day",
-            "name": "<b>Export Day</b>",
-            "tt_name": "config_ics_export_day",
-            "type": "dropdown",
-            "choices": [
-                {
-                    "value": "0",
-                    "name": "Sunday",
-                    "tt_name": "config_choice_sunday"
-                },
-                {
-                    "value": "1",
-                    "name": "Monday",
-                    "tt_name": "config_choice_monday"
-                },
-                {
-                    "value": "2",
-                    "name": "Tuesday",
-                    "tt_name": "config_choice_tuesday"
-                },
-                {
-                    "value": "3",
-                    "name": "Wednesday",
-                    "tt_name": "config_choice_wednesday"
-                },
-                {
-                    "value": "4",
-                    "name": "Thursday",
-                    "tt_name": "config_choice_thursday"
-                },
-                {
-                    "value": "5",
-                    "name": "Friday",
-                    "tt_name": "config_choice_friday"
-                },
-                {
-                    "value": "6",
-                    "name": "Saturday",
-                    "tt_name": "config_choice_saturday"
-                }
-            ]
-        },
-        {
-            "key": "ics-user",
-            "name": "<b>Send Export to</b>",
-            "tt_name": "config_ics_user",
-            "type": "user-list",
             "repeatable": true
         }
     ],
