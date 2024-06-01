@@ -15,7 +15,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Purpose</div>
                 <div class="card-body">
                     This external module adds afirmative scheduling to the REDCap platform.
-                    It allows users, refered to providers below, to set their availability and then for other users
+                    It allows users, also called providers below, to set their availability and then for other users
                     to schedule appointments with subjects against that availability. The goal is to eliminate the need for use of software
                     outside of REDCap. While their does exist a native Calendar module in REDCap that is useful for smaller teams or projects, some may
                     not find it suitable when dealing with larger teams that work across multiple projects, at different times, or in different locations.
@@ -25,8 +25,9 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="workflow" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">General Workflow</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow</div>
                 <div class="card-body">
+                    GO MORE IN DEPTH. TALK ABOUT ALL THE TABS AND WHAT INFO IS USED WHERE.
                     Workflow can be broken down into two main parts, scheduling availability and scheduling appointments.
                     <br><br>
                     When scheduling availability we expect a provider to use the calendar to enter when they plan to be available to see subjects for the study.
@@ -39,16 +40,52 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     with some limitations.
                 </div>
             </div>
-            <div id="basics" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Calendar Basics</div>
+            <div id="config" class="card my-4 card-primary">
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration</div>
                 <div class="card-body">
-                    Go over every tab, scheduling, availability, my. And how to use.
+                    It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
+
+                    <p><b>Calendar Admin</b><br>
+                        Admins may edit any user's calendar and have access to two additional tools:<br>
+                        1. Data cleanup - remove older availability and appointments for withdrawn subjects<br>
+                        2. ICS Exports - export a calendar file for viewing in an outside application. This file will contain PHI.<br>
+                        See below for additional information on both tools.</p>
+                    <p><b>Unschedulable</b><br>
+                        This is a list of users that have access to the project, availability on the calendar, but shouldn't be schedulable.
+                        This is useful if a team member was orignally a provider and now has a purley administrative role.</p>
+                    <p><b>Trigger DET</b><br>
+                        This is a highly technical feature and requires a developer to implement.
+                        Sends a POST to the Data Entry Trigger on calendar save. See below for details on the structure of the POST request.</p>
+                    <p><b>Name Field</b><br>
+                        Variable to index, search, and display as the subject's name in various places on the calendar.
+                        This should be a full name, i.e. a concatenation of the first and last name.</p>
+                    <p><b>Withdraw Flag</b><br>
+                        This field should be set to indicate that a subject has been withdrawn from the study and is no longer schedulable.
+                        This flag field should be set to any non-blank, non-zero value.</p>
+                    <p><b>Default Location</b><br>
+                        Location auto-selected when scheduling a new appointment<br>
+                        Location Field - Subject's home clinic. Should use the same coded value used in the location JSON<br>
+                        Location Value - Coded value for the default location from the JSON</p>
+                    <p><b>Location Source</b><br>Current or anothe<br>
+                        Location JSON - Consult documentation for JS<br>
+                        Location Project - Use this project's location JSON</p>
                 </div>
             </div>
-            <div id="config" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Configuration</div>
+            <div id="sys" class="card my-4 card-primary">
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">System Configuration</div>
                 <div class="card-body">
-                    Go over all configuration options
+                    It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
+
+                    <p><b>Allow Global Group</b><br>Variable to index, search, and display as the subject's name</p>
+                    <p><b>Prevent Local Group</b><br>Exclude Subject ID from search if truthy</p>
+                    <p><b>Project Availability Codes</b><br>
+                        Admins may edit any user's calendar and have access to two additional tools:<br>
+                        Project - remove older availability and appointments for withdrawn subjects<br>
+                        Code - export a calendar file for viewing in an outside application. This file will contain PHI. </p>
+                    <p><b>Availability Groups</b><br>
+                        Admins may edit any user's calendar and have access to two additional tools:<br>
+                        Name - remove older availability and appointments for withdrawn subjects<br>
+                        Code - export a calendar file for viewing in an outside application. This file will contain PHI. </p>
                 </div>
             </div>
             <div id="admin" class="card my-4 card-primary">
@@ -95,6 +132,8 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="det" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">DET Integration</div>
                 <div class="card-body">
+                    This is a highly technical feature and requires a developer to implement.
+                    <br><br>
                     If this feature is enabled in the configuration, the module will send a message to the DET endpoint,
                     if one is set for the project, when anything (appointment or availability) is added, removed, or updated on the calendar.
                     The message sent will be a POST request with a JSON body formatted as below. The endpoint should respond with a 200 status
@@ -138,6 +177,31 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                             }
                         </code>
                     </pre>
+
+                    If you decide to implement this feature and would like to use the internal id to query the database for more information, see below for an example of how to do so.
+                    This DET would obviously need to be hosted on the same server as the REDCap installation.
+                    <pre>
+                        <code>
+                            define("NOAUTH", true);
+                            require_once  "../redcap_connect.php";
+                            $sql = "SELECT * FROM em_scheduling_calendar WHERE id = ?";
+                            $result = db_query($sql, $_POST["id"]);
+                            while ($row = db_fetch_assoc($result)) {
+                                // Do something with the data:
+                                // project_id
+                                // visit
+                                // availability_code
+                                // user
+                                // record
+                                // location
+                                // time_start
+                                // time_end
+                                // notes
+                            }
+                        </code>
+                    </pre>
+
+
                 </div>
             </div>
             <div id="query" class="card my-4 card-primary">
