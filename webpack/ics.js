@@ -4,7 +4,7 @@ import Page, { makeAPIUrl } from "./page"
 class ICS {
 
     static copyLink() {
-        const url = makeAPIUrl("ics") + "&pid=" + Page.pid + "&hash=" + RedCap.user.icsHash
+        const url = `${makeAPIUrl("ics")}&pid=${Page.pid}&hash=${RedCap.user.icsHash}`
         navigator.clipboard.writeText(url)
     }
 

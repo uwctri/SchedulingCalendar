@@ -295,10 +295,6 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
     })
 </script>
 
-<?php
-
-$HtmlPage->PrintFooter();
-?>
 <style>
     #pagecontainer {
         max-width: 1400px;
@@ -323,3 +319,6 @@ $HtmlPage->PrintFooter();
         margin-top: 1em;
     }
 </style>
+
+<?php
+$HtmlPage->PrintFooter();
