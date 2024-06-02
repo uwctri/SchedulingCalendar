@@ -265,7 +265,7 @@
         },
         {
             "key": "availability-pids",
-            "name": "<b>Project Availability Codes</b>",
+            "name": "<b>Project Availability Groups</b>",
             "type": "sub_settings",
             "repeatable": true,
             "sub_settings": [

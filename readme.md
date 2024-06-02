@@ -1,4 +1,4 @@
-# Recalculate - Scheduling Calendar
+# Scheduling Calendar - Redcap External Module
 
 ## What does it do?
 

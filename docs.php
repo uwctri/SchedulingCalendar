@@ -21,13 +21,13 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     not find it suitable when dealing with larger teams that work across multiple projects, at different times, or in different locations.
                     <br><br>
                     Please understand that this module may be difficult to initaly setup and use. It is recommended that you read through the documentation
-                    and reach out to the developers (via a Github issue or email) for help if you are having trouble.
+                    and reach out to the developers (via a <a>Github issue</a> or email) for help if you are having trouble.
                 </div>
             </div>
             <div id="workflow" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow</div>
                 <div class="card-body">
-                    GO MORE IN DEPTH. TALK ABOUT ALL THE TABS AND WHAT INFO IS USED WHERE.
+                    GO MORE IN DEPTH. TALK ABOUT ALL THE TABS AND WHAT INFO IS USED WHERE.<br>
                     Workflow can be broken down into two main parts, scheduling availability and scheduling appointments.
                     <br><br>
                     When scheduling availability we expect a provider to use the calendar to enter when they plan to be available to see subjects for the study.
@@ -43,7 +43,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="config" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration</div>
                 <div class="card-body">
-                    It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
+                    It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module. The project settings are broken down into three categories: General, System Configuration, and Admin Tools.
 
                     <p><b>Calendar Admin</b><br>
                         Admins may edit any user's calendar and have access to two additional tools:<br>
@@ -61,31 +61,48 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                         This should be a full name, i.e. a concatenation of the first and last name.</p>
                     <p><b>Withdraw Flag</b><br>
                         This field should be set to indicate that a subject has been withdrawn from the study and is no longer schedulable.
-                        This flag field should be set to any non-blank, non-zero value.</p>
+                        This flag field should be set to any non-blank, non-zero value. Future appointments are not removed from the calendar.
+                        You can either manually remove them or clean them up using the admin tools.</p>
                     <p><b>Default Location</b><br>
-                        Location auto-selected when scheduling a new appointment<br>
-                        Location Field - Subject's home clinic. Should use the same coded value used in the location JSON<br>
-                        Location Value - Coded value for the default location from the JSON</p>
-                    <p><b>Location Source</b><br>Current or anothe<br>
-                        Location JSON - Consult documentation for JS<br>
-                        Location Project - Use this project's location JSON</p>
+                        Typically the location for an appointment is left blank and is selected by the provider when scheduling. You can, however,
+                        choose to default the location to either a field's value or a static value. Both options below use the coded location value from the location JSON.<br>
+                        Location Field - Useful if subject's have prefered clinics that are imported or selected early in the study. <br>
+                        Location Value - Useful if the vast majority of appointments (or all of them) will occur at one location.</p>
+                    <p><b>Location Source</b><br>
+                        Locations in the module are defined via a JSON object, an easily-to-read format that lists all locations, display names, coded values, and metadata.
+                        The structure of this data is detailed below. The data can either be stored on the current project or pulled from another project.
+                        This is useful if two or more studies share a location structure<br>
+                        Location JSON - If the location JSON is local is should be minified and saved here. See below for format<br>
+                        Location Project - Select another project to copy the location JSON from.
+                        This is not a one time copy, the location structure will always be looked up from this other project.
+                        This makes it easy to maintain a single source-of-truth for the location structure</p>
+                    <br>
+                    MISSING SETTINGS HERE
                 </div>
             </div>
             <div id="sys" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">System Configuration</div>
                 <div class="card-body">
-                    It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
-
-                    <p><b>Allow Global Group</b><br>Variable to index, search, and display as the subject's name</p>
-                    <p><b>Prevent Local Group</b><br>Exclude Subject ID from search if truthy</p>
-                    <p><b>Project Availability Codes</b><br>
-                        Admins may edit any user's calendar and have access to two additional tools:<br>
-                        Project - remove older availability and appointments for withdrawn subjects<br>
-                        Code - export a calendar file for viewing in an outside application. This file will contain PHI. </p>
+                    These settings can only be set by a REDCap administrator in the Control Center.
+                    It is necissary to update some of these settings any time a new project is created that will use the module.
                     <p><b>Availability Groups</b><br>
-                        Admins may edit any user's calendar and have access to two additional tools:<br>
-                        Name - remove older availability and appointments for withdrawn subjects<br>
-                        Code - export a calendar file for viewing in an outside application. This file will contain PHI. </p>
+                        When adding availability to the calendar providers associate it with a particular group.
+                        This group can be used by one project only, or shared with other projects. It is common to have projects that use only
+                        the "local" availability group, i.e. the group associated with that project only, however if a team of providers is
+                        working on multiple studies at once they may wish to enter availability into a specific group and then share that group
+                        across projects.<br>
+                        Name - Display name for the availability group.<br>
+                        Code - Coded value for the group.</p>
+                    <p><b>Project Availability Group</b><br>
+                        To associate the created availability groups (above) with any number of projects we update this list.<br>
+                        Project - The existing project using the module<br>
+                        Code - Coded value of the availability group. If listing multiple then enter a comma deliminted list. </p>
+                    <p><b>Allow Global Group</b><br>
+                        The "Global Group" is an availability group that is shared across all projects. If your REDCap instance has a small
+                        number of regular users you may wish to enable this so all, or most, availability can exist under one group.</p>
+                    <p><b>Prevent Local Group</b><br>
+                        By default all projects start with a "local" availability group that on the one project can access. You can turn that
+                        feature off here if you want to insure that custom groups are always used.</p>
                 </div>
             </div>
             <div id="admin" class="card my-4 card-primary">
@@ -141,11 +158,12 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     <br><br>
                     Note: The internal id is a unique identifier for the appointment or availability. It is not the same as the record_id or any other identifer in REDCap.
                     Currently it is only useful if you are able to directly query the database for more information. This limits the usefulness of the delete and update messages.
+                    In the future all information on the deleted or updated appointment or availability will be sent in the message.
                     <pre>
                         <code>
                             {
                                 redcap_url: Root URL of the REDCap installation,
-                                project_url: URL to the assoicated projecting ending in "/index.php?pid=[project-id]",
+                                project_url: URL to the associated project ending in "/index.php?pid=[project-id]",
                                 project_id: The project id of the current project,
                                 username: The username of the current user,
                                 resource: Enum describing the resource that was impacted (Availability, Appointment),
@@ -177,9 +195,8 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                             }
                         </code>
                     </pre>
-
                     If you decide to implement this feature and would like to use the internal id to query the database for more information, see below for an example of how to do so.
-                    This DET would obviously need to be hosted on the same server as the REDCap installation.
+                    This DET would need to be hosted on the same server as the REDCap installation so we can use the "redcap_connect" script and query the database.
                     <pre>
                         <code>
                             define("NOAUTH", true);

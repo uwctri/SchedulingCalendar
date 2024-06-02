@@ -705,10 +705,11 @@ class Scheduling extends AbstractExternalModule
         if (empty($id)) {
             return [
                 "msg" => "No id provided",
-                "success" => true
+                "success" => false
             ];
         }
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
+        // TODO for delete we should return all the data that was deleted
         return [
             "msg" => "Entry $id was deleted",
             "success" => true
