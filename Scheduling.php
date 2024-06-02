@@ -51,12 +51,9 @@ class Scheduling extends AbstractExternalModule
         $result = null;
 
         // Check if its the non-CRUD utility function
-        // TODO swap this to an API link http://localhost/api/?NOAUTH&type=module&prefix=scheduling_calendar&page=router&__calendar=
-        // ^^ add a copy URL button to the cal page for admins
-        // ^^ note: that URL should be per admin user. Generate a json of hashes for each user
         if (!empty($payload["utility"]) && $payload["utility"] == "ics") {
             $result = [
-                "data" => $this->utilityICS($payload),
+                "data" => $this->makeICS($payload),
                 "success" => true
             ];
             return json_encode($result);
@@ -126,12 +123,25 @@ class Scheduling extends AbstractExternalModule
         $admins = $this->getProjectSetting("calendar-admin");
         $user = $this->getUser();
         $username = $user->getUsername();
+        $isAdmin = in_array($username, $admins);
+        $hash = "";
+        if ($isAdmin) {
+            $json = json_decode($this->getProjectSetting("ics-hash-json") ?? "{}", true);
+            if (in_array($username, array_values($json))) {
+                $hash = array_search($username, $json);
+            } else {
+                $hash = substr(str_replace(['+', '/', '='], '', base64_encode(random_bytes(128))), 0, 128);
+                $json[$hash] = $username;
+                $this->setProjectSetting("ics-hash-json", json_encode($json));
+            }
+        }
         return [
             "username" => $username,
             "email" => $user->getEmail(),
             "name" => $GLOBALS['user_firstname'] . ' ' . $GLOBALS['user_lastname'],
-            "isCalendarAdmin" => in_array($username, $admins),
-            "isSuperUser" => $user->isSuperUser()
+            "isCalendarAdmin" => $isAdmin,
+            "isSuperUser" => $user->isSuperUser(),
+            "icsHash" => $hash
         ];
     }
 
@@ -248,7 +258,7 @@ class Scheduling extends AbstractExternalModule
                     // "visit_code" = [
                     // "branching_logic" => true,
                     // "scheduled" => [],
-                    // "range" => [] // TODO we don't even have config for this yet
+                    // "range" => []
                     // ];
                 ]
             ];
@@ -791,6 +801,7 @@ class Scheduling extends AbstractExternalModule
 
     private function setAppointments($payload)
     {
+        // TODO we don't enforce ranges for appointments here or in JS
         $project_id = $payload["pid"];
         $visit = $payload["visits"];
         $start = $payload["start"];
@@ -1017,16 +1028,12 @@ class Scheduling extends AbstractExternalModule
         return $meta;
     }
 
-    private function utilityICS($payload)
+    public function makeICS($payload)
     {
-        $project_id = $payload["pid"];
-        $extraFields = $this->getProjectSetting("ics-field") ?? [];
-        return $this->makeICS($extraFields, $project_id);
-    }
+        $project_id = is_array($payload) ? $payload["pid"] : $payload;
+        $extraFields = $this->getProjectSetting("ics-field", $project_id) ?? [];
 
-    private function makeICS($extaFields, $project_id)
-    {
-        $project_name = $this->getProjectName();
+        $project_name = $this->getProjectName($project_id);
         $appts = $this->getAppointments([
             "pid" => $project_id,
             "start" => date('c', strtotime('-30 days')),
@@ -1039,12 +1046,12 @@ class Scheduling extends AbstractExternalModule
         ]);
         $ics = "BEGIN:VCALENDAR
                 VERSION:2.0
-                PRODID:-//CTRI/REDCap Schedule//NONSGML v1.0//EN
+                PRODID:-//REDCap//NONSGML SchedulingCalendar EM//EN
                 X-WR-CALNAME:REDCap Schedule Export - $project_id";
 
         $url = explode("ExternalModules", $this->getUrl("index.php"))[0] . "DataEntry/record_home.php";
-        $data = $this->getSingleEventFields($extaFields, null, $project_id);
-        $dd = REDCap::getDataDictionary($project_id, 'array', false, $extaFields);
+        $data = $this->getSingleEventFields($extraFields, null, $project_id);
+        $dd = REDCap::getDataDictionary($project_id, 'array', false, $extraFields);
 
         foreach ($appts as $a) {
             $desc = [
@@ -1054,7 +1061,7 @@ class Scheduling extends AbstractExternalModule
                 $this->tt('ics_visit') => $a['visit_display'],
             ];
 
-            foreach ($extaFields as $field) {
+            foreach ($extraFields as $field) {
                 $desc[$dd[$field]["field_label"]] = $data[$a["record"]][$field];
             }
 

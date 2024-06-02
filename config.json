@@ -14,6 +14,9 @@
         }
     ],
     "framework-version": 12,
+    "no-auth-pages": [
+        "ics"
+    ],
     "links": {
         "project": [
             {

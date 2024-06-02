@@ -101,7 +101,7 @@ class Calendar {
         // Modify toolbars
         Calendar.toolbars = Calendar.toolbars[Page.type]
         Calendar.toolbars.bottomRight = Page.refer ? ["refer"] : Calendar.toolbars.bottomRight
-        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["cleanup", "ics"] : Calendar.toolbars.bottomLeft
+        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["cleanup", "ics,icsDownload,icsCopy"] : Calendar.toolbars.bottomLeft
 
         // Grab user settings
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability } = UserConfig.get()
@@ -120,8 +120,16 @@ class Calendar {
                 },
                 ics: {
                     text: ".ICS",
+                },
+                icsDownload: {
+                    icon: "fa-download",
                     hint: RedCap.tt("alt_ics"),
                     click: ICS.export
+                },
+                icsCopy: {
+                    icon: "fa-copy",
+                    hint: RedCap.tt("alt_ics_copy"),
+                    click: ICS.copyLink
                 },
                 config: {
                     icon: "fa-gear",
