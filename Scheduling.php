@@ -1091,30 +1091,6 @@ class Scheduling extends AbstractExternalModule
         return preg_replace("/ {4}/", "", "$ics\nEND:VCALENDAR");
     }
 
-    private function sendICS($ics, $users, $project_id)
-    {
-        $from = $this->getContactEmail();
-        $project_name = $this->getProjectName($project_id);
-        $subject = "[REDCap] ICS Backup - $project_id";
-        $msg = "Attached is the ICS backup for project \"$project_name\" (PID $project_id)";
-        $fileName = $project_name . $this->tt("ics_cal");
-        $temp = tmpfile();
-        fwrite($temp, $ics);
-        $attachments = [
-            $fileName => stream_get_meta_data($temp)['uri']
-        ];
-
-        foreach ($users as $user) {
-            $userObj = $this->getUser($user);
-            $to = $userObj->getEmail();
-            if (empty($to))
-                continue;
-            REDCap::email($to, $from, $subject, $msg, null, null, null, $attachments);
-        }
-
-        fclose($temp);
-    }
-
     private function fireDataEntryTrigger($payload)
     {
         // Chunks of this function are lifted from the DataEntry class

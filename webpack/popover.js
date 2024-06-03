@@ -186,18 +186,11 @@ class PopOver {
             }
         }
 
-        $.getElementById("aPopStartTime").addEventListener("change", () => {
-            enforceDuration()
-            // TODO is provider still available at that time?
-        })
-
-        $.getElementById("aPopEndTime").addEventListener("change", () => {
-            // TODO is provider still available at that time?
-        })
-
-        $.getElementById("aPopVisit").addEventListener("change", () => {
-            enforceDuration()
-        })
+        // Note: Only enforcing duration. Maybe the provider isn't available after a time
+        // change, but PHP will catch that. Would be messy to rebuild the provider list
+        $.getElementById("aPopStartTime").addEventListener("change", enforceDuration)
+        $.getElementById("aPopEndTime").addEventListener("change", enforceDuration)
+        $.getElementById("aPopVisit").addEventListener("change", enforceDuration)
 
         $.getElementById("aPopSubject").addEventListener("change", () => {
             const subject = $.getElementById("aPopSubject").value
