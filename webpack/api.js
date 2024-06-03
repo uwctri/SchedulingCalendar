@@ -339,6 +339,8 @@ class API {
             }
             return Promise.reject(response)
         }).then((data) => {
+            // TODO when we return false trying to set an appointment/availability we should 
+            // do something w/ the data
             result = data
             Calendar.hideLoading()
             console.log(data)
