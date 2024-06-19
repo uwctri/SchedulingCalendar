@@ -3,6 +3,7 @@ $HtmlPage = new HtmlPage();
 $HtmlPage->addStylesheet("home.css", 'screen,print');
 $HtmlPage->PrintHeader();
 include APP_PATH_VIEWS . 'HomeTabs.php';
+// TODO finish these docs
 ?>
 <div class="projhdr">
     <h3><i class="fas fa-calendar"></i> Scheduling & Availability Documentation</h3>

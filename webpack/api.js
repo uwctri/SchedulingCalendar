@@ -8,7 +8,7 @@ class API {
 
     static _time_fields = ["start", "end"]
 
-    // Cache and throttle these gets
+    // Cache and throttle
     static cache = {
         availabilityCodes: {
             data: null,
