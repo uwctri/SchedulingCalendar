@@ -27,13 +27,18 @@ class CleanUp {
 
                 let delAvail = Promise.resolve([])
                 if (removeAvail) {
-                    const codes = Object.keys(API.cache.availabilityCodes.data)
-                    delAvail = API.deleteAvailability({
-                        "providers": "*",
-                        "locations": "*",
-                        "group": codes,
-                        "start": DateTime.now().minus({ years: 100 }).toISO(),
-                        "end": DateTime.now().minus({ days: 1 }).toISO()
+                    API.availabilityCodes({
+                        "all_availability": false
+                    }).then(groupData => {
+                        // We might be pulling from cache, so filter anyway
+                        const codes = Object.keys(groupData).filter(record => groupData[record].isLocal)
+                        delAvail = API.deleteAvailability({
+                            "providers": "*",
+                            "locations": "*",
+                            "group": codes,
+                            "start": DateTime.now().minus({ years: 100 }).toISO(),
+                            "end": DateTime.now().minus({ days: 1 }).toISO()
+                        })
                     })
                 }
 

@@ -388,20 +388,24 @@ class Scheduling extends AbstractExternalModule
         if ($globalFlag) {
             $result["global"] = [
                 "value" => "global",
-                "label" => "Global"
+                "label" => "Global",
+                "isLocal" => false
             ];
         }
         if ($localFlag) {
             $result[$project_id] = [
                 "value" => $project_id,
-                "label" => "This Project"
+                "label" => "This Project",
+                "isLocal" => true
             ];
         }
         foreach ($allCodes as $code => $name) {
-            if ($allFlag || in_array($code, $localCodes)) {
+            $isLocal = in_array($code, $localCodes);
+            if ($allFlag || $isLocal) {
                 $result[$code] = [
                     "value" => $code,
                     "label" => $name,
+                    "isLocal" => $isLocal
                 ];
             }
         }
