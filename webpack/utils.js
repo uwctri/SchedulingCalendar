@@ -23,7 +23,7 @@ export const buildGroupDropdown = (el, stillOpenFn) => {
 }
 
 export const buildLocationDropdown = (el, stillOpenFn) => {
-    // TODO Some locations should be filtered out
+    // TODO PRIORITY Some locations should be filtered out
     API.locations().then(locationsData => {
         if (!stillOpenFn()) return
         const select = $.getElementById(el)
@@ -44,7 +44,7 @@ export const buildLocationDropdown = (el, stillOpenFn) => {
 }
 
 export const buildProviderDropdown = (el, stillOpenFn) => {
-    // TODO only list the providers that are available?
+    // TODO PRIORITY only list the providers that are available?
     const select = $.getElementById(el)
     if (!RedCap.user.isCalendarAdmin) {
         let option = $.createElement("option")

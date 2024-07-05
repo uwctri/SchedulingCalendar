@@ -334,10 +334,7 @@ class API {
             method: 'POST',
             body: API.toFormData(data)
         }).then((response) => {
-            if (response.ok) {
-                return response.json()
-            }
-            return Promise.reject(response)
+            return response.ok ? response.json() : Promise.reject(response)
         }).then((data) => {
             // TODO when we return false trying to set an appointment/availability we should 
             // do something w/ the data
