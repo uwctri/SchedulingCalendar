@@ -256,9 +256,9 @@ class Scheduling extends AbstractExternalModule
                 "summary_fields" => [],
                 "visits" => [
                     // "visit_code" = [
-                    // "branching_logic" => true,
-                    // "scheduled" => [],
-                    // "range" => []
+                    //     "branching_logic" => true,
+                    //     "scheduled" => [],
+                    //     "range" => []
                     // ];
                 ]
             ];
@@ -297,6 +297,14 @@ class Scheduling extends AbstractExternalModule
                 $rangeStart = $allData[$record][$vSet["link"]][$vSet["rangeStart"]];
                 $rangeEnd = $allData[$record][$vSet["link"]][$vSet["rangeEnd"]];
                 $subjects[$record]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
+            }
+            if (empty($subjects[$record]["visits"][$visit])) {
+                // Nothing else built these out, so build them with defaults
+                $subjects[$record]["visits"][$visit] = [
+                    "branching_logic" => true,
+                    "scheduled" => [],
+                    "range" => []
+                ];
             }
         }
 
