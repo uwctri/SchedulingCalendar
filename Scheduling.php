@@ -239,8 +239,14 @@ class Scheduling extends AbstractExternalModule
             $locationField = null;
         }
 
+        // Get all data we need to pull together
+        $visitSettings = $this->getVisits($payload, true);
+        $blFields = $this->getProjectSetting("visit-branch-logic-field");
+        $allData = REDCap::getData($project_id, "array", null, array_merge($blFields, [$visitSettings["rangeStart"], $visitSettings["rangeEnd"]]));
         $withdrawField = $this->getProjectSetting("withdraw-field", $project_id);
         $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField], null, $project_id);
+
+        // Loop over every record and build out info
         foreach ($data as $record_id => $recordData) {
             $name = $recordData[$nameField];
             $loc = $recordData[$locationField] ?? $locationStatic;
@@ -262,6 +268,27 @@ class Scheduling extends AbstractExternalModule
                     // ];
                 ]
             ];
+
+
+            // Do Branching logic evaluation for every record
+            $blData = $blFields ? $allData : [];
+            foreach ($visitSettings["visits"] as $visit => $vSet) {
+                $blValue = $vSet["blValue"];
+                $blEvent = $vSet["blEvent"];
+                $blField = $vSet["blField"];
+                $subjects[$record_id]["visits"][$visit]["branching_logic"] = true;
+                $subjects[$record_id]["visits"][$visit]["range"] = [];
+                if ($blData && $blEvent && $blField) {
+                    $not = (count($blValue) > 0) && ($blValue[0] == "!");
+                    $v = $blData[$record_id][$blEvent][$blField];
+                    $subjects[$record_id]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
+                }
+                if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
+                    $rangeStart = $allData[$record_id][$vSet["link"]][$vSet["rangeStart"]];
+                    $rangeEnd = $allData[$record_id][$vSet["link"]][$vSet["rangeEnd"]];
+                    $subjects[$record_id]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
+                }
+            }
         }
 
         // Perform a second query to get all scheduled visits for the subjects
@@ -275,32 +302,7 @@ class Scheduling extends AbstractExternalModule
             $subjects[$record]["visits"][$visit]["scheduled"][] = $row["time_start"];
         }
 
-        // Get all data we need to pull together
-        $visitSettings = $this->getVisits($payload, true);
-        $blFields = $this->getProjectSetting("visit-branch-logic-field");
-        $allData = REDCap::getData($project_id, "array", null, array_merge($blFields, [$visitSettings["rangeStart"], $visitSettings["rangeEnd"]]));
-
-        // Do Branching logic evaluation
-        $blData = $blFields ? $allData : [];
-        foreach ($visitSettings["visits"] as $visit => $vSet) {
-            $blValue = $vSet["blValue"];
-            $blEvent = $vSet["blEvent"];
-            $blField = $vSet["blField"];
-            $subjects[$record]["visits"][$visit]["branching_logic"] = true;
-            $subjects[$record]["visits"][$visit]["range"] = [];
-            if ($blData && $blEvent && $blField) {
-                $not = (count($blValue) > 0) && ($blValue[0] == "!");
-                $v = $blData[$record][$blEvent][$blField];
-                $subjects[$record]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
-            }
-            if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
-                $rangeStart = $allData[$record][$vSet["link"]][$vSet["rangeStart"]];
-                $rangeEnd = $allData[$record][$vSet["link"]][$vSet["rangeEnd"]];
-                $subjects[$record]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
-            }
-        }
-
-        // Check if any exta info is on the subject summary
+        // Check if any exta info is on the subject summary (3rd query)
         $extaFields = $this->getProjectSetting("ss-field");
         if (!empty($extaFields)) {
             $dd = Redcap::getDataDictionary($project_id, 'array', false, $extaFields);
@@ -314,8 +316,6 @@ class Scheduling extends AbstractExternalModule
                 }
             }
         }
-
-
 
         return $subjects;
     }
