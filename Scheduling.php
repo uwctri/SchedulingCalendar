@@ -1140,7 +1140,7 @@ class Scheduling extends AbstractExternalModule
         foreach ($data as $record_id => $event_data) {
             foreach ($event_data as $event_id => $fields) {
                 foreach ($fields as $field => $value) {
-                    $results[$record_id][$field] = $value;
+                    $results[$record_id][$field] = $results[$record_id][$field] ?? $value;
                 }
             }
         }
