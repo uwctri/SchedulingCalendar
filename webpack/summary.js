@@ -48,7 +48,7 @@ class Summary {
                 const div = $.createElement("div")
                 div.classList.add("subjectExtraInfo")
                 div.innerText = `${sf.label}: ${sf.value.trim()}`
-                nameEl.after(div)
+                nameEl.parentNode.append(div)
             }
 
             for (const v in visitData) {
@@ -78,7 +78,7 @@ class Summary {
                     notes.classList.remove("d-none")
                 }
                 clone.classList.remove("d-none")
-                template.after(clone)
+                template.parentNode.append(clone)
             }
             $.getElementById("subjectSummary").classList.remove("d-none")
         })
