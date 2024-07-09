@@ -36,6 +36,7 @@ class Summary {
         const subject = subjects[0]
         if (subject == Summary._current)
             return
+        Summary._current = subject
         const template = $.getElementById("eventTemplate")
         const nameEl = $.getElementById("subjectName")
 

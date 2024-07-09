@@ -298,14 +298,6 @@ class Scheduling extends AbstractExternalModule
                 $rangeEnd = $allData[$record][$vSet["link"]][$vSet["rangeEnd"]];
                 $subjects[$record]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
             }
-            if (empty($subjects[$record]["visits"][$visit])) {
-                // Nothing else built these out, so build them with defaults
-                $subjects[$record]["visits"][$visit] = [
-                    "branching_logic" => true,
-                    "scheduled" => [],
-                    "range" => []
-                ];
-            }
         }
 
         // Check if any exta info is on the subject summary
