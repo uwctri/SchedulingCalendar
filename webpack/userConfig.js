@@ -20,8 +20,8 @@ class UserConfig {
     static get() {
         const expandRows = localStorage.getItem("expandRows")
         const limitAvailability = localStorage.getItem("limitAvailability")
-        let hiddenDays = localStorage.getItem("configDays").split(',').filter(x => x)
-        hiddenDays = hiddenDays ? hiddenDays.map(x => parseInt(x)) : defaultHiddenDays
+        let hiddenDays = localStorage.getItem("configDays")
+        hiddenDays = hiddenDays ? hiddenDays.split(',').filter(x => x).map(x => parseInt(x)) : defaultHiddenDays
         const showAllDays = localStorage.getItem("showAllDays") == "true"
         hiddenDays = showAllDays ? [] : hiddenDays
         return {
