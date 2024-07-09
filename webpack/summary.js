@@ -52,7 +52,7 @@ class Summary {
 
             for (const v in visitData) {
                 const vConfig = subjectData.visits[v]
-                if (!vConfig.branching_logic)
+                if (!vConfig || !vConfig.branching_logic)
                     continue
                 let clone = template.cloneNode(true)
                 clone.id = ""
