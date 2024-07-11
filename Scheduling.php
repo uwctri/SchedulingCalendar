@@ -6,6 +6,8 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
+// TODO We need to log to the EM specifc logs module
+
 class Scheduling extends AbstractExternalModule
 {
     /*
