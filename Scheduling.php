@@ -41,6 +41,14 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
+    Always show the page link
+    */
+    public function redcap_module_link_check_display($project_id, $link)
+    {
+        return $link;
+    }
+
+    /*
     Process a post request from router
     */
     public function process()
