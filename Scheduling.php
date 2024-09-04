@@ -7,6 +7,8 @@ use REDCap;
 use RestUtility;
 
 // TODO We need to log to the EM specifc logs module
+// TODO visit-extendable is not used
+// TODO visit-location-free is not used
 
 class Scheduling extends AbstractExternalModule
 {
@@ -386,8 +388,8 @@ class Scheduling extends AbstractExternalModule
     private function getAvailabilityCodes($payload = null)
     {
         $project_id = $payload["pid"];
-        $globalFlag = $this->getSystemSetting("global-group");
-        $localFlag = !$this->getSystemSetting("no-local-group");
+        $globalFlag = $this->getSystemSetting("global-group") == "1";
+        $localFlag = !$this->getSystemSetting("no-local-group") == "1";
         $systemIndex = array_search($project_id, $this->getSystemSetting("availability-pid") ?? []);
         $localCodes = [];
         if ($systemIndex !== false)
@@ -472,8 +474,9 @@ class Scheduling extends AbstractExternalModule
         $allFlag = $payload["all_availability"];
         $overflowFlag = $payload["allow_overflow"]; // Internal param for scheduling
 
-        $codes = array_keys($this->getAvailabilityCodes($payload));
-        if (empty($codes) && !$allFlag) {
+        $codes = $this->getAvailabilityCodes($payload);
+        $codes_keys = array_keys($codes);
+        if (empty($codes_keys) && !$allFlag) {
             return $availability;
         }
 
@@ -484,7 +487,7 @@ class Scheduling extends AbstractExternalModule
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
 
         if (!$allFlag) {
-            $query->add("AND")->addInClause("availability_code", $codes);
+            $query->add("AND")->addInClause("availability_code", $codes_keys);
         }
 
         if (!empty($providers)) {
@@ -501,7 +504,6 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND time_start <= ? AND time_end >= ?", [$start, $end]);
         }
 
-        $codes = $this->getAvailabilityCodes($payload);
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
             $provider = $allUsers[$row["user"]] ?? $row["user"];
@@ -886,17 +888,14 @@ class Scheduling extends AbstractExternalModule
         if (!empty($vShared["wbDateTimes"])) {
             $dd = Redcap::getDataDictionary($project_id, 'array', false, $vShared["wbDateTimes"]);
             foreach ($vShared["wbDateTimes"] as $dt) {
-                $validation = $dd[$dt]["field_validation_type"];
-                $hasSeconds = str_contains($validation, "_ss") || str_contains($validation, "_seconds");
+                $validation = $dd[$dt]["text_validation_type_or_show_slider_number"];
                 list($date, $time) = explode(" ", $start);
-                $tmp = "";
                 if (substr($validation, 0, 8) == "datetime")
-                    $tmp = $start;
+                    $write[$dt] = $start;
                 elseif (substr($validation, 0, 4) == "time")
-                    $tmp = $time;
+                    $write[$dt] = $time;
                 elseif (substr($validation, 0, 4) == "date")
-                    $tmp = $date;
-                $write[$dt] = $hasSeconds ? $tmp . ":00" : $tmp;
+                    $write[$dt] = $date;
             }
         }
         if ($vShared["wbUser"])
@@ -911,7 +910,7 @@ class Scheduling extends AbstractExternalModule
 
         return [
             "msg" => "Appointment scheduled",
-            "success" => true
+            "success" => true,
         ];
     }
 
@@ -974,7 +973,7 @@ class Scheduling extends AbstractExternalModule
             $row = db_fetch_assoc($sql);
             $visit = $row["visit"];
             $record = $row["record"];
-            $vShared = $this->getVisits($payload);
+            $vShared = $this->getVisits($payload, true);
             $vSet = $vShared["visits"][$visit];
             $write = [];
             if ($vShared["wbUser"])
