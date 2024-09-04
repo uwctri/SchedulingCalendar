@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --config webpack.dev.js",
     "watch": "webpack --watch --progress --config webpack.dev.js",
-    "publish": "webpack --config webpack.prod.js && cd .. && wsl -e zip dist config.json docs.php index.js license readme.md style.css router.php Scheduling.php ics.php"
+    "publish": "webpack --config webpack.prod.js && cd .. && wsl -e zip dist lang/English.ini config.json docs.php index.js index.php license readme.md style.css router.php Scheduling.php ics.php"
   },
   "devDependencies": {
     "css-loader": "^6.11.0",

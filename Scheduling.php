@@ -892,10 +892,12 @@ class Scheduling extends AbstractExternalModule
                 list($date, $time) = explode(" ", $start);
                 if (substr($validation, 0, 8) == "datetime")
                     $write[$dt] = $start;
-                elseif (substr($validation, 0, 4) == "time")
-                    $write[$dt] = $time;
                 elseif (substr($validation, 0, 4) == "date")
                     $write[$dt] = $date;
+                elseif (substr($validation, 0, 4) == "time") {
+                    $hasSeconds = str_contains($validation, "hh_mm_ss");
+                    $write[$dt] = $hasSeconds ? $time : substr($time, 0, 5);
+                }
             }
         }
         if ($vShared["wbUser"])
