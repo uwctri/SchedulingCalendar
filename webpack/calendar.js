@@ -356,7 +356,7 @@ class Calendar {
                     }
                     const user = calEvent.user
                     const accessableColor = Calendar.accessableColors[Object.keys(colors).length % Calendar.accessableColors.length]
-                    const color = colors[user] || Calendar._metadata[user]['color'] || accessableColor
+                    const color = colors[user] || Calendar._metadata[user]?.color || accessableColor
                     calEvent.color = color
                     colors[user] = color
                     return calEvent

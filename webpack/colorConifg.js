@@ -8,11 +8,12 @@ import iro from '@jaames/iro'
 const html = RedCap.ttHTML(template)
 const borderColor = "#000"
 const defaultColor = "#ffffff"
+const defaultText = "Random"
 const pickerWidth = 250
 
+// TODO add a reset button to this to undo a change to a user's color
 class ColorConfig {
 
-    // TODO have cal hit the API for correct colors, generate if not present
     static _init = false
     static _metadata = {}
 
@@ -70,6 +71,7 @@ class ColorConfig {
             let color = ColorConfig._metadata[user]?.color || defaultColor
             colorPicker.color.hexString = color
             color = !user ? "" : color
+            color = color === defaultColor ? defaultText : color
             colorInput.value = color
         })
 
@@ -99,7 +101,7 @@ class ColorConfig {
     static updateMetadata() {
         const user = $.getElementById("userColorSelect").value
         const color = $.getElementById("userColorInput").value
-        if (!user || !color)
+        if (!user || !color || ["#000", "#000000", "#fff", "#ffffff"].includes(color))
             return
         ColorConfig._metadata[user] = { color: color }
     }
