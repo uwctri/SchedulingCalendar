@@ -11,7 +11,6 @@ const defaultExpandRows = true
 const defaultLimitAvailability = true
 const defaultLineHeight = "1.5"
 
-const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 const html = RedCap.ttHTML(template)
 class UserConfig {
 
@@ -62,8 +61,8 @@ class UserConfig {
         Swal.fire({
             title: RedCap.tt("user_title"),
             html: newHtml,
-            confirmButtonColor: rcBtnColor,
-            confirmButtonText: RedCap.tt("user_save"),
+            confirmButtonColor: RedCap.btn_color,
+            confirmButtonText: RedCap.tt("save"),
             customClass: {
                 container: 'userConfigModal'
             }

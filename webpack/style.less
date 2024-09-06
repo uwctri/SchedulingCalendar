@@ -172,9 +172,14 @@
 }
 
 .cleanupModal,
-.userConfigModal {
+.userConfigModal,
+.userColorModal {
 
     padding: 0;
+
+    .IroColorPicker {
+        display: inline-block !important;
+    }
 
     .swal2-modal {
         width: max-content;
@@ -219,6 +224,7 @@
     width: 24em; // Arbitrary width that looks good
 }
 
+.userColorModal .swal2-html-container,
 .userConfigModal .swal2-html-container {
     width: 21em; // Arbitrary width that looks good
 }
@@ -486,33 +492,22 @@
             text-align: right;
         }
 
+        thead,
+        .external-modules-instance-label,
+        tr[field=scheduling-and-availability],
+        tr[field=user-colors],
         tr[field=location-field],
         tr[field=location-static],
         tr[field=location-json],
         tr[field=location-pid],
-        tr[field=ics-day] {
-            display: none;
-        }
-
-        thead {
-            display: none;
-        }
-
-        .external-modules-instance-label {
+        tr[field=ics-day],
+        tr[field=visit-branch-logic-field] label,
+        tr[field=visit-branch-logic-value] label {
             display: none;
         }
 
         .sub_start td {
             background-color: var(--redcap-dark-grey);
-        }
-
-        tr[field=scheduling-and-availability] {
-            display: none;
-        }
-
-        tr[field=visit-branch-logic-field] label,
-        tr[field=visit-branch-logic-value] label {
-            display: none;
         }
 
         tr[field=visit-branch-logic-event] td,

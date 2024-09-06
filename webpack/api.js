@@ -57,7 +57,13 @@ class API {
                 }
             },
             interval: 5,
-        }
+        },
+        metadata: {
+            data: null,
+            expire: null,
+            promise: null,
+            interval: 999
+        },
     }
 
     static timestamp() { return DateTime.now().toISO() }
@@ -284,6 +290,34 @@ class API {
 
         API.requiredKeys(data, [["start", "end", "subjects"], ["id"]])
         API.expireAppointmentsCache()
+        return await API.post(data)
+    }
+
+    static async metadata(payload) {
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.Metadata,
+            ...payload
+        }
+
+        // Throttle, return cache, or store to cache
+        const cache = API.cache.metadata
+        if (cache.expire && cache.expire > API.timestamp())
+            return cache.data
+        if (cache.promise)
+            return cache.promise
+        const promise = API.post(data)
+        return await API.updateCache(promise, cache)
+    }
+
+    static async setMetadata(payload) {
+        const data = {
+            "crud": CRUD.Update,
+            "resource": Resource.Metadata,
+            ...payload
+        }
+
+        API.requiredKeys(data, ["metadata"])
         return await API.post(data)
     }
 

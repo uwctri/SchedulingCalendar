@@ -28,7 +28,6 @@ import RedCap from './redcap'
 import { goToRecord } from './page'
 import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
 
-const rcBtnColor = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 const html = RedCap.ttHTML(template)
 const swalDenyColor = "#dc3741"
 class ContextMenu {
@@ -115,7 +114,7 @@ class ContextMenu {
         Swal.fire({
             title: `${RedCap.tt("context_change")} ${title}`,
             html: html,
-            confirmButtonColor: rcBtnColor,
+            confirmButtonColor: RedCap.btn_color,
             confirmButtonText: RedCap.tt("context_update"),
             didOpen: () => {
                 $.getElementById(`aPopText${title}`).classList.remove('hidden')

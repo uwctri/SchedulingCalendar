@@ -104,7 +104,12 @@ class Scheduling extends AbstractExternalModule
             "visit" => [
                 "read" => "getVisits",
                 "default" => "Vist resource is read only."
-            ]
+            ],
+            "metadata" => [
+                "read" => "getUserMetadata",
+                "update" => "setUserMetadata",
+                "default" => "Metadata resource can be read and updated only."
+            ],
         ][$payload["resource"]][$payload["crud"]];
 
         if ($payload["bundle"] && !empty($task)) {
@@ -1029,6 +1034,27 @@ class Scheduling extends AbstractExternalModule
         return [
             "msg" => "Deleted range of appointments",
             "success" => true
+        ];
+    }
+
+    private function getUserMetadata($payload)
+    {
+        $meta = $this->getProjectSetting("user-metadata") ?? "{}";
+        return [
+            "msg" => "Project config retrieved",
+            "success" => true,
+            "data" => json_decode($meta)
+        ];;
+    }
+
+    private function setUserMetadata($payload)
+    {
+        $meta = $payload["metadata"];
+        $result = $this->setProjectSetting("user-metadata", json_encode($meta));
+        return [
+            "msg" => "Project config updated",
+            "success" => true,
+            "debug" => $result
         ];
     }
 

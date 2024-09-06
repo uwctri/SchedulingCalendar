@@ -30,6 +30,11 @@
     },
     "project-settings": [
         {
+            "key": "user-metadata",
+            "name": "User Colors JSON, set via the calendar admin panel",
+            "type": "textarea"
+        },
+        {
             "key": "scheduling-and-availability",
             "name": "Used for CSS matching. Ignore",
             "type": "descriptive"

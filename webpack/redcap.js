@@ -7,6 +7,7 @@ class RedCap {
     static user = ExternalModules.UWMadison.Scheduling?.user
     static project_name = ExternalModules.UWMadison.Scheduling?.project_name
     static email = ExternalModules.UWMadison.Scheduling?.email
+    static btn_color = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
 
     static tt = (key) => ExternalModules.UWMadison.Scheduling?.tt(key) // Redcap EM translate func
     static ttHTML = (html) => {

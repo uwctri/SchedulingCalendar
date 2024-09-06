@@ -9,6 +9,7 @@ import PopOver from "./popover"
 import { genRowCol } from "./utils"
 import ContextMenu from "./contextMenu"
 import UserConfig from "./userConfig"
+import ColorConfig from "./colorConifg"
 import ICS from "./ics"
 import CleanUp from "./cleanup"
 import SearchBar from "./searchBar"
@@ -101,7 +102,7 @@ class Calendar {
         // Modify toolbars
         Calendar.toolbars = Calendar.toolbars[Page.type]
         Calendar.toolbars.bottomRight = Page.refer ? ["refer"] : Calendar.toolbars.bottomRight
-        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["cleanup", "ics,icsDownload,icsCopy"] : Calendar.toolbars.bottomLeft
+        Calendar.toolbars.bottomLeft = RedCap.user.isCalendarAdmin ? ["cleanup", "ics,icsDownload,icsCopy", "userColors"] : Calendar.toolbars.bottomLeft
 
         // Grab user settings
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability } = UserConfig.get()
@@ -135,6 +136,11 @@ class Calendar {
                     icon: "fa-gear",
                     hint: RedCap.tt("alt_user"),
                     click: UserConfig.open
+                },
+                userColors: {
+                    icon: "fa-palette",
+                    hint: RedCap.tt("alt_colors"),
+                    click: ColorConfig.open
                 },
                 search: {
                     icon: "fa-magnifying-glass",

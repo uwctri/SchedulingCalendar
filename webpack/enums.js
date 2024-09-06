@@ -8,4 +8,4 @@ function createEnum(values) {
 }
 
 export const CRUD = createEnum(["Create", "Read", "Update", "Delete"])
-export const Resource = createEnum(["Availability", "Appointment", "Provider", "Subject", "Location", "Visit", "AvailabilityCode"])
+export const Resource = createEnum(["Availability", "Appointment", "Provider", "Subject", "Location", "Visit", "AvailabilityCode", "Metadata"])

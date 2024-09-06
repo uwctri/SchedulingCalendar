@@ -26,6 +26,7 @@
     "@fullcalendar/interaction": "^6.1.14",
     "@fullcalendar/list": "^6.1.14",
     "@fullcalendar/timegrid": "^6.1.14",
+    "@jaames/iro": "^5.5.2",
     "choices.js": "^10.2.0",
     "imask": "^7.6.1",
     "litepicker": "^2.0.12",
