@@ -1039,22 +1039,22 @@ class Scheduling extends AbstractExternalModule
 
     private function getUserMetadata($payload)
     {
-        $meta = $this->getProjectSetting("user-metadata") ?? "{}";
+        $meta = $this->getProjectSetting("user-metadata");
+        $meta = empty($meta) ? "{}" : $meta;
         return [
-            "msg" => "Project config retrieved",
+            "msg" => "User metadata retrieved",
             "success" => true,
             "data" => json_decode($meta)
-        ];;
+        ];
     }
 
     private function setUserMetadata($payload)
     {
         $meta = $payload["metadata"];
-        $result = $this->setProjectSetting("user-metadata", json_encode($meta));
+        $this->setProjectSetting("user-metadata", json_encode($meta));
         return [
-            "msg" => "Project config updated",
-            "success" => true,
-            "debug" => $result
+            "msg" => "User metadata updated",
+            "success" => true
         ];
     }
 

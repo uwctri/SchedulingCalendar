@@ -20,7 +20,7 @@ class ColorConfig {
         if (ColorConfig._init) return
         ColorConfig._init = true
         API.metadata().then(metadata => {
-            ColorConfig._metadata = metadata // TODO something is broken here
+            ColorConfig._metadata = metadata.data
         })
     }
 
@@ -42,10 +42,13 @@ class ColorConfig {
             // Bail if save wasn't clicked
             if (!result.isConfirmed) return
 
-            // TODO save the new values
-
-            // Reload Page to reinit the cal
-            location.reload()
+            // Save the new values
+            API.setMetadata({
+                metadata: ColorConfig._metadata
+            }).then(() => {
+                // Reload Page to reinit the cal colors
+                location.reload()
+            })
         })
 
         const select = $.getElementById("userColorSelect")
@@ -67,7 +70,6 @@ class ColorConfig {
             let color = ColorConfig._metadata[user]?.color || defaultColor
             colorPicker.color.hexString = color
             color = !user ? "" : color
-            console.log(user)
             colorInput.value = color
         })
 

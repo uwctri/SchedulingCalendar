@@ -23,6 +23,7 @@ class Calendar {
     static _fc = null
     static _showAvailability = true
     static _refreshTime = DateTime.now().minus({ minutes: 60 })
+    static _metadata = {}
 
     // Great contrast colors from ...
     // https://sashamaps.net/docs/resources/20-colors/
@@ -98,6 +99,11 @@ class Calendar {
             if (DateTime.now().diff(Calendar._refreshTime).seconds >= autoRefreshTime)
                 Calendar.refresh()
         }, 1000 * 60)
+
+        // Grab any admin set metadata
+        API.metadata().then(metadata => {
+            Calendar._metadata = metadata.data
+        })
 
         // Modify toolbars
         Calendar.toolbars = Calendar.toolbars[Page.type]
@@ -348,9 +354,11 @@ class Calendar {
                             calEvent.extendedProps[key] = value
                         }
                     }
-                    const color = colors[calEvent.user] || Calendar.accessableColors[Object.keys(colors).length % Calendar.accessableColors.length]
+                    const user = calEvent.user
+                    const accessableColor = Calendar.accessableColors[Object.keys(colors).length % Calendar.accessableColors.length]
+                    const color = colors[user] || Calendar._metadata[user]['color'] || accessableColor
                     calEvent.color = color
-                    colors[calEvent.user] = color
+                    colors[user] = color
                     return calEvent
                 }
 
