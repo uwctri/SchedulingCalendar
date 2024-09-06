@@ -7,6 +7,7 @@ import Calendar from './calendar'
 import Litepicker from 'litepicker'
 import PopOver from "./popover"
 import RedCap from "./redcap"
+import { CRUD, Resource } from "./enums"
 
 const modalWidth = "800px"
 const defaultStart = "08:00"
@@ -55,8 +56,8 @@ class BulkEdit {
                     if (o.skipWeekend && (date.weekday == 6 || date.weekday == 7))
                         continue
                     bundle.push({
-                        "provider": o.provider,
-                        "location": o.location,
+                        "providers": o.provider,
+                        "locations": o.location,
                         "group": o.group,
                         "start": `${date.toFormat('yyyy-MM-dd')}T${o.start}:00`,
                         "end": `${date.toFormat('yyyy-MM-dd')}T${o.end}:00`,
