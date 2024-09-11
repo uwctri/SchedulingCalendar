@@ -9,6 +9,7 @@ use RestUtility;
 // TODO We need to log to the EM specifc logs module
 // TODO visit-extendable is not used
 // TODO visit-location-free is not used
+// TODO right now we can set Availability for time X on provider P when P has an appt at X. Should we prevent?
 
 class Scheduling extends AbstractExternalModule
 {
@@ -553,7 +554,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         $msg = "Modified existing availability";
-        $mergeOccured = $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code, null, [
+        $mergeOccured = $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, null, [
             "start" => $start,
             "end" => $end
         ]);
@@ -571,7 +572,7 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
-    private function cleanupAvailabiltiy($dateStr, $provider, $location, $code, $existing = null, $working = null)
+    private function cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, $existing = null, $working = null)
     {
         $start_of_day = $dateStr . " 00:00";
         $end_of_day = $dateStr . " 23:59";
@@ -579,6 +580,7 @@ class Scheduling extends AbstractExternalModule
         // If this is the first call get the existing availability
         if ($existing == null) {
             $existing = $this->getAvailability([
+                "pid" => $project_id,
                 "providers" => $provider,
                 "locations" => $location,
                 "start" => $start_of_day,
@@ -645,7 +647,7 @@ class Scheduling extends AbstractExternalModule
 
         // Merge occured, attempt again
         if ($resolved) {
-            $this->cleanupAvailabiltiy($dateStr, $provider, $location, $code);
+            $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code);
             return true;
         }
 
