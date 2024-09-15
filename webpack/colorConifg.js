@@ -12,6 +12,7 @@ const defaultText = "Random"
 const pickerWidth = 250
 
 // TODO add a reset button to this to undo a change to a user's color
+// TODO rework HTML so all names are in a list and its easy to see what color is for what user all at once
 class ColorConfig {
 
     static _init = false

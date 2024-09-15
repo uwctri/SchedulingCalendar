@@ -1,7 +1,7 @@
 import API from "./api"
 import UserConfig from "./userConfig"
-import RedCap from "./redcap"
 import SearchBar from "./searchBar"
+import { DateTime } from 'luxon'
 
 export const buildGroupDropdown = (el, stillOpenFn) => {
     API.availabilityCodes({
@@ -22,16 +22,20 @@ export const buildGroupDropdown = (el, stillOpenFn) => {
     })
 }
 
-export const buildLocationDropdown = (el, stillOpenFn) => {
-    // TODO PRIORITY Some locations should be filtered out
-    API.locations().then(locationsData => {
+export const buildLocationDropdown = (el, stillOpenFn, selectionInfo = null) => {
+    let availabilityPromise = getSelectedAvailability(selectionInfo)
+    let locationPromise = API.locations()
+    Promise.all([availabilityPromise, locationPromise]).then(([availabilityData, locationsData]) => {
         if (!stillOpenFn()) return
+        const validLocations = availabilityData.map(e => e.location)
         const select = $.getElementById(el)
         const loopOver = (obj) => {
             for (const code in obj) {
                 if (obj[code].sub)
                     loopOver(obj[code].sub)
                 if (!obj[code].active)
+                    continue
+                if (selectionInfo && !validLocations.includes(code))
                     continue
                 let option = $.createElement("option")
                 option.value = code
@@ -43,28 +47,35 @@ export const buildLocationDropdown = (el, stillOpenFn) => {
     })
 }
 
-export const buildProviderDropdown = (el, stillOpenFn) => {
-    // TODO PRIORITY only list the providers that are available?
-    const select = $.getElementById(el)
-    if (!RedCap.user.isCalendarAdmin) {
-        let option = $.createElement("option")
-        option.value = RedCap.user.username
-        option.text = RedCap.user.name
-        option.selected = true
-        select.add(option)
-    } else {
-        API.providers().then(providers => {
-            if (!stillOpenFn()) return
-            for (const k in providers) {
-                if (providers[k].is_unschedulable || !providers[k].is_local)
-                    continue
-                let option = $.createElement("option")
-                option.value = providers[k].value
-                option.text = providers[k].label
-                select.add(option)
-            }
-        })
-    }
+export const buildProviderDropdown = (el, stillOpenFn, selectionInfo = null) => {
+    let availabilityPromise = getSelectedAvailability(selectionInfo)
+    let providersPromise = API.providers()
+    Promise.all([availabilityPromise, providersPromise]).then(([availabilityData, providersData]) => {
+        if (!stillOpenFn()) return
+        const validProviders = availabilityData.map(e => e.user)
+        const select = $.getElementById(el)
+        for (const k in providersData) {
+            if (providersData[k].is_unschedulable || !providersData[k].is_local)
+                continue
+            if (selectionInfo && !validProviders.includes(providersData[k].value))
+                continue
+            let option = $.createElement("option")
+            option.value = providersData[k].value
+            option.text = providersData[k].label
+            select.add(option)
+        }
+    })
+}
+
+const getSelectedAvailability = (selectionInfo) => {
+    return selectionInfo ? API.getAvailability({
+        start: DateTime.fromISO(selectionInfo.startStr).toFormat("yyyy-MM-dd HH:mm:ss"),
+        end: DateTime.fromISO(selectionInfo.endStr).toFormat("yyyy-MM-dd HH:mm:ss"),
+        providers: [],
+        locations: [],
+        all_availability: false,
+        allow_overflow: true
+    }) : Promise.resolve([])
 }
 
 export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) => {

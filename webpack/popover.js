@@ -163,8 +163,8 @@ class PopOver {
         IMask(endTime, PopOver.timeMask12)
 
         buildVisitDropdown("aPopVisit", null, null, PopOver.isOpen)
-        buildLocationDropdown("aPopLocation", PopOver.isOpen)
-        buildProviderDropdown("aPopProvider", PopOver.isOpen)
+        buildLocationDropdown("aPopLocation", PopOver.isOpen, info)
+        buildProviderDropdown("aPopProvider", PopOver.isOpen, info)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
 
         const enforceDuration = () => {

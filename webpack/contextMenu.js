@@ -122,7 +122,7 @@ class ContextMenu {
                 let _ = {
                     "Provider": buildProviderDropdown,
                     "Location": buildLocationDropdown
-                }[title](`aPop${title}`, Swal.isVisible)
+                }[title](`aPop${title}`, Swal.isVisible, false)
             },
             preConfirm: () => {
                 const btnEl = "swal2-confirm"

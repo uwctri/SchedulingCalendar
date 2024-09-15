@@ -6,10 +6,14 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
+// TODO Finish changes to color menu
+// TODO Should any user be able to select any provider?
+
 // TODO We need to log to the EM specifc logs module
 // TODO visit-extendable is not used
 // TODO visit-location-free is not used
 // TODO right now we can set Availability for time X on provider P when P has an appt at X. Should we prevent?
+// TODO allow for faux-providers (rooms, users not in redcap etc)
 
 class Scheduling extends AbstractExternalModule
 {

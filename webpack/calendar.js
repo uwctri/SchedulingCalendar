@@ -327,8 +327,8 @@ class Calendar {
             },
             events: (info, successCallback, failureCallback) => {
                 let paramsCommon = {
-                    start: info.start.toISOString(),
-                    end: info.end.toISOString(),
+                    start: DateTime.fromISO(info.startStr).toFormat("yyyy-MM-dd HH:mm:ss"),
+                    end: DateTime.fromISO(info.endStr).toFormat("yyyy-MM-dd HH:mm:ss"),
                     providers: SearchBar.getPickedProviders(true),
                     locations: SearchBar.getPickedLocations(true),
                 }
