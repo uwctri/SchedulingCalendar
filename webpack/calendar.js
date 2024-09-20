@@ -195,6 +195,13 @@ class Calendar {
             slotMaxTime: endTime,
             expandRows: expandRows,
             selectable: Page.type != "my",
+            datesSet: (dateInfo) => {
+                const newStart = DateTime.fromISO(dateInfo.startStr).toFormat("yyyy-MM-dd")
+                for (const type of ["my", "schedule", "edit"]) {
+                    const typeLink = $.getElementByClassName(`type-${type}`).href.split("&date")[0]
+                    $.getElementByClassName(`type-${type}`).href = `${typeLink}&date=${newStart}`
+                }
+            },
             dateClick: (dateClickInfo) => {
                 if (dateClickInfo.view.type == "singleMonth") {
                     Calendar._fc.changeView("singleWeek")
