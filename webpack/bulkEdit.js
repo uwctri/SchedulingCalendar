@@ -98,6 +98,13 @@ class BulkEdit {
                 return false
             }
         })
+
+        $.getElementById("bulkEditMe").addEventListener("click", (event) => {
+            API.providers().then(providers => {
+                if (Object.keys(providers).includes(RedCap.user.id))
+                    $.getElementById("bulkEditProvider").value = RedCap.user.id
+            })
+        })
     }
 
     static init() {
