@@ -10,6 +10,7 @@ const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
 const defaultLimitAvailability = true
 const defaultLineHeight = "1.5"
+const defaultBulkPickerType = "range"
 
 const html = RedCap.ttHTML(template)
 class UserConfig {
@@ -30,8 +31,13 @@ class UserConfig {
             slotSize: localStorage.getItem("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows,
             lineHeight: localStorage.getItem("lineHeight") || defaultLineHeight,
-            limitAvailability: typeof limitAvailability === "string" ? limitAvailability === "true" : defaultLimitAvailability
+            limitAvailability: typeof limitAvailability === "string" ? limitAvailability === "true" : defaultLimitAvailability,
+            bulkPickerType: localStorage.getItem("bulkPickerType") || defaultBulkPickerType
         }
+    }
+
+    static set(setting, value) {
+        localStorage.setItem(setting, value)
     }
 
     static init() {

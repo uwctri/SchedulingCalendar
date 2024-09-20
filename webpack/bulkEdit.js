@@ -5,9 +5,11 @@ import { DateTime } from 'luxon'
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
 import Calendar from './calendar'
 import Litepicker from 'litepicker'
+import 'litepicker/dist/plugins/multiselect';
 import PopOver from "./popover"
 import RedCap from "./redcap"
 import { CRUD, Resource } from "./enums"
+import UserConfig from './userConfig'
 
 const modalWidth = "800px"
 const defaultStart = "08:00"
@@ -16,21 +18,64 @@ const html = RedCap.ttHTML(template)
 class BulkEdit {
 
     static picker = null
+    static pickType = UserConfig.get()["bulkPickerType"]
 
     static get() {
+        const skipWeekend = $.getElementById("bulkEditSkip").checked
+        const startDay = DateTime.fromJSDate(BulkEdit.picker.getStartDate()?.toJSDate())
+        const endDay = DateTime.fromJSDate(BulkEdit.picker.getEndDate()?.toJSDate())
+        let dates = []
+        if (BulkEdit.pickType == "range") {
+            for (let date = startDay; date <= endDay; date = date.plus({ days: 1 })) {
+                if (skipWeekend && (date.weekday == 6 || date.weekday == 7))
+                    continue
+                dates.push(date)
+            }
+        } else {
+            dates = BulkEdit.picker.getMultipleDates().map(date => DateTime.fromJSDate(date.toJSDate()))
+        }
         return {
-            startDay: DateTime.fromJSDate(BulkEdit.picker.getStartDate()?.toJSDate()),
-            endDay: DateTime.fromJSDate(BulkEdit.picker.getEndDate()?.toJSDate()),
+            dates: dates,
+            startDay: startDay,
+            endDay: endDay,
             start: $.getElementById("bulkEditStart").value,
             end: $.getElementById("bulkEditEnd").value,
             group: $.getElementById("bulkEditGroup").value,
             location: $.getElementById("bulkEditLocation").value,
             provider: $.getElementById("bulkEditProvider").value,
-            skipWeekend: $.getElementById("bulkEditSkip").checked
         }
     }
 
     static open() {
+
+        const sendBundle = (crud, o) => {
+            let bundle = []
+            for (let date of o.dates) {
+                bundle.push({
+                    "providers": o.provider,
+                    "locations": o.location,
+                    "group": o.group,
+                    "start": `${date.toFormat('yyyy-MM-dd')}T${o.start}:00`,
+                    "end": `${date.toFormat('yyyy-MM-dd')}T${o.end}:00`,
+                })
+            }
+            API.multi({
+                "crud": crud,
+                "resource": Resource.Availability,
+                "bundle": bundle
+            }).then(data => {
+                Calendar.refresh()
+            })
+        }
+
+        const updatePicker = () => {
+            const isMulti = BulkEdit.pickType == "multi"
+            $.getElementById("bulkEditSkip").disabled = isMulti
+            $.getElementById("bulkEditSkip").checked = isMulti ? false : $.getElementById("bulkEditSkip").checked
+            $.getElementByClassName("calTypeRange").style.fontWeight = !isMulti ? "bold" : "normal"
+            $.getElementByClassName("calTypeMulti").style.fontWeight = isMulti ? "bold" : "normal"
+            BulkEdit.setupPicker()
+        }
 
         PopOver.close()
         Swal.fire({
@@ -50,27 +95,7 @@ class BulkEdit {
 
                 const btnEl = "swal2-confirm"
                 const o = BulkEdit.get()
-
-                let bundle = []
-                for (let date = o.startDay; date <= o.endDay; date = date.plus({ days: 1 })) {
-                    if (o.skipWeekend && (date.weekday == 6 || date.weekday == 7))
-                        continue
-                    bundle.push({
-                        "providers": o.provider,
-                        "locations": o.location,
-                        "group": o.group,
-                        "start": `${date.toFormat('yyyy-MM-dd')}T${o.start}:00`,
-                        "end": `${date.toFormat('yyyy-MM-dd')}T${o.end}:00`,
-                    })
-                }
-
-                API.multi({
-                    "crud": CRUD.Create,
-                    "resource": Resource.Availability,
-                    "bundle": bundle
-                }).then(data => {
-                    Calendar.refresh()
-                })
+                sendBundle(CRUD.Create, o)
 
                 savingAnimation(btnEl)
                 setTimeout(Swal.close, 2000)
@@ -83,15 +108,19 @@ class BulkEdit {
                 const btnEl = "swal2-deny"
                 const o = BulkEdit.get()
 
-                API.deleteAvailability({
-                    "providers": o.provider,
-                    "locations": o.location,
-                    "group": o.group,
-                    "start": `${o.startDay.toFormat('yyyy-MM-dd')}T${o.start}:00`,
-                    "end": `${o.endDay.toFormat('yyyy-MM-dd')}T${o.end}:00`,
-                }).then(data => {
-                    Calendar.refresh()
-                })
+                if (BulkEdit.pickType == "range") {
+                    API.deleteAvailability({
+                        "providers": o.provider,
+                        "locations": o.location,
+                        "group": o.group,
+                        "start": `${o.startDay.toFormat('yyyy-MM-dd')}T${o.start}:00`,
+                        "end": `${o.endDay.toFormat('yyyy-MM-dd')}T${o.end}:00`,
+                    }).then(data => {
+                        Calendar.refresh()
+                    })
+                } else {
+                    sendBundle(CRUD.Delete, o)
+                }
 
                 savingAnimation(btnEl)
                 setTimeout(Swal.close, 2000)
@@ -105,15 +134,36 @@ class BulkEdit {
                     $.getElementById("bulkEditProvider").value = RedCap.user.id
             })
         })
+
+        $.getElementByClassName("bulkEditCalType").addEventListener("click", (event) => {
+            const newType = BulkEdit.pickType == "range" ? "multi" : "range"
+            UserConfig.set("bulkPickerType", newType)
+            BulkEdit.pickType = newType
+            updatePicker()
+        })
+
+        updatePicker()
     }
 
-    static init() {
-        BulkEdit.picker = new Litepicker({
+    static setupPicker() {
+        if (BulkEdit.picker)
+            BulkEdit.picker.destroy()
+
+        const settings = {
             element: $.getElementById('litepicker'),
             inlineMode: true,
             singleMode: false,
             firstDay: 0,
-        })
+        }
+        BulkEdit.picker = new Litepicker(
+            Object.assign(settings, BulkEdit.pickType == "range" ? {} : {
+                plugins: ['multiselect']
+            })
+        )
+    }
+
+    static init() {
+        BulkEdit.setupPicker()
         $.getElementById("bulkEditStart").value = defaultStart
         $.getElementById("bulkEditEnd").value = defaultEnd
 
@@ -154,7 +204,8 @@ class BulkEdit {
                 valid = false
             }
         }
-        if (BulkEdit.picker.getStartDate() == null || BulkEdit.picker.getEndDate() == null) {
+        if (((BulkEdit.pickType == "range") && (BulkEdit.picker.getStartDate() == null || BulkEdit.picker.getEndDate() == null)) ||
+            ((BulkEdit.pickType == "multi") && BulkEdit.picker.getMultipleDates().length == 0)) {
             $.getElementsByClassName("litepicker")[0].classList.add("litepicker-invalid")
             valid = false
         }
