@@ -16,9 +16,13 @@ new MutationObserver((mutations) => {
         $.querySelectorAll(`${head} [class*=${className}-], ${foot} [class*=${className}-]`).forEach(el => el.remove())
         let newEl = $.createElement("i")
 
-        // Make sure the toggle icon doesn't get reset
+        // Make sure the toggle icons doesn't get reset
         if (className == "fa-eye" && !Calendar._showAvailability)
             className = "fa-eye-slash"
+        if (className == "fa-lock" && Calendar._fc.getOption("editable")) {
+            className = "fa-unlock"
+            $.querySelectorAll(`${head} .${className}`).forEach(el => el.remove())
+        }
 
         newEl.classList = `fa-solid ${className}`
         newEl.replaceWith(el)

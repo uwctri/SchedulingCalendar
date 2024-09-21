@@ -51,7 +51,7 @@ class Calendar {
     static toolbars = {
         edit: {
             topRight: ["search", "singleMonth,singleWeek,singleDay"],
-            topLeft: ["prev,next", "today", "config", "bulk"],
+            topLeft: ["prev,next", "today", "config", "lock", "bulk"],
             bottomRight: [],
             bottomLeft: [],
         },
@@ -115,6 +115,41 @@ class Calendar {
 
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
+            views: {
+                singleMonth: {
+                    type: "dayGridMonth",
+                    buttonText: RedCap.tt("btn_month"),
+                },
+                singleDay: {
+                    allDaySlot: false,
+                    type: "timeGridDay",
+                    buttonText: RedCap.tt("btn_day"),
+                },
+                singleWeek: {
+                    type: "timeGridWeek",
+                    hiddenDays: hiddenDays,
+                    buttonText: RedCap.tt("btn_week"),
+                    allDaySlot: false
+                },
+                agenda: {
+                    type: "list",
+                    visibleRange: () => {
+                        // half year forward and back
+                        let dt = DateTime.now()
+                        return {
+                            start: dt.minus({ day: 364 / 2 }).toJSDate(),
+                            end: dt.plus({ day: 364 / 2 }).toJSDate()
+                        }
+                    },
+                    listDayFormat: {
+                        month: "long",
+                        year: "numeric",
+                        day: "numeric",
+                        weekday: "long"
+                    },
+                    buttonText: RedCap.tt("btn_agenda")
+                }
+            },
             customButtons: {
                 today: {
                     text: RedCap.tt("btn_today"),
@@ -165,6 +200,17 @@ class Calendar {
                     text: RedCap.tt("btn_bulk"),
                     click: BulkEdit.open
                 },
+                lock: {
+                    icon: "fa-lock",
+                    hint: RedCap.tt("btn_lock"),
+                    click: () => {
+                        const o = Calendar._fc.getOption("editable") ? ["fa-unlock", "fa-lock"] : ["fa-lock", "fa-unlock"]
+                        const newSetting = !Calendar._fc.getOption("editable")
+                        Calendar._fc.setOption("editable", newSetting)
+                        Calendar._fc.setOption("eventResizableFromStart", newSetting)
+                        $.querySelector(".fc-lock-button ." + o[0]).classList.replace(o[0], o[1])
+                    }
+                },
                 availability: {
                     icon: "fa-eye",
                     hint: RedCap.tt("btn_tog"),
@@ -187,8 +233,10 @@ class Calendar {
             },
             initialDate: Page.date,
             slotDuration: `00:${slotSize}:00`,
+            unselectAuto: false,
             navLinks: true,
-            editable: false,
+            editable: false, // Set Dynamically
+            eventResizableFromStart: false, // Set Dynamically
             dayMaxEvents: true,
             initialView: "singleWeek",
             slotMinTime: startTime,
@@ -262,41 +310,14 @@ class Calendar {
             loading: (isLoading) => {
                 Calendar[isLoading ? "showLoading" : "hideLoading"]()
             },
-            unselectAuto: false,
-            views: {
-                singleMonth: {
-                    type: "dayGridMonth",
-                    buttonText: RedCap.tt("btn_month"),
-                },
-                singleDay: {
-                    allDaySlot: false,
-                    type: "timeGridDay",
-                    buttonText: RedCap.tt("btn_day"),
-                },
-                singleWeek: {
-                    type: "timeGridWeek",
-                    hiddenDays: hiddenDays,
-                    buttonText: RedCap.tt("btn_week"),
-                    allDaySlot: false
-                },
-                agenda: {
-                    type: "list",
-                    visibleRange: () => {
-                        // half year forward and back
-                        let dt = DateTime.now()
-                        return {
-                            start: dt.minus({ day: 364 / 2 }).toJSDate(),
-                            end: dt.plus({ day: 364 / 2 }).toJSDate()
-                        }
-                    },
-                    listDayFormat: {
-                        month: "long",
-                        year: "numeric",
-                        day: "numeric",
-                        weekday: "long"
-                    },
-                    buttonText: RedCap.tt("btn_agenda")
-                }
+            eventResize: (info) => {
+                // TODO
+                // When availability is resized we need to modify based on the old 
+                // id to the new date/time. Batch sending the updates to the server
+            },
+            eventDrop: (info) => {
+                // TODO
+                // As above
             },
             eventContent: (info) => {
                 const props = info.event.extendedProps
