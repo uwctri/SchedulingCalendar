@@ -2,6 +2,7 @@ import API from "./api"
 import UserConfig from "./userConfig"
 import SearchBar from "./searchBar"
 import { DateTime } from 'luxon'
+import RedCap from "./redcap"
 
 export const buildGroupDropdown = (el, stillOpenFn) => {
     API.availabilityCodes({
@@ -139,3 +140,10 @@ export const genRowCol = (arr, width) => {
     }
     return t
 }
+
+export const setProviderCurrentUser = (elID) => {
+    API.providers().then(providers => {
+        if (Object.keys(providers).includes(RedCap.user.id))
+            $.getElementById(elID).value = RedCap.user.id
+    })
+} 

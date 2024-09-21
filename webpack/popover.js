@@ -8,7 +8,7 @@ import template_details from "./html/details_popup.html"
 import Calendar from "./calendar"
 import Page from "./page"
 import Summary from "./summary"
-import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown } from "./utils"
+import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
@@ -65,6 +65,8 @@ class PopOver {
         $.addEventListener("click", (e) => {
             if (e.target.id == "PopClose")
                 PopOver.close()
+            if (e.target.id == "aPopMe")
+                setProviderCurrentUser("aPopProvider")
             if (e.target.id !== "aPopAddBtn")
                 return
             if (!PopOver.validate())

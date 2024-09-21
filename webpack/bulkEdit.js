@@ -128,12 +128,7 @@ class BulkEdit {
             }
         })
 
-        $.getElementById("bulkEditMe").addEventListener("click", (event) => {
-            API.providers().then(providers => {
-                if (Object.keys(providers).includes(RedCap.user.id))
-                    $.getElementById("bulkEditProvider").value = RedCap.user.id
-            })
-        })
+        $.getElementById("bulkEditMe").addEventListener("click", () => setProviderCurrentUser("bulkEditProvider"))
 
         $.getElementByClassName("bulkEditCalType").addEventListener("click", (event) => {
             const newType = BulkEdit.pickType == "range" ? "multi" : "range"
