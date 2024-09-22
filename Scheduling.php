@@ -6,7 +6,6 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
-// TODO Finish changes to color menu
 // TODO Should any user be able to select any provider?
 
 // TODO We need to log to the EM specifc logs module

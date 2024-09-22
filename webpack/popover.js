@@ -10,6 +10,8 @@ import Page from "./page"
 import Summary from "./summary"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
+// TODO we should default the provider if there is only 1 available
+
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
 const loadingDots = `<div class="loading-dots"></div>`

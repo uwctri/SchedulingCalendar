@@ -76,7 +76,7 @@ const getSelectedAvailability = (selectionInfo) => {
         locations: [],
         all_availability: false,
         allow_overflow: true
-    }) : Promise.resolve([])
+    }, true) : Promise.resolve([])
 }
 
 export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) => {

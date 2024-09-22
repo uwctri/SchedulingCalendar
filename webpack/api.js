@@ -43,8 +43,9 @@ class API {
         availability: {
             stor: {
                 "hash": {
-                    expire: "",
                     data: [],
+                    expire: null,
+                    promise: null,
                 }
             },
             interval: 5,
@@ -52,8 +53,9 @@ class API {
         appointments: {
             stor: {
                 "hash": {
-                    expire: "",
                     data: [],
+                    expire: null,
+                    promise: null,
                 }
             },
             interval: 5,
@@ -180,7 +182,7 @@ class API {
         return await API.updateCache(promise, cache)
     }
 
-    static async getAvailability(payload) {
+    static async getAvailability(payload, returnPromise = false) {
 
         const data = {
             "crud": CRUD.Read,
@@ -194,13 +196,16 @@ class API {
         let cache = API.cache.availability.stor[hash]
         if (cache && cache.expire > API.timestamp())
             return cache.data
+        if (cache && cache.promise && returnPromise)
+            return cache.promise
 
         const promise = API.post(data)
+        API.cache.availability.stor[hash] = { promise: promise }
         const response = await promise
         API.cache.availability.stor[hash] = {
             data: response,
             expire: API.futureTimestamp(API.cache.availability.interval),
-            promise: null
+            promise: null,
         }
         return response
     }
@@ -231,7 +236,7 @@ class API {
         return await API.post(data)
     }
 
-    static async getAppointments(payload) {
+    static async getAppointments(payload, returnPromise = false) {
 
         const data = {
             "crud": CRUD.Read,
@@ -245,12 +250,16 @@ class API {
         let cache = API.cache.appointments.stor[hash]
         if (cache && cache.expire > API.timestamp())
             return cache.data
+        if (cache && cache.promise && returnPromise)
+            return cache.promise
 
         const promise = API.post(data)
+        API.cache.availability.stor[hash] = { promise: promise }
         const response = await promise
         API.cache.appointments.stor[hash] = {
             data: response,
             expire: API.futureTimestamp(API.cache.appointments.interval),
+            promise: null,
         }
         return response
     }
