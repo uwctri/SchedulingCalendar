@@ -6,8 +6,6 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
-// TODO Should any user be able to select any provider?
-
 // TODO We need to log to the EM specifc logs module
 // TODO visit-extendable is not used
 // TODO visit-location-free is not used
@@ -680,12 +678,47 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteAvailability($payload)
     {
+        if (isset($payload["start"]) && isset($payload["end"]) && isset($payload["id"])) {
+            return $this->deleteSplitAvailability($payload);
+        }
         if (isset($payload["start"]) && isset($payload["end"])) {
             return $this->deleteRangeAvailability($payload);
         }
         if (isset($payload["id"])) {
             return $this->deleteEntry($payload);
         }
+    }
+
+    private function deleteSplitAvailability($payload)
+    {
+        $project_id = $payload["pid"];
+        $start = $payload["start"];
+        $end = $payload["end"];
+        $id = $payload["id"];
+
+        // Grab existing info
+        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE id = ?", [$id]);
+        $row = db_fetch_assoc($sql);
+        $provider = $row["user"];
+        $location = $row["location"];
+        $oldEnd = $row["time_end"];
+        $code = $row["availability_code"];
+
+        // Shrink existing availability, create new one
+        $msg1 = $this->modifyAvailabiltiy($id, null, $start);
+        $msg2 = $this->setAvailability([
+            "pid" => $project_id,
+            "group" => $code,
+            "start" => $end,
+            "end" => $oldEnd,
+            "providers" => $provider,
+            "locations" => $location
+        ]);
+
+        return [
+            "msg" => "Availability split",
+            "success" => true
+        ];
     }
 
     private function deleteRangeAvailability($payload)

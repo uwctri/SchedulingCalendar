@@ -51,15 +51,17 @@ class ContextMenu {
                 const id = o.target.getAttribute('data-internal-id')
                 const timeLabels = $.getElementsByClassName("fc-timegrid-slot-label");
                 const buckets = Array.from(timeLabels).map(el => el.getBoundingClientRect().top)
-                const ycord = o.event.y
-                let time = null
-                for (let i = 0; i < buckets.length; i++) {
-                    if (buckets[i] > ycord) {
-                        time = timeLabels[i].getAttribute('data-time')
-                        break
-                    }
-                }
-                // TODO do the split!
+                const index = buckets.findIndex(el => el > o.event.y)
+                const end = timeLabels[index].getAttribute('data-time')
+                const start = timeLabels[index - 1].getAttribute('data-time')
+                const details = Calendar.getEvent(id)
+                API.deleteAvailability({
+                    id: id,
+                    start: `${details.startStr.split("T")[0]}T${start}`,
+                    end: `${details.endStr.split("T")[0]}T${end}`,
+                }).then((data) => {
+                    Calendar.refresh()
+                })
             },
         }
     ]
