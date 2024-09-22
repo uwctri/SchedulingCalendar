@@ -11,6 +11,7 @@ import Summary from "./summary"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
 // TODO we should default the provider if there is only 1 available
+// TODO We don't update loc/provider dropdowns if the user changes the time manually. Who cares?
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving

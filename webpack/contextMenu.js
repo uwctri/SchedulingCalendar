@@ -32,18 +32,37 @@ const html = RedCap.ttHTML(template)
 const swalDenyColor = "#dc3741"
 class ContextMenu {
 
-    static availabilityMenu = [{
-        label: RedCap.tt("context_del_av"),
-        action(o) {
-            const id = o.target.getAttribute('data-internal-id')
-            o.target.remove()
-            API.deleteAvailability({
-                id: id
-            }).then((data) => {
-                Calendar.refresh()
-            })
+    static availabilityMenu = [
+        {
+            label: RedCap.tt("context_del_av"),
+            action(o) {
+                const id = o.target.getAttribute('data-internal-id')
+                o.target.remove()
+                API.deleteAvailability({
+                    id: id
+                }).then((data) => {
+                    Calendar.refresh()
+                })
+            },
         },
-    }]
+        {
+            label: RedCap.tt("context_split"),
+            action(o) {
+                const id = o.target.getAttribute('data-internal-id')
+                const timeLabels = $.getElementsByClassName("fc-timegrid-slot-label");
+                const buckets = Array.from(timeLabels).map(el => el.getBoundingClientRect().top)
+                const ycord = o.event.y
+                let time = null
+                for (let i = 0; i < buckets.length; i++) {
+                    if (buckets[i] > ycord) {
+                        time = timeLabels[i].getAttribute('data-time')
+                        break
+                    }
+                }
+                // TODO do the split!
+            },
+        }
+    ]
 
     static appointmentMenu = [
         {
@@ -160,7 +179,7 @@ class ContextMenu {
             }
         }
 
-        const attachOption = (target, opt, el) => {
+        const attachOption = (target, opt, el, jsEvent) => {
             const item = $.createElement('li')
             item.className = 'context-menu-item'
             item.innerHTML = `<span>${opt.label}</span>`
@@ -168,6 +187,7 @@ class ContextMenu {
                 e.stopPropagation()
                 if (!opt.subMenu || opt.subMenu.length === 0) {
                     opt.target = el
+                    opt.event = jsEvent
                     opt.action(opt)
                     hideMenu(true)
                 }
@@ -188,7 +208,7 @@ class ContextMenu {
             ContextMenu.closeAll()
             contextMenu.className = 'context-menu'
             contextMenu.innerHTML = ''
-            menuOptions.forEach(opt => attachOption(contextMenu, opt, el))
+            menuOptions.forEach(opt => attachOption(contextMenu, opt, el, jsEvent))
             $.body.appendChild(contextMenu)
 
             const { innerWidth, innerHeight } = window

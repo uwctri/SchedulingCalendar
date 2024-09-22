@@ -18,6 +18,8 @@ import Page from "./page"
 import RedCap from "./redcap"
 
 const autoRefreshTime = 120 // seconds
+
+// TODO add support for 24 hour time (user setting, make default)
 class Calendar {
 
     static _fc = null
