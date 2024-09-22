@@ -53,7 +53,8 @@ class Calendar {
     static toolbars = {
         edit: {
             topRight: ["search", "singleMonth,singleWeek,singleDay"],
-            topLeft: ["prev,next", "today", "config", "lock", "bulk"],
+            //topLeft: ["prev,next", "today", "config", "lock", "bulk"], // TODO re-enable locking
+            topLeft: ["prev,next", "today", "config", "bulk"],
             bottomRight: [],
             bottomLeft: [],
         },
