@@ -166,6 +166,7 @@ class SearchBar {
             SearchBar._choices.setChoiceByValue(Page.id || Page.record)
             Summary.open()
             SearchBar.show()
+            changeEvent()
         }
     }
 
