@@ -27,12 +27,14 @@ class Scheduling extends AbstractExternalModule
             `user` VARCHAR(126) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
             `record` VARCHAR(126) CHARACTER SET utf8 COLLATE utf8_unicode_ci,
             `location` VARCHAR(126) CHARACTER SET utf8 COLLATE utf8_unicode_ci NOT NULL,
-            `time_start` timestamp NOT NULL,
-            `time_end` timestamp NOT NULL,
+            `time_start` timestamp DEFAULT 0, 
+            `time_end` timestamp DEFAULT 0, 
             `notes` TEXT, 
             `metadata` JSON,
             PRIMARY KEY (`id`)
         );");
+        // Note: timestamps must be defaulted as we don't know the value of explicit_defaults_for_timestamp
+        // w/o a DEFAULT or ON UPDATE clause the timestamp will default to CURRENT_TIMESTAMP
     }
 
     /*
