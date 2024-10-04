@@ -10,7 +10,9 @@ const centerClassName = "fc-toolbar-chunk"
 const titleClassName = "fc-toolbar-title"
 const searchID = "search-bar"
 const placeholder = RedCap.tt("search_placeholder")
+const filterText = RedCap.tt("search_filter")
 const choicesSelector = ".choices__inner .choices__list"
+const subtitleClass = "toolbar-subtitle"
 
 class SearchBar {
 
@@ -69,6 +71,7 @@ class SearchBar {
             const el = $.querySelector(`.${centerClassName} input`)
             el.placeholder = text
             el.style.width = `${text.length}ch`
+            updateFilterText()
             Summary.open()
         }
 
@@ -99,8 +102,20 @@ class SearchBar {
             return flatLocs
         }
 
+        const updateFilterText = () => {
+            let picks = SearchBar.getPicked()
+            picks = picks.map(x => x.label)
+            const el = $.getElementByClassName(subtitleClass)
+            el.innerHTML = picks.length > 0 ? `${filterText}: ${picks.join(", ")}` : ""
+        }
+
         let centerEl = $.getElementsByClassName(centerClassName)[1]
         centerEl.id = "topCenterBar" // used by CSS
+
+        // Insert the subtitle
+        let div = document.createElement('div');
+        div.classList.add(subtitleClass);
+        $.getElementByClassName(titleClassName).appendChild(div)
 
         // Build out the select el and insert it
         let searchBarEl = $.createElement("select")
@@ -165,7 +180,12 @@ class SearchBar {
         if (Page.id || Page.record) {
             SearchBar._choices.setChoiceByValue(Page.id || Page.record)
             Summary.open()
-            SearchBar.show()
+            changeEvent()
+        }
+
+        if (Page.type == "edit" && !RedCap.user.isCalendarAdmin) {
+            // If the user is not listed then the search bar just skips it
+            SearchBar._choices.setChoiceByValue(RedCap.user.username)
             changeEvent()
         }
     }
@@ -182,11 +202,7 @@ class SearchBar {
 
     static toggle() {
         if (!SearchBar.ready) return
-        if (SearchBar.isVisible()) {
-            SearchBar.hide()
-        } else {
-            SearchBar.show()
-        }
+        SearchBar.isVisible() ? SearchBar.hide() : SearchBar.show()
     }
 
     static isVisible() {
