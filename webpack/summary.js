@@ -66,7 +66,7 @@ class Summary {
                     dateEl.innerText = dt.toFormat("ccc, d LLL yyyy @ hh:mma")
                     dateEl.setAttribute("data-date", dt.toFormat("yyyy-MM-dd"))
                     nameEl.classList.add("scheduledEvent")
-                } else if (vConfig.range.length == 2) {
+                } else if (vConfig.range.length == 2 && vConfig.range[0] && vConfig.range[1]) {
                     const start = DateTime.fromFormat("yyyy-MM-dd", vConfig.range[0].split(" ")[0])
                     const end = DateTime.fromFormat("yyyy-MM-dd", vConfig.range[1].split(" ")[0])
                     dateEl.setAttribute("data-date", start.toFormat("yyyy-MM-dd"))
