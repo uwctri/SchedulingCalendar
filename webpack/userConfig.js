@@ -9,6 +9,7 @@ const defaultSlotSize = "30"
 const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
 const defaultLimitAvailability = true
+const defaultFilterToSelf = true
 const defaultLineHeight = "1.5"
 const defaultBulkPickerType = "range"
 
@@ -20,6 +21,7 @@ class UserConfig {
     static get() {
         const expandRows = localStorage.getItem("expandRows")
         const limitAvailability = localStorage.getItem("limitAvailability")
+        const filterToSelf = localStorage.getItem("filterToSelf")
         let hiddenDays = localStorage.getItem("configDays")
         hiddenDays = hiddenDays ? hiddenDays.split(',').filter(x => x).map(x => parseInt(x)) : defaultHiddenDays
         const showAllDays = localStorage.getItem("showAllDays") == "true"
@@ -30,8 +32,9 @@ class UserConfig {
             hiddenDays: hiddenDays || defaultHiddenDays,
             slotSize: localStorage.getItem("slotSize") || defaultSlotSize,
             expandRows: typeof expandRows === "string" ? expandRows === "true" : defaultExpandRows,
-            lineHeight: localStorage.getItem("lineHeight") || defaultLineHeight,
             limitAvailability: typeof limitAvailability === "string" ? limitAvailability === "true" : defaultLimitAvailability,
+            filterToSelf: typeof filterToSelf === "string" ? filterToSelf === "true" : defaultFilterToSelf,
+            lineHeight: localStorage.getItem("lineHeight") || defaultLineHeight,
             bulkPickerType: localStorage.getItem("bulkPickerType") || defaultBulkPickerType
         }
     }
@@ -54,13 +57,14 @@ class UserConfig {
 
     static open() {
 
-        const { start, end, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability } = UserConfig.get()
+        const { start, end, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability, filterToSelf } = UserConfig.get()
         UserConfig.init()
 
         // Modify the html with current values
         const newHtml = html.replace("START-TIME", start).replace("END-TIME", end).
             replace("SLOT-SIZE", slotSize).replace("CHECKED-EXPAND", expandRows ? "checked" : "").
             replace("CHECKED-LIMIT", limitAvailability ? "checked" : "").
+            replace("CHECKED-FILTER", filterToSelf ? "checked" : "").
             replace("LINE-HEIGHT", lineHeight)
 
         PopOver.close()
@@ -84,6 +88,7 @@ class UserConfig {
             localStorage.setItem("expandRows", $.getElementById("expandRows").checked)
             localStorage.setItem("lineHeight", $.getElementById("lineHeight").value)
             localStorage.setItem("limitAvailability", $.getElementById("limitAvailability").checked)
+            localStorage.setItem("filterToSelf", $.getElementById("filterToSelf").checked)
             const els = $.getElementsByClassName("configWeek")
             let saveDays = []
             Array.from(els).forEach((el, index) => {

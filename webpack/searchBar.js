@@ -21,6 +21,8 @@ class SearchBar {
 
     static async init() {
 
+        const userConfig = UserConfig.get()
+
         const filterLocations = (locations) => {
             return Object.values(locations).filter(loc => loc.customProperties.active)
         }
@@ -31,7 +33,7 @@ class SearchBar {
 
         const filterProviders = (providers) => {
             providers = formatCustomProps(providers)
-            const allProviders = !UserConfig.get().limitAvailability && (Page.type == 'edit')
+            const allProviders = !userConfig.limitAvailability && (Page.type == 'edit')
             providers = providers.filter((provider) => provider.customProperties.is_local || allProviders)
             return providers
         }
@@ -183,7 +185,7 @@ class SearchBar {
             changeEvent()
         }
 
-        if (Page.type == "edit" && !RedCap.user.isCalendarAdmin) {
+        if ((Page.type == "my") || (Page.type == "edit" && userConfig.filterToSelf)) {
             // If the user is not listed then the search bar just skips it
             SearchBar._choices.setChoiceByValue(RedCap.user.username)
             changeEvent()
