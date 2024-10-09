@@ -305,8 +305,8 @@ class Scheduling extends AbstractExternalModule
                     $subjects[$record_id]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
                 }
                 if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
-                    $rangeStart = $allData[$record_id][$vSet["link"]][$vSet["rangeStart"]];
-                    $rangeEnd = $allData[$record_id][$vSet["link"]][$vSet["rangeEnd"]];
+                    $rangeStart = $allData[$record_id][$vSet["link"]][$visitSettings["rangeStart"]];
+                    $rangeEnd = $allData[$record_id][$vSet["link"]][$visitSettings["rangeEnd"]];
                     $subjects[$record_id]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
                 }
             }
