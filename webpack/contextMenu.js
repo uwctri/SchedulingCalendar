@@ -34,6 +34,7 @@ class ContextMenu {
 
     static availabilityMenu = [
         {
+            restricted: true, // Only show if user owns the availability or admin
             label: RedCap.tt("context_del_av"),
             action(o) {
                 const id = o.target.getAttribute('data-internal-id')
@@ -182,9 +183,12 @@ class ContextMenu {
         }
 
         const attachOption = (target, opt, el, jsEvent) => {
+            const details = Calendar.getEvent(el.getAttribute("data-internal-id"))
+            const disable = opt.restricted && !RedCap.user.isCalendarAdmin && (RedCap.user.username != details.extendedProps.user)
             const item = $.createElement('li')
-            item.className = 'context-menu-item'
+            item.className = 'context-menu-item ' + (disable ? 'disabled' : '')
             item.innerHTML = `<span>${opt.label}</span>`
+
             item.addEventListener('click', e => {
                 e.stopPropagation()
                 if (!opt.subMenu || opt.subMenu.length === 0) {
