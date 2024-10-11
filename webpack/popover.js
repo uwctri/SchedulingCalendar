@@ -13,6 +13,9 @@ import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, build
 // TODO we should default the provider if there is only 1 available
 // TODO We don't update loc/provider dropdowns if the user changes the time manually. Who cares?
 
+// TODO Normal users can't delete availability that they don't own, but they can cancel appts and create availability currently.
+// We should (probably) prevent them from creating availability in the future for anyone but themselves. This implies some visual changes
+
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
 const loadingDots = `<div class="loading-dots"></div>`
@@ -66,11 +69,12 @@ class PopOver {
     static setup() {
         if (PopOver._setup) return
         $.addEventListener("click", (e) => {
-            if (e.target.id == "PopClose")
+            const target = e.target.tagName == "I" ? e.target.parentElement : e.target
+            if (target.id == "PopClose")
                 PopOver.close()
-            if (e.target.id == "aPopMe")
+            if (target.id == "aPopMe")
                 setProviderCurrentUser("aPopProvider")
-            if (e.target.id !== "aPopAddBtn")
+            if (target.id !== "aPopAddBtn")
                 return
             if (!PopOver.validate())
                 return

@@ -143,7 +143,7 @@ export const genRowCol = (arr, width) => {
 
 export const setProviderCurrentUser = (elID) => {
     API.providers().then(providers => {
-        if (Object.keys(providers).includes(RedCap.user.id))
-            $.getElementById(elID).value = RedCap.user.id
+        if (Object.keys(providers).includes(RedCap.user.username))
+            $.getElementById(elID).value = RedCap.user.username
     })
 } 
