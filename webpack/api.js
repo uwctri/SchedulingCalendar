@@ -236,6 +236,19 @@ class API {
         return await API.post(data)
     }
 
+    static async updateAvailability(payload) {
+
+        const data = {
+            "crud": CRUD.Update,
+            "resource": Resource.Availability,
+            ...payload
+        }
+
+        API.requiredKeys(data, ["id", "start", "end"])
+        API.expireAvailabilityCache()
+        return await API.post(data)
+    }
+
     static async getAppointments(payload, returnPromise = false) {
 
         const data = {

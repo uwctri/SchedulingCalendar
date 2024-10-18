@@ -84,7 +84,7 @@ class Scheduling extends AbstractExternalModule
             "availability" => [
                 "create" => "setAvailability",
                 "read" => "getAvailability",
-                "update" => "", # Use create for updates
+                "update" => "modifyAvailability",
                 "delete" => "deleteAvailability",
             ],
             "appointment" => [
@@ -343,7 +343,7 @@ class Scheduling extends AbstractExternalModule
 
     private function getGlobalSubjects($provider)
     {
-        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?' AND record IS NOT NULL", $provider);
+        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?' AND record IS NOT NULL", [$provider]);
 
         $data = [];
         while ($row = db_fetch_assoc($sql)) {
@@ -629,17 +629,17 @@ class Scheduling extends AbstractExternalModule
             if (($apptStart <= $start) && ($end > $apptEnd) && ($start <= $apptEnd)) {
                 // Extend the end of the existing appointment
                 $resolved = true;
-                $this->modifyAvailabiltiy($id, null, $end);
+                $this->modifyAvailability($id, null, $end);
             }
             if (($start < $apptStart) && ($apptEnd >= $end) && ($end >= $apptStart)) {
                 // Extend the start of the existing appointment (to earlier in the day)
                 $resolved = true;
-                $this->modifyAvailabiltiy($id, $start, null);
+                $this->modifyAvailability($id, $start, null);
             }
             if (($start < $apptStart) && ($end > $apptEnd)) {
                 // Extend the start and end of the existing appointment
                 $resolved = true;
-                $this->modifyAvailabiltiy($id, $start, $end);
+                $this->modifyAvailability($id, $start, $end);
             }
         }
 
@@ -658,8 +658,14 @@ class Scheduling extends AbstractExternalModule
         return false;
     }
 
-    private function modifyAvailabiltiy($id, $newStart = null, $newEnd = null)
+    private function modifyAvailability($id_or_payload, $newStart = null, $newEnd = null)
     {
+        $id = $id_or_payload;
+        if (is_array($id_or_payload)) {
+            $id = $id_or_payload["id"];
+            $newStart = $id_or_payload["start"];
+            $newEnd = $id_or_payload["end"];
+        }
         $query = $this->createQuery();
         $query->add("UPDATE em_scheduling_calendar SET");
         $conditions = [];
@@ -707,7 +713,7 @@ class Scheduling extends AbstractExternalModule
         $code = $row["availability_code"];
 
         // Shrink existing availability, create new one
-        $msg1 = $this->modifyAvailabiltiy($id, null, $start);
+        $msg1 = $this->modifyAvailability($id, null, $start);
         $msg2 = $this->setAvailability([
             "pid" => $project_id,
             "group" => $code,
@@ -902,10 +908,10 @@ class Scheduling extends AbstractExternalModule
             // Modify the availability
             $newStart = ($exStart == $start) ? $end : $exStart;
             $newEnd = ($exEnd == $end) ? $start : $exEnd;
-            $this->modifyAvailabiltiy($id, $newStart, $newEnd);
+            $this->modifyAvailability($id, $newStart, $newEnd);
         } else {
             // In the middle, modify and create new availability
-            $this->modifyAvailabiltiy($id, $exStart, $start);
+            $this->modifyAvailability($id, $exStart, $start);
             $this->setAvailability([
                 "pid" => $project_id,
                 "start" => $end,

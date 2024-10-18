@@ -53,8 +53,7 @@ class Calendar {
     static toolbars = {
         edit: {
             topRight: ["search", "singleMonth,singleWeek,singleDay"],
-            //topLeft: ["prev,next", "today", "config", "lock", "bulk"], // TODO re-enable locking
-            topLeft: ["prev,next", "today", "config", "bulk"],
+            topLeft: ["prev,next", "today", "config", "lock", "bulk"],
             bottomRight: [],
             bottomLeft: [],
         },
@@ -90,7 +89,7 @@ class Calendar {
         $.getElementById("loader").classList.add("d-none")
     }
 
-    static isLoadingVisible() {
+    static isLoading() {
         return !$.getElementById("loader").classList.contains("d-none")
     }
 
@@ -207,8 +206,8 @@ class Calendar {
                     icon: "fa-lock",
                     hint: RedCap.tt("btn_lock"),
                     click: () => {
-                        const o = Calendar._fc.getOption("editable") ? ["fa-unlock", "fa-lock"] : ["fa-lock", "fa-unlock"]
                         const newSetting = !Calendar._fc.getOption("editable")
+                        const o = !newSetting ? ["fa-unlock", "fa-lock"] : ["fa-lock", "fa-unlock"]
                         Calendar._fc.setOption("editable", newSetting)
                         Calendar._fc.setOption("eventResizableFromStart", newSetting)
                         $.querySelector(".fc-lock-button ." + o[0]).classList.replace(o[0], o[1])
@@ -314,13 +313,22 @@ class Calendar {
                 Calendar[isLoading ? "showLoading" : "hideLoading"]()
             },
             eventResize: (info) => {
-                // TODO
-                // When availability is resized we need to modify based on the old 
-                // id to the new date/time. Batch sending the updates to the server
+                API.updateAvailability({
+                    id: info.el.getAttribute("data-internal-id"),
+                    start: DateTime.fromJSDate(info.event.start).toFormat("yyyy-MM-dd HH:mm:ss"),
+                    end: DateTime.fromJSDate(info.event.end).toFormat("yyyy-MM-dd HH:mm:ss")
+                }).then((data) => {
+                    Calendar.refresh()
+                })
             },
             eventDrop: (info) => {
-                // TODO
-                // As above
+                API.updateAvailability({
+                    id: info.el.getAttribute("data-internal-id"),
+                    start: DateTime.fromJSDate(info.event.start).toFormat("yyyy-MM-dd HH:mm:ss"),
+                    end: DateTime.fromJSDate(info.event.end).toFormat("yyyy-MM-dd HH:mm:ss")
+                }).then((data) => {
+                    Calendar.refresh()
+                })
             },
             eventContent: (info) => {
                 const props = info.event.extendedProps
