@@ -65,6 +65,9 @@ export const buildProviderDropdown = (el, stillOpenFn, selectionInfo = null) => 
             option.text = providersData[k].label
             select.add(option)
         }
+        // If only 1 provider (and the blank) exists then select it
+        if (select.options.length == 2)
+            select.value = select.options[1].value
     })
 }
 

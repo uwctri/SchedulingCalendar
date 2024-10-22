@@ -10,9 +10,7 @@ import Page from "./page"
 import Summary from "./summary"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
-// TODO we should default the provider if there is only 1 available
 // TODO We don't update loc/provider dropdowns if the user changes the time manually. Who cares?
-
 // TODO Normal users can't delete availability that they don't own, but they can cancel appts and create availability currently.
 // We should (probably) prevent them from creating availability in the future for anyone but themselves. This implies some visual changes
 
