@@ -6,7 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
-// TODO We need to log to the EM specifc logs module
+// TODO Imrprove logging
 // TODO visit-extendable is not used
 // TODO visit-location-free is not used
 // TODO right now we can set Availability for time X on provider P when P has an appt at X. Should we prevent?
@@ -569,6 +569,18 @@ class Scheduling extends AbstractExternalModule
                 [$project_id, $code, $provider, $location, $start, $end]
             );
         }
+
+        $this->log(
+            "Availability added for proivder" . ($mergeOccured ? " (merged with existing availability)" : ""),
+            [
+                "provider" => $provider,
+                "location" => $location,
+                "start" => $start,
+                "end" => $end,
+                "code" => $code
+            ]
+        );
+
         return [
             "msg" => $msg,
             "success" => true
@@ -678,6 +690,16 @@ class Scheduling extends AbstractExternalModule
         $query->add("WHERE id = ?", [$id]);
         $query->execute();
         $msg = "Availabiltiy $id updated to range $newStart to $newEnd";
+
+        $this->log(
+            "Modifed Availability",
+            [
+                "start" => $newStart,
+                "end" => $newEnd,
+                "id" => $id
+            ]
+        );
+
         return [
             "msg" => $msg,
             "success" => true
@@ -693,7 +715,13 @@ class Scheduling extends AbstractExternalModule
             return $this->deleteRangeAvailability($payload);
         }
         if (isset($payload["id"])) {
-            return $this->deleteEntry($payload);
+            // Can't log in delete entry as we won't even know if its Avail/Appt
+            $result = $this->deleteEntry($payload);
+            $this->log(
+                "Deleted Availabiltiy Entry",
+                $result["data"]
+            );
+            return $result;
         }
     }
 
@@ -722,6 +750,14 @@ class Scheduling extends AbstractExternalModule
             "providers" => $provider,
             "locations" => $location
         ]);
+
+        $this->log(
+            "Split Availability",
+            [
+                "split" => $start,
+                "id" => $id
+            ]
+        );
 
         return [
             "msg" => "Availability split",
@@ -768,6 +804,17 @@ class Scheduling extends AbstractExternalModule
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
+        $this->log(
+            "Deleted Availability Range",
+            [
+                "start" => $start,
+                "end" => $end,
+                "providers" => $providers,
+                "locations" => $locations,
+                "codes" => $codes
+            ]
+        );
+
         return [
             "msg" => "Range delete ran with no issues",
             "success" => true
@@ -785,11 +832,13 @@ class Scheduling extends AbstractExternalModule
                 "success" => false
             ];
         }
+        $sql = $this->query("SELECT * FROm em_scheduling_calendar WHERE id = ?", [$id]);
+        $row = db_fetch_assoc($sql);
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
-        // TODO for delete we should return all the data that was deleted
         return [
             "msg" => "Entry $id was deleted",
-            "success" => true
+            "success" => true,
+            "data" => $row
         ];
     }
 
@@ -961,6 +1010,19 @@ class Scheduling extends AbstractExternalModule
             [$project_id, $visit, $provider, $record, $location, $start, $end, $notes, $meta]
         );
 
+        $this->log(
+            "Appointment Schedled",
+            [
+                "provider" => $provider,
+                "location" => $location,
+                "start" => $start,
+                "end" => $end,
+                "record" => $record,
+                "visit" => $visit,
+                "notes" => $notes
+            ]
+        );
+
         return [
             "msg" => "Appointment scheduled",
             "success" => true,
@@ -1005,6 +1067,15 @@ class Scheduling extends AbstractExternalModule
             [$provider, $location, $id]
         );
 
+        $this->log(
+            "Appointment Modifed",
+            [
+                "provider" => $provider,
+                "location" => $location,
+                "id" => $id,
+            ]
+        );
+
         return [
             "msg" => "Appointment provider and/or location updated",
             "success" => true
@@ -1036,7 +1107,14 @@ class Scheduling extends AbstractExternalModule
             if (!empty($write) && $vSet["link"])
                 REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]], "overwrite");
 
-            return $this->deleteEntry($id);
+            $result = $this->deleteEntry($id);
+
+            $this->log(
+                "Deleted Appointment Entry",
+                $result["data"]
+            );
+
+            return $result;
         }
     }
 
@@ -1076,6 +1154,15 @@ class Scheduling extends AbstractExternalModule
         $query->add("AND")->addInClause("record", $subjects);
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
+
+        $this->log(
+            "Deleted Appointment Range",
+            [
+                "start" => $start,
+                "end" => $end,
+                "subjects" => $subjects
+            ]
+        );
 
         return [
             "msg" => "Deleted range of appointments",
