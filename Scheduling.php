@@ -573,6 +573,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Availability added for proivder" . ($mergeOccured ? " (merged with existing availability)" : ""),
             [
+                "agent" => $this->getUser()->getUsername(),
                 "provider" => $provider,
                 "location" => $location,
                 "start" => $start,
@@ -694,6 +695,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Modifed Availability",
             [
+                "agent" => $this->getUser()->getUsername(),
                 "start" => $newStart,
                 "end" => $newEnd,
                 "id" => $id
@@ -719,7 +721,10 @@ class Scheduling extends AbstractExternalModule
             $result = $this->deleteEntry($payload);
             $this->log(
                 "Deleted Availabiltiy Entry",
-                $result["data"]
+                [
+                    "agent" => $this->getUser()->getUsername(),
+                    ...$result["data"]
+                ]
             );
             return $result;
         }
@@ -754,6 +759,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Split Availability",
             [
+                "agent" => $this->getUser()->getUsername(),
                 "split" => $start,
                 "id" => $id
             ]
@@ -807,6 +813,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Deleted Availability Range",
             [
+                "agent" => $this->getUser()->getUsername(),
                 "start" => $start,
                 "end" => $end,
                 "providers" => $providers,
@@ -1013,6 +1020,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Appointment Schedled",
             [
+                "agent" => $this->getUser()->getUsername(),
                 "provider" => $provider,
                 "location" => $location,
                 "start" => $start,
@@ -1070,6 +1078,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Appointment Modifed",
             [
+                "agent" => $this->getUser()->getUsername(),
                 "provider" => $provider,
                 "location" => $location,
                 "id" => $id,
@@ -1111,7 +1120,10 @@ class Scheduling extends AbstractExternalModule
 
             $this->log(
                 "Deleted Appointment Entry",
-                $result["data"]
+                [
+                    "agent" => $this->getUser()->getUsername(),
+                    ...$result["data"]
+                ]
             );
 
             return $result;
@@ -1158,6 +1170,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Deleted Appointment Range",
             [
+                "agent" => $this->getUser()->getUsername(),
                 "start" => $start,
                 "end" => $end,
                 "subjects" => $subjects
