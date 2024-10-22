@@ -2,8 +2,23 @@ import { CRUD, Resource } from "./enums"
 import Calendar from "./calendar"
 import RedCap from "./redcap"
 import { DateTime } from "luxon"
+import Swal from 'sweetalert2'
 
 const req_msg = "Missing required keys in payload object for API call"
+const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    iconColor: 'white',
+    customClass: {
+        popup: 'colored-toast',
+    },
+    showConfirmButton: false,
+    timer: 500 * 1000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+        toast.addEventListener('click', () => Swal.close())
+    }
+})
 class API {
 
     static _time_fields = ["start", "end"]
@@ -378,13 +393,11 @@ class API {
             }
         }
         format(data)
-        if ("bundle" in data) {
-            for (const obj of data["bundle"]) {
+        if ("bundle" in data)
+            for (const obj of data["bundle"])
                 format(obj)
-            }
-        }
 
-        console.log(data)
+        console.log("SENDING", data)
         Calendar.showLoading()
         await fetch(RedCap.router, {
             method: 'POST',
@@ -392,13 +405,21 @@ class API {
         }).then((response) => {
             return response.ok ? response.json() : Promise.reject(response)
         }).then((data) => {
-            // TODO when we return false trying to set an appointment/availability we should 
-            // do something w/ the data
+            const success = data.success ?? true
             result = data
             Calendar.hideLoading()
-            console.log(data)
+            console[success ? 'log' : 'warn'](data)
+            if (success) return
+            Toast.fire({
+                icon: 'warning',
+                title: 'Unable to perfrom action',
+            })
         }).catch((error) => {
-            console.warn('Something went wrong in API.js', error, data)
+            Toast.fire({
+                icon: 'error',
+                title: 'Fatal Server Error',
+            })
+            console.error('Something went wrong in API.js', error, data)
         })
 
         return result
