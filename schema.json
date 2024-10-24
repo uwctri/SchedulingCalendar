@@ -1,0 +1,101 @@
+{
+    "availabilitycode": {
+        "read": [
+            [
+                "all_availability"
+            ]
+        ]
+    },
+    "availability": {
+        "read": [
+            [
+                "start",
+                "end",
+                "providers",
+                "locations",
+                "all_availability"
+            ]
+        ],
+        "create": [
+            [
+                "start",
+                "end",
+                "providers",
+                "locations",
+                "group"
+            ]
+        ],
+        "update": [
+            [
+                "id",
+                "start",
+                "end"
+            ]
+        ],
+        "delete": [
+            [
+                "start",
+                "end",
+                "providers",
+                "locations",
+                "group"
+            ],
+            [
+                "id"
+            ],
+            [
+                "id",
+                "start",
+                "end"
+            ]
+        ]
+    },
+    "appointment": {
+        "create": [
+            [
+                "start",
+                "end",
+                "providers",
+                "locations",
+                "subjects",
+                "visits",
+                "notes"
+            ]
+        ],
+        "read": [
+            [
+                "start",
+                "end",
+                "providers",
+                "locations",
+                "subjects",
+                "visits",
+                "all_appointments"
+            ]
+        ],
+        "update": [
+            [
+                "id",
+                "providers",
+                "locations"
+            ]
+        ],
+        "delete": [
+            [
+                "start",
+                "end",
+                "subjects"
+            ],
+            [
+                "id"
+            ]
+        ]
+    },
+    "metadata": {
+        "update": [
+            [
+                "metadata"
+            ]
+        ]
+    }
+}

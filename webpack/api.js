@@ -3,6 +3,7 @@ import Calendar from "./calendar"
 import RedCap from "./redcap"
 import { DateTime } from "luxon"
 import Swal from 'sweetalert2'
+import schema from "../schema.json";
 
 const req_msg = "Missing required keys in payload object for API call"
 const Toast = Swal.mixin({
@@ -87,12 +88,11 @@ class API {
     static futureTimestamp(minutes) { return DateTime.now().plus({ "minutes": minutes }).toISO() }
     static expireAvailabilityCache() { API.cache.availability.stor = {} }
     static expireAppointmentsCache() { API.cache.appointments.stor = {} }
-    static requiredKeys(obj, keys) {
-        let keyOptions = Array.isArray(keys[0]) ? keys : [keys]
-        for (const keySet of keyOptions) {
+    static requiredKeys(obj) {
+        let keyOptions = schema[obj.resource][obj.crud]
+        for (const keySet of keyOptions)
             if (keySet.every(key => key in obj))
                 return true
-        }
         throw Error(req_msg)
     }
 
@@ -113,7 +113,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["all_availability"])
+        API.requiredKeys(data)
 
         // Throttle, return cache, or store to cache
         const cache = API.cache.availabilityCodes
@@ -205,7 +205,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "all_availability"])
+        API.requiredKeys(data)
 
         const hash = JSON.stringify(payload)
         let cache = API.cache.availability.stor[hash]
@@ -233,7 +233,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "group"])
+        API.requiredKeys(data)
         API.expireAvailabilityCache()
         return await API.post(data)
     }
@@ -246,7 +246,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, [["start", "end", "providers", "locations", "group"], ["id"], ["id", "start", "end"]])
+        API.requiredKeys(data)
         API.expireAvailabilityCache()
         return await API.post(data)
     }
@@ -259,7 +259,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["id", "start", "end"])
+        API.requiredKeys(data)
         API.expireAvailabilityCache()
         return await API.post(data)
     }
@@ -272,7 +272,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits", "all_appointments"])
+        API.requiredKeys(data)
 
         const hash = JSON.stringify(payload)
         let cache = API.cache.appointments.stor[hash]
@@ -300,7 +300,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["start", "end", "providers", "locations", "subjects", "visits", "notes"])
+        API.requiredKeys(data)
         API.expireAppointmentsCache()
         return await API.post(data)
     }
@@ -313,7 +313,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["id", "providers", "locations"])
+        API.requiredKeys(data)
         return await API.post(data)
     }
 
@@ -325,7 +325,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, [["start", "end", "subjects"], ["id"]])
+        API.requiredKeys(data)
         API.expireAppointmentsCache()
         return await API.post(data)
     }
@@ -333,8 +333,7 @@ class API {
     static async metadata(payload) {
         const data = {
             "crud": CRUD.Read,
-            "resource": Resource.Metadata,
-            ...payload
+            "resource": Resource.Metadata
         }
 
         // Throttle, return cache, or store to cache
@@ -354,7 +353,7 @@ class API {
             ...payload
         }
 
-        API.requiredKeys(data, ["metadata"])
+        API.requiredKeys(data)
         return await API.post(data)
     }
 
@@ -432,11 +431,13 @@ class API {
         const phpArray = (obj, outerKey, depth) => {
             for (let [key, value] of Object.entries(obj)) {
                 key = depth > 0 ? `[${key}]` : key
-                if (typeof value == "object") {
+                if (Array.isArray(value) && value.length === 0) {
+                    form.append(`${outerKey}${key}`, '[]') // Use a placeholder for empty arrays
+                } else if (typeof value == "object") {
                     phpArray(value, `${outerKey}${key}`, depth + 1)
-                    continue
+                } else {
+                    form.append(`${outerKey}${key}`, value)
                 }
-                form.append(`${outerKey}${key}`, value)
             }
         }
 

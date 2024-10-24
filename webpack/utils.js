@@ -108,6 +108,7 @@ export const buildSubjectDropdown = (el, stillOpenFn) => {
             if (subjectData[k].is_withdrawn)
                 continue
             let option = $.createElement("option")
+            console.log(subjectData[k])
             option.value = subjectData[k].value
             option.text = subjectData[k].label
             select.add(option)

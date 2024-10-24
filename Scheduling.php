@@ -6,7 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
-// TODO Imrprove logging
+// TODO Improve logging
 // TODO visit-extendable is not used
 // TODO visit-location-free is not used
 // TODO right now we can set Availability for time X on provider P when P has an appt at X. Should we prevent?
@@ -14,6 +14,8 @@ use RestUtility;
 
 class Scheduling extends AbstractExternalModule
 {
+    private $schema; // API Schema
+
     /*
     Create the core scheduling and availability table on module enable
     */
@@ -55,6 +57,15 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
+    Cache the API schema from JSON when obj is created
+    */
+    function __construct()
+    {
+        parent::__construct();
+        $this->schema = json_decode(file_get_contents($this->getUrl("schema.json")), true);
+    }
+
+    /*
     Process a post request from router
     */
     public function process()
@@ -63,8 +74,13 @@ class Scheduling extends AbstractExternalModule
         $payload = $request->getRequestVars();
         $project_id = $payload["projectid"] ?? $_GET["pid"];
         $payload["pid"] = $project_id;
-        $err_msg = "Not supported";
+        $err_msg = "Not supported. Invalid resource or CRUD operation.";
         $result = null;
+
+        // Replace placeholders for empty arrays
+        $payload = array_map(function ($x) {
+            return $x == "[]" ? [] : $x;
+        }, $payload);
 
         // Check if its the non-CRUD utility function
         if (!empty($payload["utility"]) && $payload["utility"] == "ics") {
@@ -73,6 +89,15 @@ class Scheduling extends AbstractExternalModule
                 "success" => true
             ];
             return json_encode($result);
+        }
+
+        // Check Schema if any
+        $schema = $this->schema[$payload["resource"]][$payload["crud"]];
+        if ($schema) {
+            $schemaError = true;
+            foreach ($schema as $schemOption)
+                if (count(array_intersect_key(array_flip($schemOption), $payload)) === count($schemOption))
+                    $schemaError = false; // All required keys are present
         }
 
         // CRUD functions
@@ -116,7 +141,9 @@ class Scheduling extends AbstractExternalModule
             ],
         ][$payload["resource"]][$payload["crud"]];
 
-        if ($payload["bundle"] && !empty($task)) {
+        if ($schemaError) {
+            $err_msg = "Missing parameters for operation";
+        } elseif ($payload["bundle"] && !empty($task)) {
             $result = [];
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
@@ -133,7 +160,13 @@ class Scheduling extends AbstractExternalModule
         if ($this->getProjectSetting('fire-det') && in_array($payload["crud"], ["create", "update", "delete"])) {
             $this->fireDataEntryTrigger($payload);
         }
-        return json_encode($result);
+
+        // Return the error or result
+        return $err_msg ? json_encode([
+            "success" => false,
+            "msg" => $err_msg,
+            "payload" => $payload
+        ]) : json_encode($result);
     }
 
     /*
@@ -205,7 +238,7 @@ class Scheduling extends AbstractExternalModule
         $providers = [];
         foreach ($unformatted as $username) {
             if (array_key_exists($username, $allUsers)) {
-                $name = $allUsers[$username] ?? "";
+                $name = $allUsers[$username];
                 $providers[$username] = [
                     "value" => $username,
                     "label" => $name ?? $username,
@@ -274,7 +307,7 @@ class Scheduling extends AbstractExternalModule
             $withdraw = boolval($recordData[$withdrawField]);
             $subjects[$record_id] = [
                 "value" => $record_id,
-                "label" => $name ?? $record_id,
+                "label" => $name ?: "$record_id",
                 "location" => $loc,
                 "name" => $name,
                 "record_id" => $record_id,
@@ -357,7 +390,7 @@ class Scheduling extends AbstractExternalModule
                 $name = $record_data[$nameField];
                 $subjects["$pid:$record_id"] = [
                     "value" => $record_id,
-                    "label" => $name ?? $record_id,
+                    "label" => $name ?: "$record_id",
                     "location" => $loc,
                     "name" => $name,
                     "record_id" => $record_id,
@@ -548,13 +581,6 @@ class Scheduling extends AbstractExternalModule
         $provider = $payload["providers"];
         $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
-
-        if (empty($code) || empty($start) || empty($end) || empty($provider) || empty($location)) {
-            return [
-                "msg" => "Unable to set Availability, missing required info",
-                "success" => false
-            ];
-        }
 
         $msg = "Modified existing availability";
         $mergeOccured = $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, null, [
@@ -779,19 +805,6 @@ class Scheduling extends AbstractExternalModule
         $providers = $payload["providers"]; // Could be * for all
         $locations = $payload["locations"]; // Could be * for all
 
-        if (empty($start) || empty($end)) {
-            return [
-                "msg" => "No start or end time provided",
-                "success" => false
-            ];
-        }
-        if (empty($providers)) {
-            return [
-                "msg" => "No providers provided",
-                "success" => false
-            ];
-        }
-
         $query = $this->createQuery();
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NULL");
 
@@ -935,13 +948,6 @@ class Scheduling extends AbstractExternalModule
         $notes = $payload["notes"];
         $notes = empty($notes) ? null : $notes; // If empty note then store null, not empty string
 
-        if (empty($project_id) || empty($visit) || empty($start) || empty($end) || empty($provider) || empty($location) || empty($record)) {
-            return [
-                "msg" => "Unable to add Appointment, missing required info",
-                "success" => false
-            ];
-        }
-
         // Search for availability that overflows the start/end
         $payload["allow_overflow"] = true;
         $existing = $this->getAvailability($payload);
@@ -1043,13 +1049,6 @@ class Scheduling extends AbstractExternalModule
         $project_id = $payload["pid"];
         $provider = $payload["providers"];
         $location = $payload["locations"];
-
-        if (empty($id) || empty($provider) || empty($location)) {
-            return [
-                "msg" => "Unable to modify appontment, missing required fields",
-                "success" => false
-            ];
-        }
 
         // Grab needed info
         $sql = $this->query("SELECT visit, user, record, location FROM em_scheduling_calendar WHERE id = ? ", [$id]);
