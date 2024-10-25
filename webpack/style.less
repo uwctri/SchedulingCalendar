@@ -246,6 +246,7 @@
     width: 20.33em; // Arbitrary width that looks good
 }
 
+/* Popover with no input */
 .detailsPopOver {
 
     .fa-solid {
@@ -265,6 +266,7 @@
 
 }
 
+/* Popovers with inputs */
 .appointmentPopOver,
 .availabilityPopOver {
 
@@ -314,11 +316,13 @@
     }
 }
 
+/* Close button for all popovers */
 #PopClose {
     line-height: 0.6em;
     cursor: pointer;
 }
 
+/* Invalid marker for inputs on all modals */
 .is-invalid-noicon {
     border-color: var(--bs-form-invalid-border-color);
 
@@ -328,6 +332,7 @@
     }
 }
 
+/* Loaders / Spinners */
 .loading-dots {
     position: relative;
     width: 10px;
@@ -404,6 +409,7 @@
     }
 }
 
+/* Right Click Menus */
 .context-sub-menu,
 .context-menu {
 
@@ -476,6 +482,7 @@
 
 }
 
+/* Config Page Branching Logic */
 .modal-content {
 
     table:has(input[name=location-default][value=static]:checked) {
@@ -562,6 +569,7 @@
     }
 }
 
+/* Modal - Bulk Availability Edit */
 .bulkEditModal {
 
     .span-to {
@@ -638,6 +646,7 @@
     }
 }
 
+/* Toast Errors/Warnings */
 .colored-toast {
     &.swal2-icon-success {
         background-color: #a5dc86 !important;
@@ -669,4 +678,11 @@
     .swal2-html-container {
         color: white;
     }
+}
+
+/* Style subtitles on choice.js menu */
+.choices-subtitle {
+    font-size: 0.5em;
+    color: var(--bs-secondary);
+    font-size: 7pt;
 }

@@ -13,8 +13,8 @@ const placeholder = RedCap.tt("search_placeholder")
 const filterText = RedCap.tt("search_filter")
 const choicesSelector = ".choices__inner .choices__list"
 const subtitleClass = "toolbar-subtitle"
+const choicesSubtitleClass = "choices-subtitle"
 
-// TODO we need to show the record ID in the subtitle
 class SearchBar {
 
     static _choices = null
@@ -171,7 +171,23 @@ class SearchBar {
             removeItems: true,
             removeItemButton: true,
             placeholderValue: placeholder,
-            choices: choices
+            choices: choices,
+            callbackOnCreateTemplates: (template) => {
+                // Add in the record_id for all users and all coded values for admins
+                return {
+                    choice: (config, data, hoverText) => {
+                        const classNames = config.classNames
+                        const subtitle = RedCap.user.isCalendarAdmin || (data.customProperties.type == "subject") ? `<span class="${choicesSubtitleClass}">${data.value}</span>` : ""
+                        return template(`
+                          <div class="${classNames.item} ${classNames.itemChoice} ${data.disabled ? classNames.itemDisabled : classNames.itemSelectable}" 
+                          data-select-text="${config.itemSelectText}" data-choice ${data.disabled ? 'data-choice-disabled aria-disabled="true"' : 'data-choice-selectable'} 
+                          data-id="${data.id}" data-value="${data.value}" ${data.groupId > 0 ? 'role="treeitem"' : 'role="option"'}>
+                            ${data.label} ${subtitle}
+                          </div>
+                        `);
+                    },
+                }
+            },
         })
 
         SearchBar.hide()
