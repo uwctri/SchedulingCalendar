@@ -6,9 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
-// TODO Improve logging
-// TODO visit-extendable is not used
-// TODO visit-location-free is not used
+// Note: Redcap currently drops the record_id from params for logging
 // TODO right now we can set Availability for time X on provider P when P has an appt at X. Should we prevent?
 // TODO allow for faux-providers (rooms, users not in redcap etc)
 
@@ -478,7 +476,7 @@ class Scheduling extends AbstractExternalModule
             "branch-logic-field" => "blField",
             "branch-logic-value" => "blValue",
             "duration" => "duration",
-            "extendable" => "isExtendable",
+            "extendable" => "isExtendable",      // TODO this isn't used right now
             "location-free" => "isLocationFree", // TODO this isn't used right now
         ];
 
@@ -597,7 +595,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         $this->log(
-            "Availability added for proivder" . ($mergeOccured ? " (merged with existing availability)" : ""),
+            "Availability Added" . ($mergeOccured ? " (merged with existing availability)" : ""),
             [
                 "agent" => $this->getUser()->getUsername(),
                 "provider" => $provider,
@@ -852,13 +850,19 @@ class Scheduling extends AbstractExternalModule
                 "success" => false
             ];
         }
-        $sql = $this->query("SELECT * FROm em_scheduling_calendar WHERE id = ?", [$id]);
-        $row = db_fetch_assoc($sql);
+        $result = $this->query("SELECT * FROm em_scheduling_calendar WHERE id = ?", [$id]);
+        if ($result->num_rows == 0) {
+            return [
+                "msg" => "No entry found for id $id",
+                "success" => false
+            ];
+        }
+        $data = db_fetch_assoc($result);
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
         return [
             "msg" => "Entry $id was deleted",
             "success" => true,
-            "data" => $row
+            "data" => $data
         ];
     }
 
@@ -1150,6 +1154,7 @@ class Scheduling extends AbstractExternalModule
         $start = $payload["start"];
         $end = $payload["end"];
         $subjects = $payload["subjects"];
+        $project_id = $payload["pid"];
 
         if (empty($subjects)) {
             return [
@@ -1158,10 +1163,12 @@ class Scheduling extends AbstractExternalModule
             ];
         }
 
-        // TODO should we edit the writeback user and date/time to blank?
+        // Note: We don't touch writeback here. This func is used for in-the-past cleanup
+        // and we don't want to junk the WB data.
 
         $query = $this->createQuery();
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");
+        $query->add("AND project_id = ?", [$project_id]);
         $query->add("AND")->addInClause("record", $subjects);
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();

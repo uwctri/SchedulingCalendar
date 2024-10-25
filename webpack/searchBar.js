@@ -14,6 +14,7 @@ const filterText = RedCap.tt("search_filter")
 const choicesSelector = ".choices__inner .choices__list"
 const subtitleClass = "toolbar-subtitle"
 
+// TODO we need to show the record ID in the subtitle
 class SearchBar {
 
     static _choices = null
