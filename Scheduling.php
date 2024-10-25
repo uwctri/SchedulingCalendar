@@ -476,7 +476,7 @@ class Scheduling extends AbstractExternalModule
             "branch-logic-field" => "blField",
             "branch-logic-value" => "blValue",
             "duration" => "duration",
-            "extendable" => "isExtendable",      // TODO this isn't used right now
+            "extendable" => "isExtendable",
             "location-free" => "isLocationFree", // TODO this isn't used right now
         ];
 
@@ -941,7 +941,6 @@ class Scheduling extends AbstractExternalModule
 
     private function setAppointments($payload)
     {
-        // TODO we don't enforce ranges for appointments here or in JS
         $project_id = $payload["pid"];
         $visit = $payload["visits"];
         $start = $payload["start"];
@@ -951,6 +950,23 @@ class Scheduling extends AbstractExternalModule
         $record = $payload["subjects"];
         $notes = $payload["notes"];
         $notes = empty($notes) ? null : $notes; // If empty note then store null, not empty string
+
+        // Check for duration
+        $config = $this->getVisits($payload)[$visit];
+        if (!empty($config["duration"])) {
+            $duration = (strtotime($end) - strtotime($start)) / 60;
+            $msg = "";
+            if ($config["isExtendable"] && ($duration < $config["duration"]))
+                $msg = "Appointment duration must be at least $config[duration] minutes";
+            if (!$config["isExtendable"] && ($duration != $config["duration"]))
+                $msg = "Appointment duration must be exactly $config[duration] minutes";
+            if ($msg) {
+                return [
+                    "msg" => "Appointment duration must be exactly $config[duration] minutes",
+                    "success" => false
+                ];
+            }
+        }
 
         // Search for availability that overflows the start/end
         $payload["allow_overflow"] = true;
