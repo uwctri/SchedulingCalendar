@@ -7,7 +7,6 @@ use REDCap;
 use RestUtility;
 
 // Note: Redcap currently drops the record_id from params for logging
-// TODO right now we can set Availability for time X on provider P when P has an appt at X. Should we prevent?
 // TODO allow for faux-providers (rooms, users not in redcap etc)
 
 class Scheduling extends AbstractExternalModule
@@ -594,6 +593,13 @@ class Scheduling extends AbstractExternalModule
             );
         }
 
+        // TODO
+        // Regardless of merge, review all appts for today
+        // and delete any avaialbility that overlaps
+
+        // Pull appoinments for the day
+        // Use the snippet from setAppointments to clear the availability under the appts
+
         $this->log(
             "Availability Added" . ($mergeOccured ? " (merged with existing availability)" : ""),
             [
@@ -868,7 +874,6 @@ class Scheduling extends AbstractExternalModule
 
     private function getAppointments($payload)
     {
-        $appt = [];
         $project_id = $payload["pid"];
         $allFlag = $payload["all_appointments"];
         $providers = $payload["providers"];
@@ -914,6 +919,7 @@ class Scheduling extends AbstractExternalModule
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
 
         $result = $query->execute();
+        $appt = [];
         while ($row = $result->fetch_assoc()) {
             $appt[] = [
                 "internal_id" => $row["id"],
