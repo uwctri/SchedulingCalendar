@@ -377,18 +377,19 @@ class API {
 
         let result = {}
         data["redcap_csrf_token"] = RedCap.csrf()
+        console.log("SENDING", data)
 
         // Format times to be compatible with Postgress Timestamps
         // Trash the microseconds and swap T for space
-        // Swap bools to 1 or 0 
+        // Swap bools to 1 or 0, and empty arrays to a placeholder
         const format = (obj) => {
             for (const [key, value] of Object.entries(obj)) {
-                if (API._time_fields.includes(key)) {
+                if (API._time_fields.includes(key))
                     obj[key] = value.split('.')[0].replace("T", " ")
-                }
-                if (typeof value == "boolean") {
+                if (typeof value == "boolean")
                     obj[key] = value ? 1 : 0
-                }
+                if (Array.isArray(value) && value.length === 0)
+                    obj[key] = '[]'
             }
         }
         format(data)
@@ -396,7 +397,6 @@ class API {
             for (const obj of data["bundle"])
                 format(obj)
 
-        console.log("SENDING", data)
         Calendar.showLoading()
         await fetch(RedCap.router, {
             method: 'POST',
@@ -431,13 +431,10 @@ class API {
         const phpArray = (obj, outerKey, depth) => {
             for (let [key, value] of Object.entries(obj)) {
                 key = depth > 0 ? `[${key}]` : key
-                if (Array.isArray(value) && value.length === 0) {
-                    form.append(`${outerKey}${key}`, '[]') // Use a placeholder for empty arrays
-                } else if (typeof value == "object") {
+                if (typeof value == "object")
                     phpArray(value, `${outerKey}${key}`, depth + 1)
-                } else {
+                else
                     form.append(`${outerKey}${key}`, value)
-                }
             }
         }
 
