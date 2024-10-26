@@ -11,8 +11,7 @@ import Summary from "./summary"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
 // TODO We don't update loc/provider dropdowns if the user changes the time manually. Who cares?
-// TODO Normal users can't delete availability that they don't own, but they can cancel appts and create availability currently.
-// We should (probably) prevent them from creating availability in the future for anyone but themselves. This implies some visual changes
+// TODO Normal users can't delete availability that they don't own, but they can cancel appts and create availability currently. Make that configurable?
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
 const saveDelay = 2000 // Time to wait before closing the popover after saving
