@@ -886,12 +886,7 @@ class Scheduling extends AbstractExternalModule
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure(true); // TODO we won't have all visits for My Cal Page
         $allVisits = $this->getVisits($payload); // TODO we won't have all visits for My Cal Page
-        $allSubjects = null;
-        if ($allFlag) {
-            $allSubjects = $this->getGlobalSubjects($providers);
-        } else {
-            $allSubjects = $this->getSubjects($payload);
-        }
+        $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
