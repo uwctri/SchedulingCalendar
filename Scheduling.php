@@ -371,9 +371,18 @@ class Scheduling extends AbstractExternalModule
         return $subjects;
     }
 
-    private function getGlobalSubjects($provider)
+    private function getGlobalSubjects($providers)
     {
-        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = '?' AND record IS NOT NULL", [$provider]);
+        if (is_array($providers)) {
+            if (count($providers) == 0)
+                return [];
+            $query = $this->createQuery();
+            $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
+            $query->add("AND")->addInClause("user", $providers); // We don't use this right now, we only search for 1 provider
+            $sql = $query->execute();
+        } else {
+            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = ? AND record IS NOT NULL", [$providers]);
+        }
 
         $data = [];
         while ($row = db_fetch_assoc($sql)) {
