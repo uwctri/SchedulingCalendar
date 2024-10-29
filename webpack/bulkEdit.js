@@ -2,7 +2,7 @@ import Swal from 'sweetalert2'
 import template from './html/bulkEdit.html'
 import API from "./api"
 import { DateTime } from 'luxon'
-import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
+import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, savingAnimation, setProviderCurrentUser } from "./utils"
 import Calendar from './calendar'
 import Litepicker from 'litepicker'
 import 'litepicker/dist/plugins/multiselect';
