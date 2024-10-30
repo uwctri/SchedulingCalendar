@@ -486,7 +486,7 @@ class Scheduling extends AbstractExternalModule
             "branch-logic-value" => "blValue",
             "duration" => "duration",
             "extendable" => "isExtendable",
-            "location-free" => "isLocationFree", // TODO this isn't used right now
+            "location-free" => "isLocationFree", // TODO this isn't used right now, we don't check lcoation at all
         ];
 
         $values = array_map(function ($setting) use ($project_id) {
