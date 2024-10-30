@@ -11,7 +11,6 @@ import RedCap from "./redcap"
 import { CRUD, Resource } from "./enums"
 import UserConfig from './userConfig'
 
-const modalWidth = "800px"
 const defaultStart = "08:00"
 const defaultEnd = "17:00"
 const html = RedCap.ttHTML(template)
@@ -88,7 +87,6 @@ class BulkEdit {
                 container: 'bulkEditModal'
             },
             didOpen: BulkEdit.init,
-            width: modalWidth,
             preConfirm: () => {
                 if (!BulkEdit.validate())
                     return false
