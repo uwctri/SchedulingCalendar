@@ -14,12 +14,13 @@ const Toast = Swal.mixin({
         popup: 'colored-toast',
     },
     showConfirmButton: false,
-    timer: 500 * 1000,
+    timer: 30 * 1000,
     timerProgressBar: true,
     didOpen: (toast) => {
         toast.addEventListener('click', () => Swal.close())
     }
 })
+
 class API {
 
     static _time_fields = ["start", "end"]
