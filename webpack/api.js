@@ -326,6 +326,7 @@ class API {
         }
 
         API.requiredKeys(data)
+        API.expireAvailabilityCache()
         API.expireAppointmentsCache()
         return await API.post(data)
     }

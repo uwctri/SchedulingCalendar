@@ -20,6 +20,7 @@ class Summary {
     }
 
     static update() {
+        if (!Summary.isOpen()) return
         Summary.close()
         API.cache.subjects.expire = null
         Summary.open()
@@ -85,11 +86,16 @@ class Summary {
     }
 
     static close() {
+        if (!Summary.isOpen()) return
         [...$.getElementsByClassName("subjectExtraInfo")].forEach(el => el.remove());
         [...$.getElementsByClassName("cardEvent")].forEach(el => el.remove())
         $.getElementById("subjectName").innerText = ""
         $.getElementById("subjectSummary").classList.add("d-none")
         Summary._current = null
+    }
+
+    static isOpen() {
+        return Summary._init && (Summary._current != null)
     }
 
 }

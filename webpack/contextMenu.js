@@ -25,6 +25,7 @@ import Swal from 'sweetalert2'
 import Calendar from './calendar'
 import template from './html/modify_appointment.html'
 import RedCap from './redcap'
+import Summary from './summary'
 import { goToRecord } from './page'
 import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
 
@@ -122,6 +123,7 @@ class ContextMenu {
             API.deleteAppointments({
                 id: id
             }).then((data) => {
+                Summary.update()
                 Calendar.refresh()
             })
         });

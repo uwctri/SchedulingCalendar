@@ -136,7 +136,8 @@ class SearchBar {
             visits = values[3]
         })
         locations = flattenLocations(locations)
-        addProperty(providers, "type", "provider")
+        if (Page.type != "my")
+            addProperty(providers, "type", "provider")
         addProperty(subjects, "type", "subject")
         addProperty(visits, "type", "visit")
 
@@ -202,7 +203,7 @@ class SearchBar {
             changeEvent()
         }
 
-        if ((Page.type == "my") || (Page.type == "edit" && userConfig.filterToSelf)) {
+        if (Page.type == "edit" && userConfig.filterToSelf) {
             // If the user is not listed then the search bar just skips it
             SearchBar._choices.setChoiceByValue(RedCap.user.username)
             changeEvent()
@@ -240,7 +241,10 @@ class SearchBar {
     }
 
     static getPickedProviders(valueOnly = false) {
-        return SearchBar.getPicked(valueOnly, "provider")
+        let picked = SearchBar.getPicked(valueOnly, "provider")
+        if (Page.type == "my")
+            picked.push(RedCap.user.username)
+        return picked
     }
 
     static getPickedSubjects(valueOnly = false) {
