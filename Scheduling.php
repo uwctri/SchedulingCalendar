@@ -8,7 +8,7 @@ use RestUtility;
 
 // Note: Redcap currently drops the record_id from params for logging
 // TODO allow for faux-providers (rooms, users not in redcap etc)
-// TODO Get the "My Calendar" page working 100%
+// TODO need security checks on all API calls (check if user is allowed to access the project), esp for My Schedule page
 
 class Scheduling extends AbstractExternalModule
 {
@@ -386,12 +386,13 @@ class Scheduling extends AbstractExternalModule
         }
 
         $data = [];
+        $subjects = [];
         while ($row = db_fetch_assoc($sql)) {
             $data[$row["project_id"]][$row["record"]] = $row["location"];
         }
         foreach ($data as $pid => $records) {
             $nameField = $this->getProjectSetting("name-field", $pid);
-            $projectData = $this->getSingleEventFields([$nameField], $records, $pid);
+            $projectData = $this->getSingleEventFields([$nameField], array_keys($records), $pid);
             foreach ($projectData as $record_id => $record_data) {
                 $loc = $records[$record_id];
                 $name = $record_data[$nameField];
@@ -402,10 +403,12 @@ class Scheduling extends AbstractExternalModule
                     "name" => $name,
                     "record_id" => $record_id,
                     "project_id" => $pid,
-                    "is_withdrawn" => false
+                    "is_withdrawn" => false // Always false for My Sched page
                 ];
             }
         }
+
+        return $subjects;
     }
 
     private function getLocations($payload = null)
@@ -926,6 +929,7 @@ class Scheduling extends AbstractExternalModule
         $result = $query->execute();
         $appt = [];
         while ($row = $result->fetch_assoc()) {
+            $allSubjectsRecord = $allFlag ? "$row[project_id]:$row[record]" : $row["record"];
             $appt[] = [
                 "internal_id" => $row["id"],
                 "project_id" => $row["project_id"],
@@ -939,7 +943,7 @@ class Scheduling extends AbstractExternalModule
                 "visit" => $row["visit"],
                 "visit_display" => $allVisits[$row["visit"]]["label"] ?? $row["visit"],
                 "record" => $row["record"],
-                "record_display" => $allSubjects[$row["record"]]["label"] ?? $row["record"],
+                "record_display" => $allSubjects[$allSubjectsRecord]["label"] ?? $row["record"],
                 "notes" => $row["notes"],
                 "metadata" => json_decode($row["metadata"], true) ?? [],
                 "is_availability" => false,
