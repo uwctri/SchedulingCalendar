@@ -1,22 +1,28 @@
 <div class="container">
     <div class="row">
         <div class="col">
-            <div id="picker" class="mb-4"></div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="form-group">
-            <div class="input-group">
-                <input id="userColorInput" type="text" class="form-control" placeholder="{{color}}">
+            <div class="row">
+                <div class="col">
+                    <div id="picker" class="mb-4"></div>
+                </div>
             </div>
         </div>
-    </div>
-    <div class="row">
-        <div class="form-group">
-            <div class="input-group">
-                <select id="userColorSelect" class="form-select">
-                    <option value="" selected>{{user}}</option>
-                </select>
+        <div class="col">
+            <div class="row my-1 userRow hidden">
+                <div class="col mt-1 text-left">
+                    <div class="username">{{user}}</div>
+                </div>
+                <div class="col-4">
+                    <input type="text" class="form-control colorHex" placeholder="{{color}}">
+                </div>
+                <div class="col-1 my-1 rounded colorSwatch">
+                </div>
+                <div class="col-1 mt-1">
+                    <i class="fa-solid fa-dice colorRandom"></i>
+                </div>
+                <div class="col-1 mt-1">
+                    <i class="fa-solid fa-rotate-left colorReset"></i>
+                </div>
             </div>
         </div>
     </div>

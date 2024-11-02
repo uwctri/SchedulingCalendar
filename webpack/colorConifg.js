@@ -7,29 +7,23 @@ import iro from '@jaames/iro'
 
 const html = RedCap.ttHTML(template)
 const borderColor = "#000"
-const defaultColor = "#ffffff"
-const defaultText = "Random"
 const pickerWidth = 250
+const hexRegex = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i
 
-// TODO add a reset button to this to undo a change to a user's color
-// TODO rework HTML so all names are in a list and its easy to see what color is for what user all at once
+// Note: Once a color is set we don't allow it to go back to random
+// TODO scroll
 class ColorConfig {
 
-    static _init = false
-    static _metadata = {}
-
-    static init() {
-        if (ColorConfig._init) return
-        ColorConfig._init = true
-        API.metadata().then(metadata => {
-            ColorConfig._metadata = metadata.data
-        })
-    }
+    static metadata = null
 
     static open() {
 
+        // No need for an init, just hit the cache
+        let providerPromise = API.providers()
+        let metadataPromise = API.metadata()
+        let metadata
         let colorPicker
-        ColorConfig.init()
+
         PopOver.close()
         Swal.fire({
             title: RedCap.tt("color_title"),
@@ -46,34 +40,64 @@ class ColorConfig {
 
             // Save the new values
             API.setMetadata({
-                metadata: ColorConfig._metadata
+                metadata: metadata
             }).then(() => {
                 // Reload Page to reinit the cal colors
                 location.reload()
             })
         })
 
-        const select = $.getElementById("userColorSelect")
-        const colorInput = $.getElementById("userColorInput")
-
-        // Create dropdown
-        API.providers().then(providers => {
+        // Create list of users rows
+        Promise.all([providerPromise, metadataPromise]).then(([providers, metaReturn]) => {
+            ColorConfig.metadata = ColorConfig.metadata == null ? { ...metaReturn.data } : ColorConfig.metadata
+            metadata = metaReturn.data
+            let template = $.getElementByClassName("userRow")
             for (const k in providers) {
-                let option = $.createElement("option")
-                option.value = providers[k].value
-                option.text = providers[k].label
-                select.add(option)
-            }
-        })
+                // Build the HTML
+                let row = template.cloneNode(true)
+                row.classList.remove("hidden")
+                row.querySelector(".username").innerText = providers[k].label
+                const color = metadata[providers[k].value]?.color
+                const colorHex = !color ? RedCap.tt("color_random") : color
+                const originalColor = ColorConfig.metadata[providers[k].value]?.color
+                row.querySelector(".colorHex").value = colorHex
+                row.querySelector(".colorHex").setAttribute("data-original", originalColor)
+                row.querySelector(".colorSwatch").style.backgroundColor = color
 
-        // When the dropdown changes, update the color picker
-        $.getElementById("userColorSelect").addEventListener("change", () => {
-            const user = select.value
-            let color = ColorConfig._metadata[user]?.color || defaultColor
-            colorPicker.color.hexString = color
-            color = !user ? "" : color
-            color = color === defaultColor ? defaultText : color
-            colorInput.value = color
+                // Setup Hex input
+                row.querySelector(".colorHex").addEventListener("keyup", (event) => {
+                    const hex = event.target.value.toLowerCase()
+                    if (!hex.match(hexRegex)) return
+                    row.querySelector(".colorSwatch").style.backgroundColor = hex
+                    metadata[providers[k].value] = { color: hex }
+                    colorPicker.color.hexString = hex
+                })
+
+                // Setup hex focus
+                row.querySelector(".colorHex").addEventListener("focus", (event) => {
+                    const hex = event.target.value.toLowerCase()
+                    if (!hex.match(hexRegex)) return
+                    colorPicker.color.hexString = hex
+                })
+
+                // Setup Random and Reset buttons
+                row.querySelector(".colorRandom").addEventListener("click", () => {
+                    // TODO replace this with accessable colors?
+                    const getRandomColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')
+                    const el = row.querySelector(".colorHex")
+                    el.value = getRandomColor()
+                    el.dispatchEvent(new Event('keyup'))
+                })
+
+                // Setup Reset button
+                row.querySelector(".colorReset").addEventListener("click", () => {
+                    const el = row.querySelector(".colorHex")
+                    el.value = el.getAttribute("data-original")
+                    el.dispatchEvent(new Event('keyup'))
+                })
+
+                template.parentNode.appendChild(row)
+            }
         })
 
         // Setup color picker
@@ -84,29 +108,13 @@ class ColorConfig {
         })
 
         // When the color picker changes, update the color string
-        colorPicker.on('color:change', function (color) {
-            colorInput.value = color.hexString
-            ColorConfig.updateMetadata()
-        })
-
-        // When the color string changes, update the color picker
-        colorInput.addEventListener("change", function () {
-            const hex = colorInput.value
-            if (!hex.match(/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})$/i))
-                return
-            colorPicker.color.hexString = colorInput.value
-            ColorConfig.updateMetadata()
+        colorPicker.on('color:change', (color) => {
+            const el = $.activeElement
+            if (!el.classList.contains("colorHex")) return
+            el.value = color.hexString
+            el.dispatchEvent(new Event('keyup'))
         })
     }
-
-    static updateMetadata() {
-        const user = $.getElementById("userColorSelect").value
-        const color = $.getElementById("userColorInput").value
-        if (!user || !color || ["#000", "#000000", "#fff", "#ffffff"].includes(color))
-            return
-        ColorConfig._metadata[user] = { color: color }
-    }
-
 }
 
 export default ColorConfig

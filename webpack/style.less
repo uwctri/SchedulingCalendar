@@ -191,6 +191,20 @@
 
     padding: 0;
 
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 3px;
+    }
+
     .IroColorPicker {
         display: inline-block !important;
     }
@@ -245,9 +259,18 @@
     text-align: left;
 }
 
-.userColorModal .swal2-html-container,
 .userConfigModal .swal2-html-container {
     width: 20.33em; // Arbitrary width that looks good
+}
+
+.userColorModal {
+    .swal2-html-container {
+        width: 45em; // Arbitrary width that looks good
+    }
+
+    .container {
+        max-height: 20em; // Arbitrary height that looks good
+    }
 }
 
 /* Popover with no input */
