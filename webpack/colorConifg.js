@@ -11,7 +11,6 @@ const pickerWidth = 250
 const hexRegex = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i
 
 // Note: Once a color is set we don't allow it to go back to random
-// TODO scroll corrections
 class ColorConfig {
 
     static metadata = null
