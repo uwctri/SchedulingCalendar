@@ -26,29 +26,7 @@ class Calendar {
     static _showAvailability = true
     static _refreshTime = DateTime.now().minus({ minutes: 60 })
     static _metadata = {}
-
-    // Great contrast colors from ...
-    // https://sashamaps.net/docs/resources/20-colors/
-    static accessableColors = [
-        "#e6194B", // Red
-        "#3cb44b", // Green
-        //"#ffe119", // Yellow
-        "#4363d8", // Blue
-        "#f58231", // Orange
-        "#42d4f4", // Cyan
-        // "#f032e6", // Magenta
-        "#fabed4", // Pink
-        "#469990", // Teal
-        "#dcbeff", // Lavender
-        "#9A6324", // Brown
-        "#fffac8", // Beige
-        "#800000", // Maroon
-        "#aaffc3", // Mint
-        //"#000075", // Navy
-        "#a9a9a9", // Grey
-    ].map(value => ({ value, sort: Math.random() }))
-        .sort((a, b) => a.sort - b.sort)
-        .map(({ value }) => value)
+    static _userColors = {}
 
     static toolbars = {
         edit: {
@@ -382,7 +360,6 @@ class Calendar {
                     all_appointments: Page.type == "my",
                 }
 
-                let colors = {}
                 const commonProcessing = (calEvent) => {
                     // Copy all non-standard fields to extendedProps
                     // Assign unique colors to each provider
@@ -394,10 +371,9 @@ class Calendar {
                         }
                     }
                     const user = calEvent.user
-                    const accessableColor = Calendar.accessableColors[Object.keys(colors).length % Calendar.accessableColors.length]
-                    const color = colors[user] || Calendar._metadata[user]?.color || accessableColor
+                    const color = Calendar._userColors[user] || Calendar._metadata[user]?.color || ColorConfig.getRandomAccessableColor()
                     calEvent.color = color
-                    colors[user] = color
+                    Calendar._userColors[user] = color
                     return calEvent
                 }
 

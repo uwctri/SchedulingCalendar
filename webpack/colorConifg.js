@@ -11,10 +11,42 @@ const pickerWidth = 250
 const hexRegex = /^#([0-9a-f]{6}|[0-9a-f]{3})$/i
 
 // Note: Once a color is set we don't allow it to go back to random
-// TODO scroll
+// TODO scroll corrections
 class ColorConfig {
 
     static metadata = null
+    // Great contrast colors from ...
+    // https://sashamaps.net/docs/resources/20-colors/
+    static accessableColors = [
+        "#e6194B", // Red
+        "#3cb44b", // Green
+        //"#ffe119", // Yellow
+        "#4363d8", // Blue
+        "#f58231", // Orange
+        "#42d4f4", // Cyanf
+        // "#f032e6", // Magenta
+        "#fabed4", // Pink
+        "#469990", // Teal
+        "#dcbeff", // Lavender
+        "#9A6324", // Brown
+        "#fffac8", // Beige
+        "#800000", // Maroon
+        "#aaffc3", // Mint
+        //"#000075", // Navy
+        "#a9a9a9", // Grey
+    ]
+    static _accessableColors
+
+    static getRandomColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')
+    static getRandomAccessableColor = () => {
+        if (!ColorConfig._accessableColors) {
+            ColorConfig._accessableColors = ColorConfig.accessableColors.slice()
+                .map(value => ({ value, sort: Math.random() }))
+                .sort((a, b) => a.sort - b.sort)
+                .map(({ value }) => value)
+        }
+        return ColorConfig._accessableColors.pop()
+    }
 
     static open() {
 
@@ -82,17 +114,16 @@ class ColorConfig {
 
                 // Setup Random and Reset buttons
                 row.querySelector(".colorRandom").addEventListener("click", () => {
-                    // TODO replace this with accessable colors?
-                    const getRandomColor = () => '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0')
                     const el = row.querySelector(".colorHex")
-                    el.value = getRandomColor()
+                    el.value = ColorConfig.getRandomColor()
                     el.dispatchEvent(new Event('keyup'))
                 })
 
                 // Setup Reset button
                 row.querySelector(".colorReset").addEventListener("click", () => {
                     const el = row.querySelector(".colorHex")
-                    el.value = el.getAttribute("data-original")
+                    const value = el.getAttribute("data-original")
+                    el.value = value && value != "undefined" ? value : RedCap.tt("color_random")
                     el.dispatchEvent(new Event('keyup'))
                 })
 
