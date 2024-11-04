@@ -12,7 +12,7 @@ use RestUtility;
 
 class Scheduling extends AbstractExternalModule
 {
-    private $schema; // API Schema
+    private $schema = null; // API Schema
 
     /*
     Create the core scheduling and availability table on module enable
@@ -55,12 +55,13 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
-    Cache the API schema from JSON when obj is created
+    Cache the API schema from JSON when it is requested
     */
-    function __construct()
+    public function getSchema()
     {
-        parent::__construct();
-        $this->schema = json_decode(file_get_contents($this->getUrl("schema.json")), true);
+        if ($this->schema == null)
+            $this->schema = json_decode(file_get_contents($this->getUrl("schema.json")), true);
+        return $this->schema;
     }
 
     /*
@@ -70,7 +71,7 @@ class Scheduling extends AbstractExternalModule
     {
         $request = RestUtility::processRequest(false);
         $payload = $request->getRequestVars();
-        $project_id = $payload["projectid"] ?? $_GET["pid"];
+        $project_id = $payload["projectid"] ?? $this->escape($_GET["pid"]);
         $payload["pid"] = $project_id;
         $err_msg = "Not supported. Invalid resource or CRUD operation.";
         $result = null;
@@ -90,7 +91,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Check Schema if any
-        $schema = $this->schema[$payload["resource"]][$payload["crud"]];
+        $schema = $this->getSchema()[$payload["resource"]][$payload["crud"]];
         if ($schema) {
             $schemaError = true;
             foreach ($schema as $schemOption)
@@ -201,13 +202,13 @@ class Scheduling extends AbstractExternalModule
     {
         $project_id = $project_id ?? $this->getProjectId();
         $sql = $this->query("SELECT app_title FROM redcap_projects WHERE project_id = ?", [$project_id]);
-        return db_fetch_assoc($sql)["app_title"];
+        return $this->escape(db_fetch_assoc($sql)["app_title"]);
     }
 
     public function getContactEmail()
     {
         $sql = $this->query("SELECT value FROM redcap_config WHERE field_name = 'homepage_contact_email'", []);
-        return db_fetch_assoc($sql)["value"];
+        return $this->escape(db_fetch_assoc($sql)["value"]);
     }
 
     /*
@@ -1351,16 +1352,14 @@ class Scheduling extends AbstractExternalModule
 
     private function getSingleEventFields($fields, $records = null, $project_id = null)
     {
-        if ($project_id == null) {
-            $project_id = $_GET["pid"] ?? PROJECT_ID;
-        }
+        $project_id = $project_id ?? $this->getProjectId();
         $fields = array_filter($fields);
         $data = REDCap::getData($project_id, 'array', $records, $fields);
         $results = [];
         foreach ($data as $record_id => $event_data) {
             foreach ($event_data as $event_id => $fields) {
                 foreach ($fields as $field => $value) {
-                    $results[$record_id][$field] = $results[$record_id][$field] ?? $value;
+                    $results[$record_id][$field] = $this->escape($results[$record_id][$field] ?? $value);
                 }
             }
         }

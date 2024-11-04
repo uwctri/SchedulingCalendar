@@ -15,6 +15,7 @@ const choicesSelector = ".choices__inner .choices__list"
 const subtitleClass = "toolbar-subtitle"
 const choicesSubtitleClass = "choices-subtitle"
 
+// TODO Visit filter doesn't seem to be working?
 class SearchBar {
 
     static _choices = null

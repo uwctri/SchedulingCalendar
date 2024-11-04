@@ -7,3 +7,4 @@ webpack/node_modules
 *.woff2
 fonts
 *.zip
+/dist
