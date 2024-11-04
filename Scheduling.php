@@ -7,7 +7,6 @@ use REDCap;
 use RestUtility;
 
 // Note: Redcap currently drops the record_id from params for logging
-// TODO allow for faux-providers (rooms, users not in redcap etc)
 // TODO need security checks on all API calls (check if user is allowed to access the project), esp for My Schedule page
 
 class Scheduling extends AbstractExternalModule
