@@ -1352,15 +1352,17 @@ class Scheduling extends AbstractExternalModule
 
     private function getSingleEventFields($fields, $records = null, $project_id = null)
     {
-        $project_id = $project_id ?? $this->getProjectId();
-        $fields = array_filter($fields);
-        $data = REDCap::getData($project_id, 'array', $records, $fields);
         $results = [];
-        foreach ($data as $record_id => $event_data) {
-            foreach ($event_data as $event_id => $fields) {
-                foreach ($fields as $field => $value) {
-                    $results[$record_id][$field] = $this->escape($results[$record_id][$field] ?? $value);
-                }
+        $project_id = $project_id ?? $this->getProjectId();
+        $record_id_field = REDCap::getRecordIdField();
+        $fields = array_filter($fields);
+        if (empty($fields))
+            return $results;
+        $data = REDCap::getData($project_id, 'json', $records, $fields + [$record_id_field]);
+        foreach ($data as $record_id => $record) {
+            $record_id = $record[$record_id_field];
+            foreach ($fields as $field => $value) {
+                $results[$record_id][$field] = $this->escape($results[$record_id][$field] ?? $value);
             }
         }
         return $results;
