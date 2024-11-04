@@ -6,9 +6,6 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
 
-// Note: Redcap currently drops the record_id from params for logging
-// TODO need security checks on all API calls (check if user is allowed to access the project), esp for My Schedule page
-
 class Scheduling extends AbstractExternalModule
 {
     private $schema = null; // API Schema
@@ -271,8 +268,6 @@ class Scheduling extends AbstractExternalModule
     */
     private function getSubjects($payload)
     {
-        // TODO: What issues might occur regarding dags and pulling subject names? 
-        // Need to make sure we can't see those names
         $project_id = $payload["pid"];
         $nameField = $this->getProjectSetting("name-field");
         $subjects = [];
