@@ -484,7 +484,7 @@ class Scheduling extends AbstractExternalModule
             "branch-logic-value" => "blValue",
             "duration" => "duration",
             "extendable" => "isExtendable",
-            "location-free" => "isLocationFree", // TODO this isn't used right now, we don't check lcoation at all
+            "location-free" => "isLocationFree",
         ];
 
         $values = array_map(function ($setting) use ($project_id) {
@@ -892,8 +892,8 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
 
         $allUsers = $this->getAllUsers();
-        $allLocations = $this->getLocationStructure(true); // TODO we won't have all visits for My Cal Page
-        $allVisits = $this->getVisits($payload); // TODO we won't have all visits for My Cal Page
+        $allLocations = $this->getLocationStructure(true); // we won't have all visits for My Cal Page
+        $allVisits = $this->getVisits($payload); // we won't have all visits for My Cal Page
         $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
 
         $query = $this->createQuery();
