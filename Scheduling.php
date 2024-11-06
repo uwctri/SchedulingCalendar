@@ -586,13 +586,78 @@ class Scheduling extends AbstractExternalModule
         $provider = $payload["providers"];
         $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
+        $logData = [
+            "agent" => $this->getUser()->getUsername(),
+            "provider" => $provider,
+            "location" => $location,
+            "start" => $start,
+            "end" => $end,
+            "code" => $code
+        ];
 
+        // Search for existing appts, don't allow overlap with this new availability
+        $start_of_day = $dateStr . " 00:00";
+        $end_of_day = $dateStr . " 23:59";
+        $appts = $this->getAppointments([
+            ...$payload,
+            "start" => $start_of_day,
+            "end" => $end_of_day
+        ]);
+        foreach ($appts as $appt) {
+            $apptStart = $appt["start"];
+            $apptEnd = $appt["end"];
+            if (($apptEnd < $start) && ($apptStart > $end))
+                continue; // No overlap at all
+            if (($apptStart <= $start) && ($apptEnd >= $end)) {
+                return [
+                    "msg" => "Availability overlaps with existing appointment",
+                    "success" => false
+                ];
+            }
+            if (($apptStart <= $start) && ($apptEnd < $end) && ($start < $apptEnd)) {
+                $this->log(
+                    "Requested availability overlaps with existing appointment, modifying request.",
+                    $logData
+                );
+                return $this->setAvailability([
+                    ...$payload,
+                    "start" => $apptEnd
+                ]);
+            }
+            if (($apptStart > $start) && ($apptEnd >= $end) && ($end > $apptStart)) {
+                $this->log(
+                    "Requested availability overlaps with existing appointment, modifying request.",
+                    $logData
+                );
+                return $this->setAvailability([
+                    ...$payload,
+                    "end" => $apptStart
+                ]);
+            }
+            if (($apptStart > $start) && ($apptEnd < $end)) {
+                $this->log(
+                    "Requested availability overlaps with existing appointment, modifying request.",
+                    $logData
+                );
+                $this->setAvailability([
+                    ...$payload,
+                    "end" => $apptStart
+                ]);
+                return $this->setAvailability([
+                    ...$payload,
+                    "start" => $apptEnd
+                ]);
+            }
+        }
+
+        // Cleanup any existing availability that overlaps with out availability
         $msg = "Modified existing availability";
         $mergeOccured = $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, null, [
             "start" => $start,
             "end" => $end
         ]);
 
+        // No cleanup occured, insert new availability
         if (!$mergeOccured) {
             $msg = "Inserted new availability";
             $this->query(
@@ -601,16 +666,7 @@ class Scheduling extends AbstractExternalModule
             );
         }
 
-        // Regardless of merge, review all appts for today
-        // and delete any avaialbility that overlaps
-        // foreach($this->getAppointments($payload) as $appt) {
-        //     // TODO
-        // }
-
-
-        // Pull appoinments for the day
-        // Use the snippet from setAppointments to clear the availability under the appts
-
+        // Log the action
         $this->log(
             "Availability Added" . ($mergeOccured ? " (merged with existing availability)" : ""),
             [
