@@ -1,4 +1,4 @@
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2-optimized'
 import RedCap from './redcap'
 import API from "./api"
 import template from './html/userColors.html'

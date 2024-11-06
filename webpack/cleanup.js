@@ -3,7 +3,7 @@ import { savingAnimation } from "./utils"
 import template from './html/cleanUp.html'
 import { DateTime } from 'luxon'
 import Calendar from './calendar'
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2-optimized'
 import RedCap from "./redcap"
 import API from "./api"
 

@@ -21,7 +21,7 @@
 // ])
 
 import API from './api.js'
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2-optimized'
 import Calendar from './calendar'
 import template from './html/modify_appointment.html'
 import RedCap from './redcap'

@@ -1,4 +1,4 @@
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2-optimized'
 import template from './html/userConfig.html'
 import PopOver from "./popover"
 import RedCap from './redcap'

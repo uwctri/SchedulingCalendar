@@ -2,7 +2,7 @@ import { CRUD, Resource } from "./enums"
 import Calendar from "./calendar"
 import RedCap from "./redcap"
 import { DateTime } from "luxon"
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2-optimized'
 import schema from "../schema.json";
 
 const req_msg = "Missing required keys in payload object for API call"

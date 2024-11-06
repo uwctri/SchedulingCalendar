@@ -1,4 +1,4 @@
-import Swal from 'sweetalert2'
+import Swal from 'sweetalert2-optimized'
 import template from './html/bulkEdit.html'
 import API from "./api"
 import { DateTime } from 'luxon'
