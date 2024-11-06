@@ -3,7 +3,6 @@ $HtmlPage = new HtmlPage();
 $HtmlPage->addStylesheet("home.css", 'screen,print');
 $HtmlPage->PrintHeader();
 include APP_PATH_VIEWS . 'HomeTabs.php';
-// TODO finish these docs
 ?>
 <div class="projhdr">
     <h3><i class="fas fa-calendar"></i> Scheduling & Availability Documentation</h3>
@@ -12,6 +11,12 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
 <div class="bg-white container m-0 p-0">
     <div class="row">
         <div class="col-10">
+            <div class="alert alert-warning p-4 my-4">
+                <span><i class="fa-solid fa-triangle-exclamation fa-2xl"></i>
+                    <span class="ml-4 font-weight-bold">This docs page is still a major work in progress. A lot of information is missing or poorly formatted.
+                    </span>
+                </span>
+            </div>
             <div id="purpose" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Purpose</div>
                 <div class="card-body">
@@ -223,7 +228,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="query" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Query Parameters</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">URL Query Parameters</div>
                 <div class="card-body">
                     When building a form in REDCap you might want to add a button to send the user to the calendar; probably to schedule an appointment as a part of the workflow.
                     When linking to the calendar from an an instrument, or any external source, you can appened a few extra query parameters to configure things.
