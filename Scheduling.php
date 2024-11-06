@@ -975,7 +975,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         if (!empty($vists)) {
-            $query->add("AND")->addInClause("visit", $locations);
+            $query->add("AND")->addInClause("visit", $vists);
         }
 
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);

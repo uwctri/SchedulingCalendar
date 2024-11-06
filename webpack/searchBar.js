@@ -256,7 +256,7 @@ class SearchBar {
     }
 
     static getPickedEvents(valueOnly = false) {
-        return SearchBar.getPicked(valueOnly, "event")
+        return SearchBar.getPicked(valueOnly, "visit")
     }
 
 }
