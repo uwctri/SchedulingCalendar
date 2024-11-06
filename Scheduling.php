@@ -601,9 +601,12 @@ class Scheduling extends AbstractExternalModule
             );
         }
 
-        // TODO
         // Regardless of merge, review all appts for today
         // and delete any avaialbility that overlaps
+        // foreach($this->getAppointments($payload) as $appt) {
+        //     // TODO
+        // }
+
 
         // Pull appoinments for the day
         // Use the snippet from setAppointments to clear the availability under the appts
@@ -665,30 +668,30 @@ class Scheduling extends AbstractExternalModule
         $start = $working["start"];
         $end = $working["end"];
         $resolved = false;
-        foreach ($existing as $appt) {
+        foreach ($existing as $avail) {
             if ($resolved)
                 break;
 
-            $id = $appt["internal_id"];
-            $apptStart = $appt["start"];
-            $apptEnd = $appt["end"];
+            $id = $avail["internal_id"];
+            $availStart = $avail["start"];
+            $availEnd = $avail["end"];
 
-            if (($apptStart <= $start) && ($apptEnd >= $end)) {
+            if (($availStart <= $start) && ($availEnd >= $end)) {
                 // Skip creation, its a duplicate
                 $resolved = true;
             }
-            if (($apptStart <= $start) && ($end > $apptEnd) && ($start <= $apptEnd)) {
-                // Extend the end of the existing appointment
+            if (($availStart <= $start) && ($end > $availEnd) && ($start <= $availEnd)) {
+                // Extend the end of the existing availability
                 $resolved = true;
                 $this->modifyAvailability($id, null, $end);
             }
-            if (($start < $apptStart) && ($apptEnd >= $end) && ($end >= $apptStart)) {
-                // Extend the start of the existing appointment (to earlier in the day)
+            if (($start < $availStart) && ($availEnd >= $end) && ($end >= $availStart)) {
+                // Extend the start of the existing availability (to earlier in the day)
                 $resolved = true;
                 $this->modifyAvailability($id, $start, null);
             }
-            if (($start < $apptStart) && ($end > $apptEnd)) {
-                // Extend the start and end of the existing appointment
+            if (($start < $availStart) && ($end > $availEnd)) {
+                // Extend the start and end of the existing availability
                 $resolved = true;
                 $this->modifyAvailability($id, $start, $end);
             }
