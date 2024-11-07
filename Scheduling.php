@@ -9,6 +9,7 @@ use RestUtility;
 class Scheduling extends AbstractExternalModule
 {
     private $schema = null; // API Schema
+    private $visitCache = []; // Cache for visit data
 
     /*
     Create the core scheduling and availability table on module enable
@@ -369,16 +370,16 @@ class Scheduling extends AbstractExternalModule
 
     private function getGlobalSubjects($providers)
     {
-        if (is_array($providers)) {
-            if (count($providers) == 0)
-                return [];
-            $query = $this->createQuery();
-            $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
-            $query->add("AND")->addInClause("user", $providers); // We don't use this right now, we only search for 1 provider
-            $sql = $query->execute();
-        } else {
-            $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE user = ? AND record IS NOT NULL", [$providers]);
-        }
+        // Pull all info for the given provider
+        // Currently we only ever have one provider
+        if (!is_array($providers))
+            $providers = [$providers];
+        if (count($providers) == 0)
+            return [];
+        $query = $this->createQuery();
+        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
+        $query->add("AND")->addInClause("user", $providers);
+        $sql = $query->execute();
 
         $data = [];
         $subjects = [];
@@ -474,6 +475,9 @@ class Scheduling extends AbstractExternalModule
     private function getVisits($payload, $includeSharedConfig = false)
     {
         $project_id = $payload["pid"];
+        $cacheName = $project_id . ($includeSharedConfig ? "-shared" : "");
+        if ($this->visitCache[$cacheName])
+            return $this->visitCache[$cacheName];
         $names = [
             "display-name" => "label",
             "code" => "code",
@@ -508,6 +512,7 @@ class Scheduling extends AbstractExternalModule
             ];
         }
 
+        $this->visitCache[$cacheName] = $visits;
         return $visits;
     }
 
@@ -952,8 +957,11 @@ class Scheduling extends AbstractExternalModule
 
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure(true); // we won't have all visits for My Cal Page
-        $allVisits = $this->getVisits($payload); // we won't have all visits for My Cal Page
         $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
+
+        if (!$allFlag) {
+            $allVisits = $this->getVisits($payload);
+        }
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
@@ -979,10 +987,15 @@ class Scheduling extends AbstractExternalModule
         }
 
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
-
         $result = $query->execute();
+
         $appt = [];
         while ($row = $result->fetch_assoc()) {
+            if ($allFlag) {
+                $allVisits = $this->getVisits([
+                    "pid" => $row["project_id"]
+                ]);
+            }
             $allSubjectsRecord = $allFlag ? "$row[project_id]:$row[record]" : $row["record"];
             $appt[] = [
                 "internal_id" => $row["id"],
