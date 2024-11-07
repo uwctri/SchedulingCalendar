@@ -10,6 +10,7 @@ class Scheduling extends AbstractExternalModule
 {
     private $schema = null; // API Schema
     private $visitCache = []; // Cache for visit data
+    private $locationCache = []; // Cache for location data
 
     /*
     Create the core scheduling and availability table on module enable
@@ -409,28 +410,42 @@ class Scheduling extends AbstractExternalModule
 
     private function getLocations($payload = null)
     {
-        return $this->getLocationStructure();
+        return $this->getLocationStructure($payload["pid"]);
     }
 
-    private function getLocationStructure($flatten = false)
+    private function getLocationStructure($project_id, $flatten = false)
     {
-        $sot = $this->getProjectSetting("location-sot");
-        $pid = $sot == "json" ? null : $this->getProjectSetting("location-pid");
-        $locations = $this->getProjectSetting("location-json", $pid);
+        $cacheName = $project_id . ($flatten ? "-flat" : "");
+        if ($this->locationCache[$cacheName])
+            return $this->locationCache[$cacheName];
+
+        // Find where to pull info from
+        $sot = $this->getProjectSetting("location-sot", $project_id);
+        $project_id = $sot == "json" ? $project_id : $this->getProjectSetting("location-pid", $project_id);
+
+        // Decode the JSON
+        $locations = $this->getProjectSetting("location-json", $project_id);
         $locations = json_decode($locations, true) ?? [];
-        if ($flatten) {
-            $flat_locations = [];
-            foreach ($locations as $code => $data) {
-                $sites = $data["sub"];
-                unset($data["sub"]);
-                $flat_locations[$code] = $data;
-                foreach ($sites as $site_code => $site) {
-                    $flat_locations[$site_code] = array_merge($site, ["parent" => $code]);
-                }
-            }
-            return $flat_locations;
+
+        // Done?
+        if (!$flatten) {
+            $this->locationCache[$cacheName] = $locations;
+            return $locations;
         }
-        return $locations;
+
+        // Flatten the locations
+        $flat_locations = [];
+        foreach ($locations as $code => $data) {
+            $sites = $data["sub"];
+            unset($data["sub"]);
+            $flat_locations[$code] = $data;
+            foreach ($sites as $site_code => $site) {
+                $flat_locations[$site_code] = array_merge($site, ["parent" => $code]);
+            }
+        }
+
+        $this->locationCache[$cacheName] = $flat_locations;
+        return $flat_locations;
     }
 
     private function getAvailabilityCodes($payload = null)
@@ -519,6 +534,7 @@ class Scheduling extends AbstractExternalModule
     private function getAvailability($payload)
     {
         $availability = [];
+        $project_id = $payload["pid"];
         $providers = $payload["providers"];
         $locations = $payload["locations"];
         $start = $payload["start"];
@@ -533,7 +549,7 @@ class Scheduling extends AbstractExternalModule
         }
 
         $allUsers = $this->getAllUsers();
-        $allLocations = $this->getLocationStructure(true);
+        $allLocations = $this->getLocationStructure($project_id, true);
 
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
@@ -956,10 +972,10 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
 
         $allUsers = $this->getAllUsers();
-        $allLocations = $this->getLocationStructure(true); // we won't have all visits for My Cal Page
         $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
 
         if (!$allFlag) {
+            $allLocations = $this->getLocationStructure($project_id, true);
             $allVisits = $this->getVisits($payload);
         }
 
@@ -991,15 +1007,15 @@ class Scheduling extends AbstractExternalModule
 
         $appt = [];
         while ($row = $result->fetch_assoc()) {
+            $pid = $row["project_id"];
             if ($allFlag) {
-                $allVisits = $this->getVisits([
-                    "pid" => $row["project_id"]
-                ]);
+                $allVisits = $this->getVisits(["pid" => $pid]);
+                $allLocations = $this->getLocationStructure($pid, true);
             }
             $allSubjectsRecord = $allFlag ? "$row[project_id]:$row[record]" : $row["record"];
             $appt[] = [
                 "internal_id" => $row["id"],
-                "project_id" => $row["project_id"],
+                "project_id" => $pid,
                 "title" => "Default Title",
                 "start" => $row["time_start"],
                 "end" => $row["time_end"],
