@@ -27,11 +27,11 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     not find it suitable when dealing with larger teams that work across multiple projects, at different times, or in different locations.
                     <br><br>
                     Please understand that this module may be difficult to initaly setup and use. It is recommended that you read through the documentation
-                    and reach out to the developers (via a <a>Github issue</a> or email) for help if you are having trouble.
+                    and reach out to the developers (via a <a href="https://github.com/uwctri/SchedulingCalendar/issues/new">Github issue</a> or <a href="mailto:adam.nunez@ctri.wisc.edu">email</a>) for help if you are having trouble.
                 </div>
             </div>
             <div id="workflow" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow (WIP)</div>
                 <div class="card-body">
                     GO MORE IN DEPTH. TALK ABOUT ALL THE TABS AND WHAT INFO IS USED WHERE.<br>
                     Workflow can be broken down into two main parts, scheduling availability and scheduling appointments.
@@ -47,7 +47,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="config" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration (WIP)</div>
                 <div class="card-body">
                     It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module. The project settings are broken down into three categories: General, System Configuration, and Admin Tools.
 
@@ -60,7 +60,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                         This is a list of users that have access to the project, availability on the calendar, but shouldn't be schedulable.
                         This is useful if a team member was orignally a provider and now has a purley administrative role.</p>
                     <p><b>Trigger DET</b><br>
-                        This is a highly technical feature and requires a developer to implement.
+                        This is a technical feature and requires a developer to implement.
                         Sends a POST to the Data Entry Trigger on calendar save. See below for details on the structure of the POST request.</p>
                     <p><b>Name Field</b><br>
                         Variable to index, search, and display as the subject's name in various places on the calendar.
@@ -90,7 +90,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">System Configuration</div>
                 <div class="card-body">
                     These settings can only be set by a REDCap administrator in the Control Center.
-                    It is necissary to update some of these settings any time a new project is created that will use the module.
+                    It is not necissary to update these settings for every new project, but projects that share availability will need to be configured here.
                     <p><b>Availability Groups</b><br>
                         When adding availability to the calendar providers associate it with a particular group.
                         This group can be used by one project only, or shared with other projects. It is common to have projects that use only
@@ -112,13 +112,13 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="admin" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Admin Tools</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Admin Tools (WIP)</div>
                 <div class="card-body">
                     Go over every tab, scheduling, availability, my. And how to use.
                 </div>
             </div>
             <div id="locs" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Location Settings Structure</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Location Settings Structure (WIP)</div>
                 <div class="card-body">
                     Go over every tab, scheduling, availability, my. And how to use.
                     <pre>
@@ -155,14 +155,14 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="det" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">DET Integration</div>
                 <div class="card-body">
-                    This is a highly technical feature and requires a developer to implement.
+                    This is a technical feature and requires a developer to implement.
                     <br><br>
                     If this feature is enabled in the configuration, the module will send a message to the DET endpoint,
                     if one is set for the project, when anything (appointment or availability) is added, removed, or updated on the calendar.
                     The message sent will be a POST request with a JSON body formatted as below. The endpoint should respond with a 200 status
                     code message immediately upon receipt of the message and carry out any additional processing asynchronously.
                     <br><br>
-                    Note: The internal id is a unique identifier for the appointment or availability. It is not the same as the record_id or any other identifer in REDCap.
+                    <u>Note:</u> The internal id is a unique identifier for the appointment or availability. It is not the same as the record_id or any other identifer in REDCap.
                     Currently it is only useful if you are able to directly query the database for more information. This limits the usefulness of the delete and update messages.
                     In the future all information on the deleted or updated appointment or availability will be sent in the message.
                     <pre>
@@ -174,6 +174,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 username: The username of the current user,
                                 resource: Enum describing the resource that was impacted (Availability, Appointment),
                                 crud: Enum describing the operation that occured (create, update, delete. Read is never sent),
+                                msg: String message describing the operation that occured,
                                 ___
                                 // Only sent when resource is Appointment and crud is create
                                 start: Start datetime in ISO format,
@@ -197,34 +198,25 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 locations: Array of size one with the new location name (or previous if not changed),
                                 ___
                                 // Only sent when crud is delete
-                                id: Internal id of the appointment or availability
+                                id: Internal id of the appointment or availability (now deleted),
+                                data: Full data strucutre of the appointment or availability that was deleted
                             }
                         </code>
                     </pre>
                     If you decide to implement this feature and would like to use the internal id to query the database for more information, see below for an example of how to do so.
-                    This DET would need to be hosted on the same server as the REDCap installation so we can use the "redcap_connect" script and query the database.
+                    Normally DETs can be hosted on any server, but this DET would need to be hosted on the same server as the REDCap installation so the SQL database can be directly queried using the unique id.
                     <pre>
                         <code>
                             define("NOAUTH", true);
                             require_once  "../redcap_connect.php";
                             $sql = "SELECT * FROM em_scheduling_calendar WHERE id = ?";
                             $result = db_query($sql, $_POST["id"]);
-                            while ($row = db_fetch_assoc($result)) {
-                                // Do something with the data:
-                                // project_id
-                                // visit
-                                // availability_code
-                                // user
-                                // record
-                                // location
-                                // time_start
-                                // time_end
-                                // notes
-                            }
+                            $data = db_fetch_assoc($result)
+                            // Do something with the data:
+                            // project_id, visit, availability_code, user, 
+                            // record, location, time_start, time_end, notes
                         </code>
                     </pre>
-
-
                 </div>
             </div>
             <div id="query" class="card my-4 card-primary">

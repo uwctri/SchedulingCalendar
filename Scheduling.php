@@ -154,8 +154,12 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Fire DET at the end
-        if ($this->getProjectSetting('fire-det') && in_array($payload["crud"], ["create", "update", "delete"])) {
-            $this->fireDataEntryTrigger($payload);
+        if (
+            $this->getProjectSetting('fire-det') &&
+            in_array($payload["crud"], ["create", "update", "delete"]) &&
+            in_array($payload["resource"], ["availability", "appointment"])
+        ) {
+            $this->fireDataEntryTrigger(array_merge($result, $payload));
         }
 
         // Return the error or result
