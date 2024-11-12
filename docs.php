@@ -20,13 +20,13 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="purpose" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Purpose</div>
                 <div class="card-body">
-                    This external module adds afirmative scheduling to the REDCap platform.
+                    This external module adds affirmative scheduling to the REDCap platform.
                     It allows users, also called providers below, to set their availability and then for other users
                     to schedule appointments with subjects against that availability. The goal is to eliminate the need for use of software
                     outside of REDCap. While their does exist a native Calendar module in REDCap that is useful for smaller teams or projects, some may
                     not find it suitable when dealing with larger teams that work across multiple projects, at different times, or in different locations.
                     <br><br>
-                    Please understand that this module may be difficult to initaly setup and use. It is recommended that you read through the documentation
+                    Please understand that this module may be difficult to initially setup and use. It is recommended that you read through the documentation
                     and reach out to the developers (via a <a href="https://github.com/uwctri/SchedulingCalendar/issues/new">Github issue</a> or <a href="mailto:adam.nunez@ctri.wisc.edu">email</a>) for help if you are having trouble.
                 </div>
             </div>
@@ -49,8 +49,9 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="config" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration (WIP)</div>
                 <div class="card-body">
-                    It is advisable require module-specific user privileges to access the configuration settings due to the complexity of settings in the module. The project settings are broken down into three categories: General, System Configuration, and Admin Tools.
-
+                    It is advised that you require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
+                    <br><br>
+                    <h5 class="text-decoration-underline">General Configuration</h5>
                     <p><b>Calendar Admin</b><br>
                         Admins may edit any user's calendar and have access to two additional tools:<br>
                         1. Data cleanup - remove older availability and appointments for withdrawn subjects<br>
@@ -58,7 +59,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                         See below for additional information on both tools.</p>
                     <p><b>Unschedulable</b><br>
                         This is a list of users that have access to the project, availability on the calendar, but shouldn't be schedulable.
-                        This is useful if a team member was orignally a provider and now has a purley administrative role.</p>
+                        This is useful if a team member was originally a provider and now has a purely administrative role.</p>
                     <p><b>Trigger DET</b><br>
                         This is a technical feature and requires a developer to implement.
                         Sends a POST to the Data Entry Trigger on calendar save. See below for details on the structure of the POST request.</p>
@@ -72,7 +73,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     <p><b>Default Location</b><br>
                         Typically the location for an appointment is left blank and is selected by the provider when scheduling. You can, however,
                         choose to default the location to either a field's value or a static value. Both options below use the coded location value from the location JSON.<br>
-                        Location Field - Useful if subject's have prefered clinics that are imported or selected early in the study. <br>
+                        Location Field - Useful if subject's have preferred clinics that are imported or selected early in the study. <br>
                         Location Value - Useful if the vast majority of appointments (or all of them) will occur at one location.</p>
                     <p><b>Location Source</b><br>
                         Locations in the module are defined via a JSON object, an easily-to-read format that lists all locations, display names, coded values, and metadata.
@@ -82,15 +83,47 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                         Location Project - Select another project to copy the location JSON from.
                         This is not a one time copy, the location structure will always be looked up from this other project.
                         This makes it easy to maintain a single source-of-truth for the location structure</p>
-                    <br>
-                    MISSING SETTINGS HERE
+                    <h5 class="text-decoration-underline">Schedulable Visit Configuration</h5>
+                    <p>All settings in this section are repeated for every schedulable event on the calendar</p>
+                    <p><b>Display Name</b><br>
+                        The name of the event to be displayed on the calendar, in dropdowns etc.</p>
+                    <p><b>Internal Coded Value</b><br>
+                        Short unique code used on the backend for scheduling</p>
+                    <p><b>Linked Event</b><br>
+                        A REDCap event to associate this schedulable visit to. Data is pulled from this event for the
+                    <p>
+                    <p><b>Notes</b><br>
+                    </p>
+                    <p><b>Branching Logic</b><br>
+                    </p>
+                    <p><b>Duration</b><br>
+                    </p>
+                    <p><b>Allow Additional Time</b><br>
+                    </p>
+                    <p><b>Allow Any Location</b><br>
+                    </p>
+                    <h5 class="text-decoration-underline">Shared Schedulable Visit Config </h5>
+                    <p><b>Date/Time Writeback</b><br>
+                    </p>
+                    <p><b>Provider Writeback</b><br>
+                    </p>
+                    <p><b>Visit Range Start/End</b><br>
+                    </p>
+                    <h5 class="text-decoration-underline">Subject Summary Configuration</h5>
+                    <p><b>Additional Field</b><br>
+                        Add extra fields to the right-side subject summary. Useful for displaying email, phone, or other demographic information.
+                    </p>
+                    <h5 class="text-decoration-underline">ICS Export Config</h5>
+                    <p><b>Additional Field</b><br>
+                        Add extra fields to the description of the event in the calendar's ICS exports.
+                    </p>
                 </div>
             </div>
             <div id="sys" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">System Configuration</div>
                 <div class="card-body">
                     These settings can only be set by a REDCap administrator in the Control Center.
-                    It is not necissary to update these settings for every new project, but projects that share availability will need to be configured here.
+                    It is not necessary to update these settings for every new project, but projects that share availability will need to be configured here.
                     <p><b>Availability Groups</b><br>
                         When adding availability to the calendar providers associate it with a particular group.
                         This group can be used by one project only, or shared with other projects. It is common to have projects that use only
@@ -102,7 +135,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     <p><b>Project Availability Group</b><br>
                         To associate the created availability groups (above) with any number of projects we update this list.<br>
                         Project - The existing project using the module<br>
-                        Code - Coded value of the availability group. If listing multiple then enter a comma deliminted list. </p>
+                        Code - Coded value of the availability group. If listing multiple then enter a comma delimited list. </p>
                     <p><b>Allow Global Group</b><br>
                         The "Global Group" is an availability group that is shared across all projects. If your REDCap instance has a small
                         number of regular users you may wish to enable this so all, or most, availability can exist under one group.</p>
@@ -112,15 +145,27 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="admin" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Admin Tools (WIP)</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Admin Tools</div>
                 <div class="card-body">
-                    Go over every tab, scheduling, availability, my. And how to use.
+                    Admins tools are available to users who are listed as "Calendar Admin" in the general settings.
+                    A handful of tools are available to these users to help manage the calendar, all located in the bottom left corner of the calendar.
+                    <p><b>Clean Up </b><br>
+                        Using the clean up tool will remove all availability in the past and/or appointments for withdrawn subjects.
+                        This is useful to keep the calendar clean, easy to use, and can (very slightly) improve performance.</p>
+                    <p><b>ICS Export/Link</b><br>
+                        Download a copy of the calendar as an ICS file that can be imported into Outlook, Google Calendar, or any other
+                        service. This calendar will contain PHI. A link can also be generated to live-stream the calendar to another application.</p>
+                    <p><b>Color Configuration</b><br>
+                        By default users are given random colors for their availability and appointments. In the color configuration the admin
+                        can assign permanent colors for each user.</p>
                 </div>
             </div>
             <div id="locs" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Location Settings Structure (WIP)</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Location Settings Structure</div>
                 <div class="card-body">
-                    Go over every tab, scheduling, availability, my. And how to use.
+                    Locations are structured as a JSON object that is easily readable and can be stored in a REDCap project or pulled from another project.
+                    Currently the location structure is only used for construction of dropdowns and display names. In the future the structure will allow
+                    for location matching and matching to sub-locations. An example of the structure is below, currently there is no need to build out sub-locations.
                     <pre>
                         <code>
                             {
@@ -173,8 +218,8 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 project_id: The project id of the current project,
                                 username: The username of the current user,
                                 resource: Enum describing the resource that was impacted (Availability, Appointment),
-                                crud: Enum describing the operation that occured (create, update, delete. Read is never sent),
-                                msg: String message describing the operation that occured,
+                                crud: Enum describing the operation that occurred (create, update, delete. Read is never sent),
+                                msg: String message describing the operation that occurred,
                                 ___
                                 // Only sent when resource is Appointment and crud is create
                                 start: Start datetime in ISO format,
@@ -199,7 +244,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 ___
                                 // Only sent when crud is delete
                                 id: Internal id of the appointment or availability (now deleted),
-                                data: Full data strucutre of the appointment or availability that was deleted
+                                data: Full data structure of the appointment or availability that was deleted
                             }
                         </code>
                     </pre>
@@ -223,7 +268,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">URL Query Parameters</div>
                 <div class="card-body">
                     When building a form in REDCap you might want to add a button to send the user to the calendar; probably to schedule an appointment as a part of the workflow.
-                    When linking to the calendar from an an instrument, or any external source, you can appened a few extra query parameters to configure things.
+                    When linking to the calendar from an an instrument, or any external source, you can append a few extra query parameters to configure things.
 
                     <table class="table my-3">
                         <tr>

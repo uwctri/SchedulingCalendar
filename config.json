@@ -40,6 +40,12 @@
             "type": "descriptive"
         },
         {
+            "key": "general-title",
+            "name": "<b>General</b>",
+            "tt_name": "config_general",
+            "type": "descriptive"
+        },
+        {
             "key": "calendar-admin",
             "name": "<b>Calendar Admin</b><br>May edit any user's calendar and has access to additional tools",
             "tt_name": "config_admins",
