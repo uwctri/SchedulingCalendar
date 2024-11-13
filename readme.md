@@ -1,8 +1,8 @@
-# Scheduling Calendar - Redcap External Module
+# Scheduling & Availability - Redcap External Module
 
 ## What does it do?
 
-The Scheduling Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availability via an interactive calendar. It is a re-write of an internal-only EM devolved for the UW Center for Tobacco Research and Intervention that went through various iterations and, based on feedback, we've arrived here. Basic workflow consists of provider selecting times of the day that they are available via a calendar, other users can then later schedule against that time for some number of configured visits. The EM prevents obvious issues like double scheduling, location conflicts, enforces visit time, and is easily searchable based on subject, provider, visit, or location of the visit.
+The Scheduling & Availability Calendar is a Redcap EM that tracks provider availability and allows scheduling against that availability via an interactive calendar. It is a re-write of an internal-only EM devolved for the UW Center for Tobacco Research and Intervention that went through various iterations and, based on feedback, we've arrived here. Basic workflow consists of provider selecting times of the day that they are available via a calendar, other users can then later schedule against that time for some number of configured visits. The EM prevents obvious issues like double scheduling, location conflicts, enforces visit time, and is easily searchable based on subject, provider, visit, or location of the visit.
 
 ## Things to know before installing
 
