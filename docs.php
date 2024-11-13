@@ -4,6 +4,15 @@ $HtmlPage->addStylesheet("home.css", 'screen,print');
 $HtmlPage->PrintHeader();
 include APP_PATH_VIEWS . 'HomeTabs.php';
 ?>
+<style>
+    .container a {
+        text-decoration: underline;
+    }
+
+    #toc a {
+        text-decoration: none;
+    }
+</style>
 <div class="projhdr">
     <h3><i class="fas fa-calendar"></i> Scheduling & Availability Documentation</h3>
 </div>
@@ -13,7 +22,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
         <div class="col-10">
             <div class="alert alert-warning p-4 my-4">
                 <span><i class="fa-solid fa-triangle-exclamation fa-2xl"></i>
-                    <span class="ml-4 font-weight-bold">This docs page is still a major work in progress. A lot of information is missing or poorly formatted.
+                    <span class="ml-4 font-weight-bold">This docs page is still a major work in progress. A lot of information is missing, poorly formatted, or just too vague. If you have questions
                     </span>
                 </span>
             </div>
@@ -31,9 +40,8 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="workflow" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow (WIP)</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow</div>
                 <div class="card-body">
-                    GO MORE IN DEPTH. TALK ABOUT ALL THE TABS AND WHAT INFO IS USED WHERE.<br>
                     Workflow can be broken down into two main parts, scheduling availability and scheduling appointments.
                     <br><br>
                     When scheduling availability we expect a provider to use the calendar to enter when they plan to be available to see subjects for the study.
@@ -47,7 +55,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 </div>
             </div>
             <div id="config" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration (WIP)</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration</div>
                 <div class="card-body">
                     It is advised that you require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
                     <br><br>
@@ -88,26 +96,33 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     <p><b>Display Name</b><br>
                         The name of the event to be displayed on the calendar, in dropdowns etc.</p>
                     <p><b>Internal Coded Value</b><br>
-                        Short unique code used on the backend for scheduling</p>
+                        Short unique code used on the backend for scheduling.</p>
                     <p><b>Linked Event</b><br>
-                        A REDCap event to associate this schedulable visit to. Data is pulled from this event for the
+                        A REDCap event to associate this schedulable visit to. Data is pulled from and written to this event for the Shared Schedulable Visit Config below.</p>
                     <p>
                     <p><b>Notes</b><br>
+                        Any notes to be displayed on the subject summary for this event. Useful for displaying visit instructions or other information.</p>
                     </p>
                     <p><b>Branching Logic</b><br>
                     </p>
                     <p><b>Duration</b><br>
+                        Duration of the event in minutes. This is used to calculate the end time of the event when scheduling.</p>
                     </p>
                     <p><b>Allow Additional Time</b><br>
+                        Allow the provider to add additional time to the event when scheduling. This is useful if the provider needs to add time for a specific subject. When enabled the duration above becomes the minimum visit duration.</p>
                     </p>
                     <p><b>Allow Any Location</b><br>
+                        Allow the provider to schedule this event at any location, regardless of the location listed on the availability. This is useful for calls or other virtual visits. </p>
                     </p>
                     <h5 class="text-decoration-underline">Shared Schedulable Visit Config </h5>
                     <p><b>Date/Time Writeback</b><br>
+                        When a subject is scheduled for an event the date (and/or time) of the event will be written back to the linked event in this field based on the validation enabled on the field. All date, time, and datetime formats are supported. This is useful for tracking when a subject was scheduled for a visit, displaying the information in forms etc.</p>
                     </p>
                     <p><b>Provider Writeback</b><br>
+                        When a subject is scheduled for an event the provider that the event is scheduled with will be written back to the linked event in this field. This is useful for tracking who has visits, displaying the information in forms etc.</p>
                     </p>
                     <p><b>Visit Range Start/End</b><br>
+                        If your visit has a valid schedulable range calculated or manually entered somewhere in your project you can enter the field names here. This is useful for preventing scheduling outside of the valid range.</p>
                     </p>
                     <h5 class="text-decoration-underline">Subject Summary Configuration</h5>
                     <p><b>Additional Field</b><br>
@@ -165,36 +180,62 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                 <div class="card-body">
                     Locations are structured as a JSON object that is easily readable and can be stored in a REDCap project or pulled from another project.
                     Currently the location structure is only used for construction of dropdowns and display names. In the future the structure will allow
-                    for location matching and matching to sub-locations. An example of the structure is below, currently there is no need to build out sub-locations.
-                    <pre>
-                        <code>
-                            {
-                                "WFH": {
-                                    "name": "Work From Home",
-                                    "active": true,
-                                    "in_person": false
-                                },
-                                "CTRIMAD": {
-                                    "name": "Madison Office",
-                                    "active": true,
-                                    "sub": {
-                                        "CMADE": {
-                                            "name": "Madison East",
-                                            "active": true
+                    for location matching and matching to sub-locations. Two examples of the structure are below, both are very simple. Currently there is no need to build out sub-locations.
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-6">
+                                <pre>
+                                <code>
+                                    {
+                                        "WFH": {
+                                            "name": "Work From Home",
+                                            "active": true,
+                                            "in_person": false
                                         },
-                                        "CMADW": {
-                                            "name": "Madison West",
+                                        "CTRIMAD": {
+                                            "name": "Madison Office",
+                                            "active": true,
+                                            "sub": {
+                                                "CMADE": {
+                                                    "name": "Madison East",
+                                                    "active": true
+                                                },
+                                                "CMADW": {
+                                                    "name": "Madison West",
+                                                    "active": true
+                                                }
+                                            }
+                                        },
+                                        "CTRIMKE": {
+                                            "name": "Milwaukee Office",
                                             "active": true
                                         }
                                     }
-                                },
-                                "CTRIMKE": {
-                                    "name": "Milwaukee Office",
-                                    "active": true
-                                }
-                            }
-                        </code>
-                    </pre>
+                                </code>
+                                </pre>
+                                <p>Simple example of a location build out with multiple on-site locations and one "calls only" location.</p>
+                            </div>
+                            <div class="col-6">
+                                <pre>
+                                <code>
+                                    {
+                                        "call": {
+                                            "name": "Call",
+                                            "active": true,
+                                            "in_person": false
+                                        },
+                                        "site": {
+                                            "name": "In Office",
+                                            "active": true,
+                                            "in_person": true
+                                        }
+                                    }
+                                </code>
+                                </pre>
+                                <p>If you have no need for locations you can list only one or two, one for calls and one for in-person visits.</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="det" class="card my-4 card-primary">
