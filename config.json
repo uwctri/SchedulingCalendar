@@ -1,7 +1,7 @@
 {
     "name": "Scheduling and Availability",
     "tt_name": "module_name",
-    "description": "Manage availability, appoitments, and calendars",
+    "description": "Custom calendar for management of availability & appointments linked to events. Providers can specify their availability on a project, and be scheduled against it.",
     "tt_description": "module_desc",
     "documentation": "docs.php",
     "tt_documentation": "doc_path",
