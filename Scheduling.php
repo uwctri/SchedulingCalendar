@@ -815,7 +815,7 @@ class Scheduling extends AbstractExternalModule
         $msg = "Availabiltiy $id updated to range $newStart to $newEnd";
 
         $this->log(
-            "Modifed Availability",
+            "Modified Availability",
             [
                 "agent" => $this->getUser()->getUsername(),
                 "start" => $newStart,
@@ -1197,11 +1197,12 @@ class Scheduling extends AbstractExternalModule
         );
 
         $this->log(
-            "Appointment Modifed",
+            "Appointment Modified",
             [
                 "agent" => $this->getUser()->getUsername(),
                 "provider" => $provider,
                 "location" => $location,
+                "record" => $record,
                 "id" => $id,
             ]
         );
