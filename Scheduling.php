@@ -611,6 +611,7 @@ class Scheduling extends AbstractExternalModule
         $provider = $payload["providers"];
         $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
+
         $logData = [
             "agent" => $this->getUser()->getUsername(),
             "provider" => $provider,
@@ -619,6 +620,19 @@ class Scheduling extends AbstractExternalModule
             "end" => $end,
             "code" => $code
         ];
+
+        # Some users have been able to schedule month-long availability 24/7, we need to stop that
+        $dateStr2 = substr($end, 0, 10);
+        if ($dateStr != $dateStr2) {
+            $this->log(
+                "Attempting to add multi-day availability in one action. This shouldn't happen.",
+                $logData
+            );
+            return [
+                "msg" => "Start and End must be on the same day",
+                "success" => false
+            ];
+        }
 
         // Search for existing appts, don't allow overlap with this new availability
         $start_of_day = $dateStr . " 00:00";
@@ -694,14 +708,7 @@ class Scheduling extends AbstractExternalModule
         // Log the action
         $this->log(
             "Availability Added" . ($mergeOccured ? " (merged with existing availability)" : ""),
-            [
-                "agent" => $this->getUser()->getUsername(),
-                "provider" => $provider,
-                "location" => $location,
-                "start" => $start,
-                "end" => $end,
-                "code" => $code
-            ]
+            $logData
         );
 
         return [

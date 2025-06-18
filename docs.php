@@ -22,8 +22,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
         <div class="col-10">
             <div class="alert alert-warning p-4 my-4">
                 <span><i class="fa-solid fa-triangle-exclamation fa-2xl"></i>
-                    <span class="ml-4 font-weight-bold">This docs page is still a major work in progress. A lot of information is missing, poorly formatted, or just too vague. If you have questions
-                    </span>
+                    <span class="ml-4 font-weight-bold">This docs page is still a major work in progress. A lot of information is missing, poorly formatted, or just too vague. If you have questions you can reach out to the author at <a href="mailto:adam.nunez@ctri.wisc.edu">adam.nunez@ctri.wisc.edu</a>.</span>
                 </span>
             </div>
             <div id="purpose" class="card my-4 card-primary">
