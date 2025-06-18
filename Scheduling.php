@@ -621,11 +621,11 @@ class Scheduling extends AbstractExternalModule
             "code" => $code
         ];
 
-        # Some users have been able to schedule month-long availability 24/7, we need to stop that
+        // Stop any multi-day availability
         $dateStr2 = substr($end, 0, 10);
         if ($dateStr != $dateStr2) {
             $this->log(
-                "Attempting to add multi-day availability in one action. This shouldn't happen.",
+                "Bug: Attempting to add multi-day availability in one action.",
                 $logData
             );
             return [
