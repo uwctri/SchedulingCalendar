@@ -1180,17 +1180,19 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
 
         // Grab needed info
-        $sql = $this->query("SELECT visit, user, record, location FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE id = ? ", [$id]);
         $row = db_fetch_assoc($sql);
         $oldProvider = $row["user"];
         $oldLocation = $row["location"];
         $record = $row["record"];
         $visit = $row["visit"];
+        $start = $row["time_start"];
+        $end = $row["time_end"];
 
         // If provider is changed, restore old provider's Availability
         // and update the writeback if any is set
         if ($provider != $oldProvider) {
-            $this->restoreAvailability($id);
+            $this->restoreAvailability($id, $start, $end);
             $vShared = $this->getVisits($payload, true);
             $vSet = $vShared["visits"][$visit];
             if ($vShared["wbUser"] && $vSet["link"])
@@ -1224,42 +1226,46 @@ class Scheduling extends AbstractExternalModule
     {
         $project_id = $payload["pid"];
         $id = $payload["id"];
-        if (isset($payload["start"]) && isset($payload["end"])) {
+        if (isset($payload["start"]) && isset($payload["end"]))
             return $this->deleteRangeAppointments($payload);
-        }
-        if (isset($payload["id"])) {
-            $this->restoreAvailability($id);
 
-            // Blank out any write back
-            $sql = $this->query("SELECT visit, record FROM em_scheduling_calendar WHERE id = ? ", [$id]);
-            $row = db_fetch_assoc($sql);
-            $visit = $row["visit"];
-            $record = $row["record"];
-            $vShared = $this->getVisits($payload, true);
-            $vSet = $vShared["visits"][$visit];
-            $write = [];
-            if ($vShared["wbUser"])
-                $write[$vShared["wbUser"]] = "";
-            foreach ($vShared["wbDateTimes"] ?? [] as $dt)
-                $write[$dt] = "";
-            if (!empty($write) && $vSet["link"])
-                REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]], "overwrite");
+        if (!isset($payload["id"]))
+            return [
+                "msg" => "Unable to delete appointment, missing database id",
+                "success" => false
+            ];
 
-            $result = $this->deleteEntry($id);
+        $sql = $this->query("SELECT visit, record FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+        $row = db_fetch_assoc($sql);
+        $visit = $row["visit"];
+        $record = $row["record"];
 
-            $this->log(
-                "Deleted Appointment Entry",
-                [
-                    "agent" => $this->getUser()->getUsername(),
-                    ...$result["data"]
-                ]
-            );
+        $this->restoreAvailability($id, $row["time_start"], $row["time_end"]);
 
-            return $result;
-        }
+        $vShared = $this->getVisits($payload, true);
+        $vSet = $vShared["visits"][$visit];
+        $write = [];
+        if ($vShared["wbUser"])
+            $write[$vShared["wbUser"]] = "";
+        foreach ($vShared["wbDateTimes"] ?? [] as $dt)
+            $write[$dt] = "";
+        if (!empty($write) && $vSet["link"])
+            REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => $write]], "overwrite");
+
+        $result = $this->deleteEntry($id);
+
+        $this->log(
+            "Deleted Appointment Entry",
+            [
+                "agent" => $this->getUser()->getUsername(),
+                ...$result["data"]
+            ]
+        );
+
+        return $result;
     }
 
-    private function restoreAvailability($id)
+    private function restoreAvailability($id, $start, $end)
     {
         $meta = $this->getRowMetadata($id);
         if (empty($meta["restore"]))
@@ -1268,8 +1274,8 @@ class Scheduling extends AbstractExternalModule
             array_merge(
                 $meta["restore"],
                 [
-                    "start" => $meta["start"],
-                    "end" => $meta["end"]
+                    "start" => $start,
+                    "end" => $end
                 ]
             )
         );
