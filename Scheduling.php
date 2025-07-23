@@ -602,7 +602,7 @@ class Scheduling extends AbstractExternalModule
         return $availability;
     }
 
-    private function setAvailability($payload)
+    private function setAvailability($payload, $restoreBypass = false)
     {
         $project_id = $payload["pid"];
         $code = $payload["group"];
@@ -612,6 +612,7 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
 
+        $sql = "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)";
         $logData = [
             "agent" => $this->getUser()->getUsername(),
             "provider" => $provider,
@@ -620,6 +621,20 @@ class Scheduling extends AbstractExternalModule
             "end" => $end,
             "code" => $code
         ];
+
+        if ($restoreBypass) {
+            $msg = "Availability Restored";
+            $this->log($msg, $logData);
+            $this->query($sql, [$project_id, $code, $provider, $location, $start, $end]);
+            $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, null, [
+                "start" => $start,
+                "end" => $end
+            ]);
+            return [
+                "msg" => $msg,
+                "success" => true
+            ];
+        }
 
         // Stop any multi-day availability
         $dateStr2 = substr($end, 0, 10);
@@ -700,7 +715,7 @@ class Scheduling extends AbstractExternalModule
         if (!$mergeOccured) {
             $msg = "Inserted new availability";
             $this->query(
-                "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)",
+                $sql,
                 [$project_id, $code, $provider, $location, $start, $end]
             );
         }
@@ -1180,19 +1195,17 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
 
         // Grab needed info
-        $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+        $sql = $this->query("SELECT visit, user, record, location FROM em_scheduling_calendar WHERE id = ? ", [$id]);
         $row = db_fetch_assoc($sql);
         $oldProvider = $row["user"];
         $oldLocation = $row["location"];
         $record = $row["record"];
         $visit = $row["visit"];
-        $start = $row["time_start"];
-        $end = $row["time_end"];
 
         // If provider is changed, restore old provider's Availability
         // and update the writeback if any is set
         if ($provider != $oldProvider) {
-            $this->restoreAvailability($id, $start, $end);
+            $this->restoreAvailability($id);
             $vShared = $this->getVisits($payload, true);
             $vSet = $vShared["visits"][$visit];
             if ($vShared["wbUser"] && $vSet["link"])
@@ -1231,17 +1244,17 @@ class Scheduling extends AbstractExternalModule
 
         if (!isset($payload["id"]))
             return [
-                "msg" => "Unable to delete appointment, missing database id",
+                "msg" => "Unable to delete appointment, no database id provided",
                 "success" => false
             ];
 
+        $this->restoreAvailability($id);
+
+        // Blank out any write back
         $sql = $this->query("SELECT visit, record FROM em_scheduling_calendar WHERE id = ? ", [$id]);
         $row = db_fetch_assoc($sql);
         $visit = $row["visit"];
         $record = $row["record"];
-
-        $this->restoreAvailability($id, $row["time_start"], $row["time_end"]);
-
         $vShared = $this->getVisits($payload, true);
         $vSet = $vShared["visits"][$visit];
         $write = [];
@@ -1265,19 +1278,18 @@ class Scheduling extends AbstractExternalModule
         return $result;
     }
 
-    private function restoreAvailability($id, $start, $end)
+    private function restoreAvailability($id)
     {
         $meta = $this->getRowMetadata($id);
         if (empty($meta["restore"]))
             return;
         $this->setAvailability(
-            array_merge(
-                $meta["restore"],
-                [
-                    "start" => $start,
-                    "end" => $end
-                ]
-            )
+            [
+                ...$meta["restore"],
+                "start" => $meta["start"],
+                "end" => $meta["end"]
+            ],
+            true
         );
     }
 
