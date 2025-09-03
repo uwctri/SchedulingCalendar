@@ -57,6 +57,15 @@ class Calendar {
     static getView = () => { return Calendar._fc.view.type }
     static getEvent = (id) => { return Calendar._fc.getEventById(id) }
     static gotoDate = (date) => { Calendar._fc.gotoDate(date) }
+    static today = () => {
+        Calendar._fc.today()
+        if (Calendar.getView() == "agenda") {
+            $.getElementByClassName('fc-day-today').scrollIntoView()
+            window.scrollTo({
+                top: 0,
+            })
+        }
+    }
 
     static showLoading() {
         $.getElementById("loader").classList.remove("d-none")
@@ -113,11 +122,11 @@ class Calendar {
                 agenda: {
                     type: "list",
                     visibleRange: () => {
-                        // half year forward and back
+                        // 2 weeks back, half year forward
                         let dt = DateTime.now()
                         return {
-                            start: dt.minus({ day: 364 / 2 }).toJSDate(),
-                            end: dt.plus({ day: 364 / 2 }).toJSDate()
+                            start: dt.minus({ day: 14 }).toJSDate(),
+                            end: dt.plus({ day: 180 }).toJSDate()
                         }
                     },
                     listDayFormat: {
@@ -129,10 +138,14 @@ class Calendar {
                     buttonText: RedCap.tt("btn_agenda")
                 }
             },
+            viewDidMount: (args) => {
+                if (args.view.type == "agenda")
+                    $.getElementByClassName('fc-today-button').disabled = false
+            },
             customButtons: {
                 today: {
                     text: RedCap.tt("btn_today"),
-                    click: () => Calendar._fc.today()
+                    click: () => Calendar.today()
                 },
                 cleanup: {
                     icon: "fa-broom",
@@ -396,6 +409,9 @@ class Calendar {
                     })
 
                     successCallback(data)
+
+                    if (Calendar.getView() == "agenda")
+                        Calendar.today()
                 }).catch((error) => {
                     failureCallback(error)
                 })
