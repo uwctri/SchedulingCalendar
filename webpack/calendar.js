@@ -3,6 +3,7 @@ import interactionPlugin from "@fullcalendar/interaction"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
 import listPlugin from "@fullcalendar/list"
+import adaptivePlugin from "@fullcalendar/adaptive"
 import { DateTime } from "luxon"
 import BulkEdit from "./bulkEdit"
 import PopOver from "./popover"
@@ -102,7 +103,8 @@ class Calendar {
         const { start: startTime, end: endTime, hiddenDays, slotSize, expandRows, lineHeight, limitAvailability } = UserConfig.get()
 
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
-            plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin],
+            schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+            plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, adaptivePlugin],
             views: {
                 singleMonth: {
                     type: "dayGridMonth",
