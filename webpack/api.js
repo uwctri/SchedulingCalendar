@@ -133,6 +133,8 @@ class API {
             "resource": Resource.Provider,
         }
 
+        // No required keys
+
         // Throttle, return cache, or store to cache
         const cache = API.cache.providers
         if (cache.expire && cache.expire > API.timestamp())
@@ -154,6 +156,8 @@ class API {
             "providers": providers,
         }
 
+        // No required keys
+
         // Throttle, return cache, or store to cache
         const cache = API.cache.subjects
         if (cache.expire && cache.expire > API.timestamp())
@@ -171,6 +175,8 @@ class API {
             "resource": Resource.Location
         }
 
+        // No required keys
+
         // Throttle, return cache, or store to cache
         const cache = API.cache.locations
         if (cache.expire && cache.expire > API.timestamp())
@@ -187,6 +193,8 @@ class API {
             "crud": CRUD.Read,
             "resource": Resource.Visit
         }
+
+        // No required keys
 
         // Throttle, return cache, or store to cache
         const cache = API.cache.visits
@@ -337,6 +345,8 @@ class API {
             "crud": CRUD.Read,
             "resource": Resource.Metadata
         }
+
+        // No required keys
 
         // Throttle, return cache, or store to cache
         const cache = API.cache.metadata
