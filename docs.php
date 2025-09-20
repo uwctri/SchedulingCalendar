@@ -21,9 +21,13 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
     <div class="row">
         <div class="col-10">
             <div class="alert alert-warning p-4 my-4 container">
-                <div class="row">
-                    <i class="fa-solid fa-triangle-exclamation fa-2xl" style="transform: translate(0, 0.7em);"></i>
-                    <span class="ml-5 font-weight-bold">This docs page is still a major work in progress. A lot of information is missing, poorly formatted, or just too vague. If you have questions you can reach out to the author at <a href="mailto:adam.nunez@ctri.wisc.edu">adam.nunez@ctri.wisc.edu</a>.</span>
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <i class="fa-solid fa-triangle-exclamation fa-2xl"></i>
+                    </div>
+                    <div class="col">
+                        <span class="font-weight-bold">This docs page is still a major work in progress. A lot of information is missing, poorly formatted, or just too vague. If you have questions you can reach out to the author at <a href="mailto:adam.nunez@ctri.wisc.edu">adam.nunez@ctri.wisc.edu</a>.</span>
+                    </div>
                 </div>
             </div>
             <div id="purpose" class="card my-4 card-primary">
