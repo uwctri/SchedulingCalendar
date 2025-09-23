@@ -143,6 +143,12 @@
             "type": "project-id"
         },
         {
+            "key": "timezones",
+            "name": "<b>Timezones:</b><br>Newline seperated list of timezones to offer users in tzDatabase format (i.e. America/Chicago)",
+            "tt_name": "config_timezones",
+            "type": "textarea"
+        },
+        {
             "key": "visit-group",
             "name": "<b>Schedulable Visit</b>",
             "tt_name": "config_sch_group",

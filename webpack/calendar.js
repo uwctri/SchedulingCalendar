@@ -104,6 +104,7 @@ class Calendar {
 
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
+            //timeZone: RedCap.timezones[0],
             plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, adaptivePlugin],
             views: {
                 singleMonth: {

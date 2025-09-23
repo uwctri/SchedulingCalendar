@@ -2,6 +2,7 @@
 import SearchBar from "./searchBar"
 import Calendar from "./calendar"
 import Page from "./page"
+import RedCap from "./redcap"
 import "./iconObserver"
 import "./style.less"
 
@@ -12,6 +13,7 @@ $.getElementById("pageMenu").classList.remove("d-none")
 Calendar.render()
 SearchBar.init()
 
+// Setup printing
 window.onbeforeprint = () => {
     if (Calendar.getView() == "agenda") {
         $.getElementById("pageMenu").style.display = "none"
@@ -22,4 +24,18 @@ window.onbeforeprint = () => {
 
 window.onafterprint = () => {
     window.location.reload()
+}
+
+// Setup Timezone Picker
+if (RedCap.timezones.length > 1) {
+    const el = $.getElementById("timezonePicker")
+    el.style.display = "inline-block"
+    const tzPicker = el.getElementsByTagName("select")[0]
+    RedCap.timezones.forEach(tz => {
+        const option = document.createElement("option")
+        option.value = tz
+        option.textContent = tz
+        tzPicker.appendChild(option)
+    })
+    $.getElementByClassName("fc-header-toolbar").style.marginBottom = "2em"
 }

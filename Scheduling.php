@@ -213,6 +213,25 @@ class Scheduling extends AbstractExternalModule
         return $this->escape(db_fetch_assoc($sql)["value"]);
     }
 
+    public function getTimeZones()
+    {
+        $local = date_default_timezone_get();
+        $config = $this->getProjectSetting("timezones");
+        $timezones = [];
+        if ($config) {
+            $config = array_map('trim', explode("\n", $config));
+            $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::ALL);
+            $timezones = array_values(array_intersect($timezones, $config));
+        }
+        if (!in_array($local, $timezones))
+            array_unshift($timezones, $local);
+        else {
+            $timezones = array_diff($timezones, [$local]);
+            array_unshift($timezones, $local);
+        }
+        return json_encode($timezones);
+    }
+
     /*
     Get all providers that exist in the project or any other
     */

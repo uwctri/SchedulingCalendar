@@ -8,6 +8,7 @@ $index = $module->getUrl('index.php');
     <?= $jsObj; ?>.project_name = "<?= $module->getProjectName(); ?>"
     <?= $jsObj; ?>.router = "<?= $module->getUrl('router.php'); ?>"
     <?= $jsObj; ?>.email = "<?= $module->getContactEmail(); ?>"
+    <?= $jsObj; ?>.timezones = <?= $module->getTimeZones(); ?>;
     <?= $jsObj; ?>.user = <?= json_encode($module->currentUser()); ?>
 </script>
 <link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
@@ -22,6 +23,9 @@ $index = $module->getUrl('index.php');
     </div>
 </div>
 <div id="content" class="d-none">
+    <div id="timezonePicker">
+        <?= $module->tt('label_tz'); ?>: <select></select>
+    </div>
     <div id="calendarColumn">
         <div id="calendar"></div>
         <div id="loader"></div>
