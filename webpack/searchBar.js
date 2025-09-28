@@ -74,6 +74,7 @@ class SearchBar {
             const el = $.querySelector(`.${centerClassName} input`)
             el.placeholder = text
             el.style.width = `${text.length}ch`
+            el.style.minWidth = `${text.length || placeholder.length}ch`
             updateFilterText()
             Summary.open()
         }
