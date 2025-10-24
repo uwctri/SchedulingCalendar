@@ -564,6 +564,8 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $allFlag = $payload["all_availability"];
         $overflowFlag = $payload["allow_overflow"]; // Internal param for scheduling
+        $timezone = $payload["timezone"];
+        $server_tz = date_default_timezone_get();
 
         $codes = $this->getAvailabilityCodes($payload);
         $codes_keys = array_keys($codes);
@@ -600,12 +602,22 @@ class Scheduling extends AbstractExternalModule
             $provider = $allUsers[$row["user"]] ?? $row["user"];
             $location = $allLocations[$row["location"]]["name"] ?? $row["location"];
             $codeName = $codes[$row["availability_code"]]["label"] ?? $row["availability_code"];
+            $start = $row["time_start"];
+            $end = $row["time_end"];
+            if ($timezone != "local") {
+                $dtStart = new \DateTime($start, new \DateTimeZone($server_tz));
+                $dtStart->setTimezone(new \DateTimeZone($timezone));
+                $start = $dtStart->format('Y-m-d H:i:s');
+                $dtEnd = new \DateTime($end, new \DateTimeZone($server_tz));
+                $dtEnd->setTimezone(new \DateTimeZone($timezone));
+                $end = $dtEnd->format('Y-m-d H:i:s');
+            }
             $availability[] = [
                 "internal_id" => $row["id"],
                 "project_id" => $row["pid"],
                 "title" => "Default Title",
-                "start" => $row["time_start"],
-                "end" => $row["time_end"],
+                "start" => $start,
+                "end" => $end,
                 "location" => $row["location"],
                 "location_display" => $location,
                 "user" => $row["user"],
@@ -674,7 +686,8 @@ class Scheduling extends AbstractExternalModule
         $appts = $this->getAppointments([
             ...$payload,
             "start" => $start_of_day,
-            "end" => $end_of_day
+            "end" => $end_of_day,
+            "timezone" => "local"
         ]);
         foreach ($appts as $appt) {
             $apptStart = $appt["start"];
@@ -763,7 +776,8 @@ class Scheduling extends AbstractExternalModule
                 "providers" => $provider,
                 "locations" => $location,
                 "start" => $start_of_day,
-                "end" => $end_of_day
+                "end" => $end_of_day,
+                "timezone" => "local"
             ]);
 
             // Filter to those with correct code
@@ -1015,6 +1029,8 @@ class Scheduling extends AbstractExternalModule
         $vists = $payload["visits"];
         $start = $payload["start"];
         $end = $payload["end"];
+        $timezone = $payload["timezone"];
+        $server_tz = date_default_timezone_get();
 
         $allUsers = $this->getAllUsers();
         $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
@@ -1058,12 +1074,22 @@ class Scheduling extends AbstractExternalModule
                 $allLocations = $this->getLocationStructure($pid, true);
             }
             $allSubjectsRecord = $allFlag ? "$row[project_id]:$row[record]" : $row["record"];
+            $start = $row["time_start"];
+            $end = $row["time_end"];
+            if ($timezone != "local") {
+                $dtStart = new \DateTime($start, new \DateTimeZone($server_tz));
+                $dtStart->setTimezone(new \DateTimeZone($timezone));
+                $start = $dtStart->format('Y-m-d H:i:s');
+                $dtEnd = new \DateTime($end, new \DateTimeZone($server_tz));
+                $dtEnd->setTimezone(new \DateTimeZone($timezone));
+                $end = $dtEnd->format('Y-m-d H:i:s');
+            }
             $appt[] = [
                 "internal_id" => $row["id"],
                 "project_id" => $pid,
                 "title" => "Default Title",
-                "start" => $row["time_start"],
-                "end" => $row["time_end"],
+                "start" => $start,
+                "end" => $end,
                 "location" => $row["location"],
                 "location_display" => $allLocations[$row["location"]]["name"] ?? $row["location"],
                 "user" => $row["user"],
@@ -1113,6 +1139,7 @@ class Scheduling extends AbstractExternalModule
 
         // Search for availability that overflows the start/end
         $payload["allow_overflow"] = true;
+        $payload["timezone"] = "local";
         $existing = $this->getAvailability($payload);
 
         if (count($existing) == 0) {
@@ -1398,7 +1425,8 @@ class Scheduling extends AbstractExternalModule
             "locations" => [],
             "subjects" => [],
             "visits" => [],
-            "all_appointments" => false
+            "all_appointments" => false,
+            "timezone" => "local"
         ]);
         $ics = "BEGIN:VCALENDAR
                 VERSION:2.0

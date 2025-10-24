@@ -3,7 +3,8 @@ import Calendar from "./calendar"
 import RedCap from "./redcap"
 import { DateTime } from "luxon"
 import Swal from 'sweetalert2-optimized'
-import schema from "../schema.json";
+import Page from "./page"
+import schema from "../schema.json"
 
 const req_msg = "Missing required keys in payload object for API call"
 const Toast = Swal.mixin({
@@ -211,6 +212,7 @@ class API {
         const data = {
             "crud": CRUD.Read,
             "resource": Resource.Availability,
+            "timezone": Page.tz || "local",
             ...payload
         }
 
@@ -241,6 +243,10 @@ class API {
             "resource": Resource.Availability,
             ...payload
         }
+
+        // TODO: Remove this restriction by converting availability times on server side
+        if (Page.tz != RedCap.timezones[0])
+            return Promise.reject("Cannot create availability in non-default timezone")
 
         API.requiredKeys(data)
         API.expireAvailabilityCache()
@@ -278,6 +284,7 @@ class API {
         const data = {
             "crud": CRUD.Read,
             "resource": Resource.Appointment,
+            "timezone": Page.tz || "local",
             ...payload
         }
 
@@ -308,6 +315,10 @@ class API {
             "resource": Resource.Appointment,
             ...payload
         }
+
+        // TODO: Remove this restriction by converting appointment times on server side
+        if (Page.tz != RedCap.timezones[0])
+            return Promise.reject("Cannot create appointments in non-default timezone")
 
         API.requiredKeys(data)
         API.expireAppointmentsCache()

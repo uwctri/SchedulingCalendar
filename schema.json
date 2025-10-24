@@ -13,7 +13,8 @@
                 "end",
                 "providers",
                 "locations",
-                "all_availability"
+                "all_availability",
+                "timezone"
             ]
         ],
         "create": [
@@ -70,7 +71,8 @@
                 "locations",
                 "subjects",
                 "visits",
-                "all_appointments"
+                "all_appointments",
+                "timezone"
             ]
         ],
         "update": [
