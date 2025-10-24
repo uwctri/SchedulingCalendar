@@ -26,4 +26,10 @@ if (RedCap.timezones.length > 1) {
         tzPicker.appendChild(option)
     })
     $.getElementByClassName("fc-header-toolbar").style.marginBottom = "2em"
+    tzPicker.value = Page.tz || RedCap.timezones[0]
+    tzPicker.addEventListener("change", (e) => {
+        const params = new URLSearchParams(window.location.search)
+        params.set("tz", e.target.value)
+        window.location.search = params.toString()
+    })
 }
