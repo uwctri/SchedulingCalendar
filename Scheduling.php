@@ -566,6 +566,7 @@ class Scheduling extends AbstractExternalModule
         $overflowFlag = $payload["allow_overflow"]; // Internal param for scheduling
         $timezone = $payload["timezone"];
         $server_tz = date_default_timezone_get();
+        $timezone = $timezone == $server_tz ? "local" : $timezone;
 
         $codes = $this->getAvailabilityCodes($payload);
         $codes_keys = array_keys($codes);
@@ -589,6 +590,15 @@ class Scheduling extends AbstractExternalModule
 
         if (!empty($locations)) {
             $query->add("AND")->addInClause("location", $locations);
+        }
+
+        if ($timezone != "local") {
+            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
+            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $start = $dtStart->format('Y-m-d H:i:s');
+            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
+            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
         if (!$overflowFlag) {
@@ -642,6 +652,9 @@ class Scheduling extends AbstractExternalModule
         $provider = $payload["providers"];
         $location = $payload["locations"];
         $dateStr = substr($start, 0, 10);
+        $timezone = $payload["timezone"];
+        $server_tz = date_default_timezone_get();
+        $timezone = $timezone == $server_tz ? "local" : $timezone;
 
         $sql = "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)";
         $logData = [
@@ -650,8 +663,21 @@ class Scheduling extends AbstractExternalModule
             "location" => $location,
             "start" => $start,
             "end" => $end,
-            "code" => $code
+            "code" => $code,
+            "timezone" => $timezone
         ];
+
+        if ($timezone != "local") {
+            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
+            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $start = $dtStart->format('Y-m-d H:i:s');
+            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
+            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $end = $dtEnd->format('Y-m-d H:i:s');
+            $payload["start"] = $start;
+            $payload["end"] = $end;
+            $payload["timezone"] = "local";
+        }
 
         if ($restoreBypass) {
             $msg = "Availability Restored";
@@ -687,7 +713,6 @@ class Scheduling extends AbstractExternalModule
             ...$payload,
             "start" => $start_of_day,
             "end" => $end_of_day,
-            "timezone" => "local"
         ]);
         foreach ($appts as $appt) {
             $apptStart = $appt["start"];
@@ -930,7 +955,8 @@ class Scheduling extends AbstractExternalModule
             "start" => $end,
             "end" => $oldEnd,
             "providers" => $provider,
-            "locations" => $location
+            "locations" => $location,
+            "timezone" => "local"
         ]);
 
         $this->log(
@@ -1031,6 +1057,7 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $timezone = $payload["timezone"];
         $server_tz = date_default_timezone_get();
+        $timezone = $timezone == $server_tz ? "local" : $timezone;
 
         $allUsers = $this->getAllUsers();
         $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
@@ -1119,6 +1146,9 @@ class Scheduling extends AbstractExternalModule
         $record = $payload["subjects"];
         $notes = $payload["notes"];
         $notes = empty($notes) ? null : $notes; // If empty note then store null, not empty string
+        $timezone = $payload["timezone"];
+        $server_tz = date_default_timezone_get();
+        $timezone = $timezone == $server_tz ? "local" : $timezone;
 
         // Check for duration
         $config = $this->getVisits($payload)[$visit];
@@ -1137,9 +1167,20 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
+        if ($timezone != "local") {
+            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
+            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $start = $dtStart->format('Y-m-d H:i:s');
+            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
+            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $end = $dtEnd->format('Y-m-d H:i:s');
+            $payload["start"] = $start;
+            $payload["end"] = $end;
+            $payload["timezone"] = "local";
+        }
+
         // Search for availability that overflows the start/end
         $payload["allow_overflow"] = true;
-        $payload["timezone"] = "local";
         $existing = $this->getAvailability($payload);
 
         if (count($existing) == 0) {
@@ -1171,6 +1212,7 @@ class Scheduling extends AbstractExternalModule
                 "group" => $existing["availability_code"],
                 "providers" => $existing["user"],
                 "locations" => $existing["location"],
+                "timezone" => "local"
             ]);
         }
 
@@ -1223,7 +1265,8 @@ class Scheduling extends AbstractExternalModule
                 "end" => $end,
                 "record" => $record,
                 "visit" => $visit,
-                "notes" => $notes
+                "notes" => $notes,
+                "timezone" => "local" // Always store in local timezone
             ]
         );
 
@@ -1333,7 +1376,8 @@ class Scheduling extends AbstractExternalModule
             [
                 ...$meta["restore"],
                 "start" => $meta["start"],
-                "end" => $meta["end"]
+                "end" => $meta["end"],
+                "timezone" => "local"
             ],
             true
         );

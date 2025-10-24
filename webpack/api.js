@@ -241,12 +241,9 @@ class API {
         const data = {
             "crud": CRUD.Create,
             "resource": Resource.Availability,
+            "timezone": Page.tz || "local",
             ...payload
         }
-
-        // TODO: Remove this restriction by converting availability times on server side
-        if (Page.tz != RedCap.timezones[0])
-            return Promise.reject("Cannot create availability in non-default timezone")
 
         API.requiredKeys(data)
         API.expireAvailabilityCache()
@@ -313,12 +310,9 @@ class API {
         const data = {
             "crud": CRUD.Create,
             "resource": Resource.Appointment,
+            "timezone": Page.tz || "local",
             ...payload
         }
-
-        // TODO: Remove this restriction by converting appointment times on server side
-        if (Page.tz != RedCap.timezones[0])
-            return Promise.reject("Cannot create appointments in non-default timezone")
 
         API.requiredKeys(data)
         API.expireAppointmentsCache()

@@ -23,7 +23,8 @@
                 "end",
                 "providers",
                 "locations",
-                "group"
+                "group",
+                "timezone"
             ]
         ],
         "update": [
@@ -60,7 +61,8 @@
                 "locations",
                 "subjects",
                 "visits",
-                "notes"
+                "notes",
+                "timezone"
             ]
         ],
         "read": [
