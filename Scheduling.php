@@ -218,17 +218,55 @@ class Scheduling extends AbstractExternalModule
         $local = date_default_timezone_get();
         $config = $this->getProjectSetting("timezones");
         $timezones = [];
+
         if ($config) {
-            $config = array_map('trim', explode("\n", $config));
-            $timezones = \DateTimeZone::listIdentifiers(\DateTimeZone::ALL);
-            $timezones = array_values(array_intersect($timezones, $config));
+            $lines = array_map('trim', explode("\n", $config));
+            $validTimezones = \DateTimeZone::listIdentifiers(\DateTimeZone::ALL);
+
+            foreach ($lines as $line) {
+                if (empty($line)) continue;
+
+                // Parse "timezone, alias" format
+                $parts = array_map('trim', explode(',', $line, 2));
+                $timezone = $parts[0];
+                $alias = isset($parts[1]) ? $parts[1] : $timezone;
+
+                // Only include valid timezones
+                if (in_array($timezone, $validTimezones)) {
+                    $timezones[] = [
+                        'value' => $timezone,
+                        'label' => $alias
+                    ];
+                }
+            }
         }
-        if (!in_array($local, $timezones))
-            array_unshift($timezones, $local);
-        else {
-            $timezones = array_diff($timezones, [$local]);
-            array_unshift($timezones, $local);
+
+        // Add local timezone if not already present
+        $localExists = false;
+        foreach ($timezones as $tz) {
+            if ($tz['value'] !== $local)
+                continue;
+            $localExists = true;
+            break;
         }
+
+        if (!$localExists) {
+            array_unshift($timezones, [
+                'value' => $local,
+                'label' => $local
+            ]);
+        } else {
+            // Move local timezone to the front
+            $localTimezone = null;
+            $timezones = array_filter($timezones, function ($tz) use ($local, &$localTimezone) {
+                if ($tz['value'] !== $local)
+                    return true;
+                $localTimezone = $tz;
+                return false;
+            });
+            array_unshift($timezones, $localTimezone);
+        }
+
         return json_encode($timezones);
     }
 

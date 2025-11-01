@@ -21,12 +21,12 @@ if (RedCap.timezones.length > 1) {
     const tzPicker = el.getElementsByTagName("select")[0]
     RedCap.timezones.forEach(tz => {
         const option = document.createElement("option")
-        option.value = tz
-        option.textContent = tz
+        option.value = tz.value
+        option.textContent = tz.label
         tzPicker.appendChild(option)
     })
     $.getElementByClassName("fc-header-toolbar").style.marginBottom = "2em"
-    tzPicker.value = Page.tz || RedCap.timezones[0]
+    tzPicker.value = Page.tz || RedCap.timezones[0].value
     tzPicker.addEventListener("change", (e) => {
         const params = new URLSearchParams(window.location.search)
         params.set("tz", e.target.value)

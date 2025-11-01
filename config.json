@@ -144,7 +144,7 @@
         },
         {
             "key": "timezones",
-            "name": "<b>Timezones:</b><br>Newline seperated list of timezones to offer users in tzDatabase format (i.e. America/Chicago)",
+            "name": "<b>Timezones:</b><br>Newline seperated list of timezone-alias pairs to offer users in tzDatabase format (i.e. America/Chicago, Central)",
             "tt_name": "config_timezones",
             "type": "textarea"
         },
