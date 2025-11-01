@@ -10,7 +10,7 @@ const defaultHiddenDays = [0, 6] //Sunday & Saturday
 const defaultExpandRows = true
 const defaultLimitAvailability = true
 const defaultFilterToSelf = true
-const defaultUse12Hour = false
+const defaultUse12Hour = true
 const defaultLineHeight = "1.5"
 const defaultBulkPickerType = "range"
 
