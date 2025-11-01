@@ -8,6 +8,7 @@ import template_details from "./html/details_popup.html"
 import Calendar from "./calendar"
 import Page from "./page"
 import Summary from "./summary"
+import UserConfig from "./userConfig"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
@@ -60,6 +61,16 @@ class PopOver {
         }
     }
 
+    static getTimeMask() {
+        const { use12Hour } = UserConfig.get()
+        return use12Hour ? PopOver.timeMask12 : PopOver.timeMask24
+    }
+
+    static getTimeFormat() {
+        const { use12Hour } = UserConfig.get()
+        return use12Hour ? "hh:mm a" : "HH:mm"
+    }
+
     static setup() {
         if (PopOver._setup) return
         $.addEventListener("click", (e) => {
@@ -73,9 +84,9 @@ class PopOver {
             if (!PopOver.validate())
                 return
 
-            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, "hh:mm a").toISOTime()
+            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, PopOver.getTimeFormat()).toISOTime()
             start = PopOver._date.toISODate() + "T" + start
-            let end = DateTime.fromFormat($.getElementById("aPopEndTime").value, "hh:mm a").toISOTime()
+            let end = DateTime.fromFormat($.getElementById("aPopEndTime").value, PopOver.getTimeFormat()).toISOTime()
             end = PopOver._date.toISODate() + "T" + end
 
             if (Page.type == "edit") {
@@ -138,12 +149,12 @@ class PopOver {
         // IMask is used for input masking and not native Bootstrap due to sizing
         // issues inside the popover.
         const startTime = $.getElementById("aPopStartTime")
-        startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
-        IMask(startTime, PopOver.timeMask12)
+        startTime.value = DateTime.fromISO(info.startStr).toFormat(PopOver.getTimeFormat())
+        IMask(startTime, PopOver.getTimeMask())
 
         const endTime = $.getElementById("aPopEndTime")
-        endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
-        IMask(endTime, PopOver.timeMask12)
+        endTime.value = DateTime.fromISO(info.endStr).toFormat(PopOver.getTimeFormat())
+        IMask(endTime, PopOver.getTimeMask())
 
         buildGroupDropdown("aPopGroup", PopOver.isOpen)
         buildLocationDropdown("aPopLocation", PopOver.isOpen)
@@ -158,12 +169,12 @@ class PopOver {
         // IMask is used for input masking and not native Bootstrap due to sizing
         // issues inside the popover.
         const startTime = $.getElementById("aPopStartTime")
-        startTime.value = DateTime.fromISO(info.startStr).toFormat("hh:mm a")
-        IMask(startTime, PopOver.timeMask12)
+        startTime.value = DateTime.fromISO(info.startStr).toFormat(PopOver.getTimeFormat())
+        IMask(startTime, PopOver.getTimeMask())
 
         const endTime = $.getElementById("aPopEndTime")
-        endTime.value = DateTime.fromISO(info.endStr).toFormat("hh:mm a")
-        IMask(endTime, PopOver.timeMask12)
+        endTime.value = DateTime.fromISO(info.endStr).toFormat(PopOver.getTimeFormat())
+        IMask(endTime, PopOver.getTimeMask())
 
         buildVisitDropdown("aPopVisit", null, null, PopOver.isOpen)
         buildLocationDropdown("aPopLocation", PopOver.isOpen, info)
@@ -173,7 +184,7 @@ class PopOver {
         const enforceDuration = () => {
             const visit = $.getElementById("aPopVisit").value
             const config = API.cache.visits.data[visit]
-            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, "hh:mm a")
+            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, PopOver.getTimeFormat())
             endTime.disabled = false
 
             if (!visit)
@@ -181,7 +192,7 @@ class PopOver {
 
             // Set duration
             if (config.duration) {
-                endTime.value = start.plus({ minutes: config.duration }).toFormat("hh:mm a")
+                endTime.value = start.plus({ minutes: config.duration }).toFormat(PopOver.getTimeFormat())
 
                 // Not Extendable
                 if (!config.isExtendable)
@@ -215,8 +226,8 @@ class PopOver {
     static openDetails(info) {
         const title = `${RedCap.tt("pop_details")} ${closeBtn}`
         const props = info.event.extendedProps
-        const start = DateTime.fromISO(info.event.startStr).toFormat("hh:mm a")
-        const end = DateTime.fromISO(info.event.endStr).toFormat("hh:mm a")
+        const start = DateTime.fromISO(info.event.startStr).toFormat(PopOver.getTimeFormat())
+        const end = DateTime.fromISO(info.event.endStr).toFormat(PopOver.getTimeFormat())
         const html = html_details.replace("Example Time", `${start} - ${end}`)
             .replace("Example Subject", props.record_display).replace("Example Visit", props.visit_display)
             .replace("Example Provider", props.user_display).replace("Example Location", props.location_display)
