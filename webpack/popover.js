@@ -71,11 +71,6 @@ class PopOver {
         return use12Hour ? "hh:mm a" : "HH:mm"
     }
 
-    static getTimeParseFormat() {
-        const { use12Hour } = UserConfig.get()
-        return use12Hour ? "hh:mm a" : "HH:mm"
-    }
-
     static setup() {
         if (PopOver._setup) return
         $.addEventListener("click", (e) => {
@@ -89,9 +84,9 @@ class PopOver {
             if (!PopOver.validate())
                 return
 
-            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, PopOver.getTimeParseFormat()).toISOTime()
+            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, PopOver.getTimeFormat()).toISOTime()
             start = PopOver._date.toISODate() + "T" + start
-            let end = DateTime.fromFormat($.getElementById("aPopEndTime").value, PopOver.getTimeParseFormat()).toISOTime()
+            let end = DateTime.fromFormat($.getElementById("aPopEndTime").value, PopOver.getTimeFormat()).toISOTime()
             end = PopOver._date.toISODate() + "T" + end
 
             if (Page.type == "edit") {
@@ -189,7 +184,7 @@ class PopOver {
         const enforceDuration = () => {
             const visit = $.getElementById("aPopVisit").value
             const config = API.cache.visits.data[visit]
-            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, PopOver.getTimeParseFormat())
+            let start = DateTime.fromFormat($.getElementById("aPopStartTime").value, PopOver.getTimeFormat())
             endTime.disabled = false
 
             if (!visit)
