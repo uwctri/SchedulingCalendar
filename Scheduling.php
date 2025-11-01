@@ -480,13 +480,29 @@ class Scheduling extends AbstractExternalModule
         if ($this->locationCache[$cacheName])
             return $this->locationCache[$cacheName];
 
+        $locations = [];
         // Find where to pull info from
         $sot = $this->getProjectSetting("location-sot", $project_id);
-        $project_id = $sot == "json" ? $project_id : $this->getProjectSetting("location-pid", $project_id);
-
-        // Decode the JSON
-        $locations = $this->getProjectSetting("location-json", $project_id);
-        $locations = json_decode($locations, true) ?? [];
+        if (in_array($sot, ["json", "pid"])) {
+            $project_id = $sot == "json" ? $project_id : $this->getProjectSetting("location-pid", $project_id);
+            // Decode the JSON
+            $locations = $this->getProjectSetting("location-json", $project_id);
+            $locations = json_decode($locations, true) ?? [];
+        } elseif ($sot == "field") {
+            // Pull from field options
+            $field = $this->getProjectSetting("location-field-options", $project_id);
+            $dd = REDCap::getDataDictionary($project_id, 'array', false, [$field]);
+            $pairs = explode("|", $dd[$field]["select_choices_or_calculations"]);
+            foreach ($pairs as $pair) {
+                $parts = explode(",", $pair, 2);
+                $code = trim($parts[0]);
+                $name = trim($parts[1]);
+                $locations[$code] = [
+                    "name" => $name,
+                    "active" => true,
+                ];
+            }
+        }
 
         // Done?
         if (!$flatten) {

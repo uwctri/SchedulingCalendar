@@ -561,6 +561,12 @@
         }
     }
 
+    table:has(input[name=location-sot][value=field]:checked) {
+        tr[field=location-field-options] {
+            display: contents;
+        }
+    }
+
     table:has(input[name=location-sot][value=json]:checked) {
         tr[field=location-json] {
             display: contents;
@@ -595,6 +601,7 @@
         tr[field=user-metadata],
         tr[field=location-field],
         tr[field=location-static],
+        tr[field=location-field-options],
         tr[field=location-json],
         tr[field=location-pid],
         tr[field=ics-day],

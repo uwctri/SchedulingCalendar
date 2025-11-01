@@ -102,22 +102,27 @@
         },
         {
             "key": "location-field",
-            "name": "<b>Location Field:</b><br>Subject's home clinic. Should use the same coded value used in the location JSON",
+            "name": "<b>Location Home Field:</b><br>Subject's home clinic. Should use the same coded value used in the location source.",
             "tt_name": "config_loc_field",
             "type": "field-list"
         },
         {
             "key": "location-static",
-            "name": "<b>Location Value:</b><br>Coded value for the default location from the JSON",
+            "name": "<b>Location Value:</b><br>Coded value for the default location from the source",
             "tt_name": "config_loc_static",
             "type": "text"
         },
         {
             "key": "location-sot",
-            "name": "<b>Location Source</b><br>Current or another project",
+            "name": "<b>Location Source</b><br>A field, or JSON in the current or other project",
             "tt_name": "config_loc_source",
             "type": "radio",
             "choices": [
+                {
+                    "value": "field",
+                    "name": "Field",
+                    "tt_name": "config_choice_field"
+                },
                 {
                     "value": "json",
                     "name": "Local JSON",
@@ -129,6 +134,12 @@
                     "tt_name": "config_choice_pid"
                 }
             ]
+        },
+        {
+            "key": "location-field-options",
+            "name": "<b>Location Options:</b><br>Field that lists all possible location coded values and display names. All will be shown in the location dropdown when scheduling",
+            "tt_name": "config_loc_field_options",
+            "type": "field-list"
         },
         {
             "key": "location-json",
