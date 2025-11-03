@@ -28,6 +28,12 @@
             }
         ]
     },
+    "action-tags": [
+        {
+            "tag": "@SCHEDULING-CALENDAR",
+            "description": "Insert a scheduling calendar for the user to schedule an appointment as apart of an instrument workflow. Usable by both a logged-in user and survey user. Configurable as @SCHEDULING-CALENDAR([start_date], [end_date], \"visit code or linked [event_name]\", time_in_minutes, [provider], [location], \"popup-or-inline\"). All fields that support piping also support static strings."
+        }
+    ],
     "project-settings": [
         {
             "key": "user-metadata",

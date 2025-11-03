@@ -53,6 +53,30 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
+    Check for action tag on data entry forms
+    */
+    public function redcap_data_entry_form($project_id, $record, $instrument, $event_id)
+    {
+        $this->loadActionTag($project_id, $record, $event_id, $instrument);
+    }
+
+    /*
+    Check for action tag on survey pages
+    */
+    public function redcap_survey_page($project_id, $record, $instrument, $event_id)
+    {
+        $this->loadActionTag($project_id, $record, $event_id, $instrument);
+    }
+
+    private function loadActionTag($project_id, $record, $event_id, $instrument)
+    {
+        // TODO pull datadict, 
+        // check to see if this instrument has the action tag
+        // parse and pull out any info from the action tag
+        // pass everything to JS to render the calendar
+    }
+
+    /*
     Cache the API schema from JSON when it is requested
     */
     public function getSchema()
