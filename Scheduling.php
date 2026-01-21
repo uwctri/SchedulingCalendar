@@ -382,7 +382,7 @@ class Scheduling extends AbstractExternalModule
 
         // Loop over every record and build out info
         foreach ($data as $record_id => $recordData) {
-            $name = $recordData[$nameField];
+            $name = htmlspecialchars_decode(htmlspecialchars_decode($recordData[$nameField])); # We are forced to double encode by Vanderbilt
             $loc = $recordData[$locationField] ?? $locationStatic;
             $withdraw = boolval($recordData[$withdrawField]);
             $subjects[$record_id] = [
