@@ -169,7 +169,7 @@ class SearchBar {
 
         // Init the picker object
         SearchBar._choices = new Choices(searchBarEl, {
-            allowHTML: false,
+            allowHTML: true,
             removeItems: true,
             removeItemButton: true,
             placeholderValue: placeholder,

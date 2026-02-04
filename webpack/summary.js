@@ -43,7 +43,7 @@ class Summary {
 
         Promise.all([API.subjects(), API.visits()]).then(([subjectsData, visitData]) => {
             const subjectData = subjectsData[subject]
-            nameEl.innerText = subjectData.name
+            nameEl.innerHTML = subjectData.name
             for (const field in subjectData.summary_fields) {
                 const sf = subjectData.summary_fields[field]
                 const div = $.createElement("div")
