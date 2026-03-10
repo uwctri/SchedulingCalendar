@@ -14,7 +14,7 @@
     "less": "^4.4.1",
     "less-loader": "^12.3.0",
     "mini-css-extract-plugin": "^2.9.4",
-    "terser-webpack-plugin": "^5.3.14",
+    "terser-webpack-plugin": "^5.4.0",
     "webpack": "^5.101.3",
     "webpack-cli": "^5.1.4",
     "webpack-merge": "^5.10.0"
