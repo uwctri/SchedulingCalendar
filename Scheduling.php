@@ -413,7 +413,7 @@ class Scheduling extends AbstractExternalModule
                 $subjects[$record_id]["visits"][$visit]["branching_logic"] = true;
                 $subjects[$record_id]["visits"][$visit]["range"] = [];
                 if ($blData && $blEvent && $blField) {
-                    $not = (count($blValue) > 0) && ($blValue[0] == "!");
+                    $not = (strlen($blValue) > 0) && ($blValue[0] == "!");
                     $v = $blData[$record_id][$blEvent][$blField];
                     $subjects[$record_id]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
                 }
