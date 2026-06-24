@@ -10,6 +10,7 @@ import PopOver from "./popover"
 import RedCap from "./redcap"
 import { CRUD, Resource } from "./enums"
 import UserConfig from './userConfig'
+import Page from "./page"
 
 const defaultStart = "08:00"
 const defaultEnd = "17:00"
@@ -56,6 +57,7 @@ class BulkEdit {
                     "group": o.group,
                     "start": `${date.toFormat('yyyy-MM-dd')}T${o.start}:00`,
                     "end": `${date.toFormat('yyyy-MM-dd')}T${o.end}:00`,
+                    "timezone": Page.tz || "local",
                 })
             }
             API.multi({

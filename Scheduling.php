@@ -97,6 +97,7 @@ class Scheduling extends AbstractExternalModule
         $payload["pid"] = $project_id;
         $err_msg = "Not supported. Invalid resource or CRUD operation.";
         $result = null;
+        $schemaError = false;
 
         // Replace placeholders for empty arrays
         $payload = array_map(function ($x) {
@@ -116,8 +117,9 @@ class Scheduling extends AbstractExternalModule
         $schema = $this->getSchema()[$payload["resource"]][$payload["crud"]];
         if ($schema) {
             $schemaError = true;
+            $innerPayload = isset($payload["bundle"]) ? $payload["bundle"][0] : $payload;
             foreach ($schema as $schemOption)
-                if (count(array_intersect_key(array_flip($schemOption), $payload)) === count($schemOption))
+                if (count(array_intersect_key(array_flip($schemOption), $innerPayload)) === count($schemOption))
                     $schemaError = false; // All required keys are present
         }
 
@@ -166,6 +168,7 @@ class Scheduling extends AbstractExternalModule
             $err_msg = "Missing parameters for operation";
         } elseif ($payload["bundle"] && !empty($task)) {
             $result = [];
+            $err_msg = "";
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
                 $result[] = $this->$task($subPayload);
