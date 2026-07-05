@@ -562,7 +562,10 @@ class Scheduling extends AbstractExternalModule
         if ($systemIndex !== false)
             $localCodes = array_map('trim', explode(',', $this->getSystemSetting("availability-codes")[$systemIndex]));
         $allFlag = $payload["all_availability"]; // Defaults to false when payload is null
-        $allCodes = array_combine($this->getSystemSetting("group-code"), $this->getSystemSetting("group-name"));
+        $allCodes = array_combine(
+            $this->getSystemSetting("group-code") ?? [],
+            $this->getSystemSetting("group-name") ?? []
+        );
         $result = [];
         if ($globalFlag) {
             $result["global"] = [
