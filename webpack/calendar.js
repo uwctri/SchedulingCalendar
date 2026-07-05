@@ -399,14 +399,20 @@ class Calendar {
                 if (["schedule", "my"].includes(Page.type))
                     appointmentPromise = API.getAppointments({ ...paramsCommon, ...paramsAppointment })
 
-                Promise.all([availabilityPromise, appointmentPromise]).then(([availabilityData, appointmentData]) => {
+                Promise.all([availabilityPromise, appointmentPromise, API.providers()]).then(([availabilityData, appointmentData, providersData]) => {
                     let data = availabilityData.concat(appointmentData)
+                    // Filter to only schedulable and is_local providers
+                    const validProviders = Object.entries(providersData).filter(e => !e[1].is_unschedulable && e[1].is_local).map(e => e[0])
+
                     data.forEach((event) => {
                         event = commonProcessing(event)
 
-                        // If on schedule page, send the availability to background
+                        // If on schedule page, filter to only valid providers
                         if (Page.type == "schedule" && event.is_availability) {
                             event.display = "background"
+                            // If the provider is not valid, hide it
+                            if (!validProviders.includes(event.user))
+                                event.display = "none"
                         }
                     })
 
