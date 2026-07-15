@@ -689,6 +689,10 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         } else {
             $query->add("AND time_start <= ? AND time_end >= ?", [$start, $end]);
+            // TODO If availability was scheduled in two seperate projects (or more) that works
+            // then they won't be merged into one availability block. 
+            // This is a known limitation of the current design. That availabilty will be overlooked
+            // and an "unable to schedule" message will be shown to the user. This is a rare case and can be fixed in a future version.
         }
 
         $result = $query->execute();
