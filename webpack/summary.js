@@ -2,6 +2,8 @@ import SearchBar from "./searchBar"
 import API from "./api"
 import { DateTime } from "luxon"
 import Calendar from "./calendar"
+import RedCap from "./redcap"
+import Page from "./page"
 
 class Summary {
 
@@ -40,6 +42,20 @@ class Summary {
         Summary._current = subject
         const template = $.getElementById("eventTemplate")
         const nameEl = $.getElementById("subjectName")
+
+        const blurbEl = $.getElementById("summaryTzBlurb")
+        if (blurbEl) {
+            if (Array.isArray(RedCap.timezones) && RedCap.timezones.length > 1) {
+                const tzValue = Page.tz || RedCap.timezones[0].value
+                const activeTz = RedCap.timezones.find(tz => tz.value === tzValue)
+                const tzLabel = activeTz ? activeTz.label : tzValue
+                blurbEl.innerText = tzLabel ? `Times below are in ${tzLabel}` : ""
+                blurbEl.classList.remove("d-none")
+            } else {
+                blurbEl.innerText = ""
+                blurbEl.classList.add("d-none")
+            }
+        }
 
         Promise.all([API.subjects(), API.visits()]).then(([subjectsData, visitData]) => {
             const subjectData = subjectsData[subject]

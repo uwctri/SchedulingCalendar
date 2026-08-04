@@ -26,6 +26,8 @@ if (RedCap.timezones.length > 1) {
         tzPicker.appendChild(option)
     })
     $.getElementByClassName("fc-header-toolbar").style.marginBottom = "2em"
+    const subSummary = $.getElementById("subjectSummary")
+    if (subSummary) subSummary.classList.add("has-tz-picker")
     tzPicker.value = Page.tz || RedCap.timezones[0].value
     tzPicker.addEventListener("change", (e) => {
         const params = new URLSearchParams(window.location.search)

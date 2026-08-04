@@ -385,7 +385,7 @@ class Scheduling extends AbstractExternalModule
 
         // Loop over every record and build out info
         foreach ($data as $record_id => $recordData) {
-            $name = $recordData[$nameField];
+            $name = htmlspecialchars_decode(htmlspecialchars_decode($recordData[$nameField] ?? '')); # We are forced to double encode by Vanderbilt
             $loc = $recordData[$locationField] ?? $locationStatic;
             $withdraw = boolval($recordData[$withdrawField]);
             $subjects[$record_id] = [
@@ -1703,9 +1703,11 @@ class Scheduling extends AbstractExternalModule
         $data = REDCap::getData($project_id, 'array', $records, $fields);
         $results = [];
         foreach ($data as $record_id => $event_data) {
-            foreach ($event_data as $event_id => $fields) {
-                foreach ($fields as $field => $value) {
-                    $results[$record_id][$field] = $this->escape($value);
+            foreach ($event_data as $event_id => $event_fields) {
+                foreach ($event_fields as $field => $value) {
+                    if (!isset($results[$record_id][$field]) || ($value !== '' && $value !== null)) {
+                        $results[$record_id][$field] = $this->escape($value);
+                    }
                 }
             }
         }

@@ -34,6 +34,7 @@ $index = $module->getUrl('index.php');
         <div class="card">
             <div class="card-header">
                 <div id="subjectName"></div>
+                <div class="text-muted small font-italic d-none" id="summaryTzBlurb"></div>
             </div>
             <div id="eventTemplate" class="card-body p-3 d-none">
                 <div class="row text-nowrap no-gutters">
