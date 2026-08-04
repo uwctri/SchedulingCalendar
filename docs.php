@@ -68,151 +68,154 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="purpose" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Purpose</div>
                 <div class="card-body">
-                    This external module adds comprehensive scheduling functionality to the REDCap platform.
-                    It allows users (also called providers below) to set their availability and then allows other users
-                    to schedule appointments with subjects against that availability. The goal is to eliminate the need to use software
-                    outside of REDCap. While there does exist a native Calendar module in REDCap that is useful for smaller teams or projects, some may
-                    not find it suitable when dealing with larger teams that work across multiple projects, at different times, or in different locations.
+                    This external module adds comprehensive scheduling and availability management functionality to the REDCap platform.
+                    It allows providers (logged-in users) to set their availability across projects and enables clinical or study staff
+                    to schedule appointments for subjects against that availability seamlessly within REDCap.
                     <br><br>
-                    Please understand that this module may be difficult to initially set up and use. It is recommended that you read through the documentation
-                    and reach out to the developers (via a <a href="https://github.com/uwctri/SchedulingCalendar/issues/new">GitHub issue</a> or <a href="mailto:adam.nunez@ctri.wisc.edu">email</a>) for help if you are having trouble.
+                    The goal of this module is to eliminate reliance on external calendar software or third-party scheduling tools.
+                    While REDCap includes a native Calendar module for basic project needs, this external module is designed for larger teams,
+                    complex studies with multi-site locations, shared provider groups across multiple REDCap projects, time-zone sensitive scheduling,
+                    and automated data writeback into REDCap instruments.
+                    <br><br>
+                    Please review the setup instructions and configuration sections below. If you encounter any configuration issues or have feature requests,
+                    contact the developers via <a href="mailto:adam.nunez@ctri.wisc.edu">email</a> or open a <a href="https://github.com/uwctri/SchedulingCalendar/issues/new">GitHub issue</a>.
                 </div>
             </div>
             <div id="workflow" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Workflow & Navigation</div>
                 <div class="card-body">
-                    Workflow can be broken down into two main parts, scheduling availability and scheduling appointments.
+                    The module's workflow is divided into three primary navigation views available in the top right menu of the calendar:
                     <br><br>
-                    When scheduling availability we expect a provider to use the calendar to enter when they plan to be available to see subjects for the study.
-                    This could be 9-5 Monday through Friday, some other set schedule, or manually entered specific times on days. Options exist to bulk set a
-                    schedule for the provider and then make modifications for any exceptions that exist. A "Calendar Admin" can also edit availability on behalf
-                    of a provider.
+                    <p><b>1. Edit Availability (<code>type=edit</code>)</b><br>
+                        Providers or Calendar Admins use this view to set available working hours on the calendar.
+                        Availability can be entered manually by selecting time blocks directly on the calendar or using the <strong>Bulk Edit</strong> tool to generate recurring weekly schedules.
+                        Exceptions (e.g., holidays, vacations, or sick leave) can be modified or removed at any time. Calendar Admins can manage availability on behalf of any provider.</p>
+
+                    <p><b>2. Schedule Appointments (<code>type=schedule</code>)</b><br>
+                        Staff members use this view to schedule subject appointments against posted provider availability.
+                        Users can filter by provider, subject name/ID, visit type, or clinic location. The module enforces visit duration, checks location constraints,
+                        evaluates branching logic, and prevents double-booking. When scheduled, the appointment automatically populates designated writeback fields on the subject's REDCap record.</p>
+
+                    <p><b>3. My Calendar (<code>type=my</code>)</b><br>
+                        Providers use this personal view to see all upcoming appointments assigned to them across all linked projects in one consolidated calendar, along with direct links to the relevant REDCap subject records.</p>
+                </div>
+            </div>
+            <div id="actiontag" class="card my-4 card-primary">
+                <div class="card-header text-white fw-bold bg-primary bg-gradient d-flex justify-content-between align-items-center">
+                    <span>Action Tag Integration</span>
+                    <span class="badge bg-warning text-dark font-weight-bold px-2 py-1">Coming Soon</span>
+                </div>
+                <div class="card-body">
+                    The module supports the <code>@SCHEDULING-CALENDAR</code> action tag to embed an interactive scheduling calendar directly into data entry forms or survey instruments.
                     <br><br>
-                    When scheduling appointments we expect a provider to use the calendar to find a time that a provider is available and then schedule a subject
-                    for that time. Any provider can schedule a subject for any other provider. The provider can also edit the appointment after it is scheduled,
-                    with some limitations.
+                    <h5 class="text-decoration-underline">Action Tag Syntax</h5>
+                    <pre>
+                        <code>
+                            @SCHEDULING-CALENDAR([start_date], [end_date], "visit code or linked [event_name]", time_in_minutes, [provider], [location], "popup-or-inline")
+                        </code>
+                    </pre>
+                    <p><b>Parameters:</b><br>
+                        1. <b>start_date</b> – Optional start date for scheduling range (can be a static string like <code>"2026-08-01"</code> or a piped field <code>[baseline_date]</code>).<br>
+                        2. <b>end_date</b> – Optional end date for scheduling range (static string or piped field <code>[visit_window_end]</code>).<br>
+                        3. <b>visit_code</b> – The visit code or linked event name configured in project settings.<br>
+                        4. <b>time_in_minutes</b> – Visit duration override in minutes (e.g., <code>30</code> or <code>60</code>).<br>
+                        5. <b>provider</b> – Optional pre-selected provider username or piped field.<br>
+                        6. <b>location</b> – Optional pre-selected location code or piped field.<br>
+                        7. <b>mode</b> – Rendering mode: <code>"popup"</code> (launches modal) or <code>"inline"</code> (embeds inside form).
+                    </p>
+                    <p>All parameter positions support REDCap field piping as well as static string values. This allows dynamic scheduling workflows based on participant data entered earlier in a survey or instrument.</p>
                 </div>
             </div>
             <div id="config" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Project Configuration</div>
                 <div class="card-body">
-                    It is advised that you require module-specific user privileges to access the configuration settings due to the complexity of settings in the module.
+                    Due to the comprehensive nature of the module, it is strongly advised to restrict access to the External Modules configuration page to authorized project administrators.
                     <br><br>
                     <h5 class="text-decoration-underline">General Configuration</h5>
                     <p><b>Calendar Admin</b><br>
-                        Admins may edit any user's calendar and have access to two additional tools:<br>
-                        1. Data cleanup - remove older availability and appointments for withdrawn subjects<br>
-                        2. ICS Exports - export a calendar file for viewing in an outside application. This file will contain PHI.<br>
-                        See below for additional information on both tools.</p>
-                    <p><b>Unschedulable</b><br>
-                        This is a list of users that have access to the project, availability on the calendar, but shouldn't be schedulable.
-                        This is useful if a team member was originally a provider and now has a purely administrative role.</p>
+                        Users assigned as Calendar Admins may edit any provider's availability, modify existing appointments on behalf of others, and access administrative tools:<br>
+                        1. <i>Data Clean Up</i> – Purge past availability and cancel appointments for withdrawn subjects.<br>
+                        2. <i>ICS Export & Live Feed</i> – Generate calendar files or secure subscription links for calendar integration.<br>
+                        3. <i>User Color Configuration</i> – Assign custom hex colors for providers.<br>
+                    </p>
+                    <p><b>Unschedulable Users</b><br>
+                        List of users who possess project access and historical availability records but should no longer be listed as schedulable providers in dropdowns or search filters.</p>
                     <p><b>Trigger DET</b><br>
-                        This is a technical feature and requires a developer to implement.
-                        Sends a POST to the Data Entry Trigger on calendar save. See below for details on the structure of the POST request.</p>
+                        Sends an HTTP POST payload to the project's Data Entry Trigger (DET) endpoint whenever availability or appointments are added, modified, or deleted. See the DET section below for payload details.</p>
                     <p><b>Name Field</b><br>
-                        Variable to index, search, and display as the subject's name in various places on the calendar.
-                        This should be a full name, i.e. a concatenation of the first and last name.</p>
+                        REDCap variable name used to index, search, and display subject names on the calendar and subject summary panel (e.g., <code>full_name</code> or <code>first_name</code>).</p>
                     <p><b>Withdraw Flag</b><br>
-                        This field should be set to indicate that a subject has been withdrawn from the study and is no longer schedulable.
-                        This flag field should be set to any non-blank, non-zero value. Future appointments are not removed from the calendar.
-                        You can either manually remove them or clean them up using the admin tools.</p>
+                        Field indicating that a subject has withdrawn from the study. When set to any non-blank, non-zero value, the subject is flagged as withdrawn and excluded from search results for new appointments.</p>
                     <p><b>Default Location</b><br>
-                        Typically the location for an appointment is left blank and is selected by the provider when scheduling. You can, however,
-                        choose to default the location to either a field's value or a static value. Both options below use the coded location value from the location JSON.<br>
-                        <strong>Location Field</strong> - Useful if subjects have preferred clinics that are imported or selected early in the study.<br>
-                        <strong>Location Value</strong> - Useful if the vast majority of appointments (or all of them) will occur at one location.
+                        Configures how appointment locations are assigned when scheduling:<br>
+                        • <strong>Blank</strong> – Provider selects location manually during scheduling.<br>
+                        • <strong>Field</strong> – Auto-selects location based on a field value in the subject's record.<br>
+                        • <strong>Static</strong> – Auto-selects a static location code for all appointments.
                     </p>
                     <p><b>Location Source</b><br>
-                        Locations in the module are defined via a JSON object, an easily-readable format that lists all locations, display names, coded values, and metadata.
-                        The structure of this data is detailed below. The data can either be stored on the current project or pulled from another project.
-                        This is useful if two or more studies share a location structure.<br>
-                        <strong>Location JSON</strong> - If the location JSON is local, it should be minified and saved here. See below for format.<br>
-                        <strong>Location Project</strong> - Select another project to copy the location JSON from.
-                        This is not a one-time copy; the location structure will always be looked up from this other project.
-                        This makes it easy to maintain a single source of truth for the location structure.
+                        Defines where the clinic/location structure is loaded from:<br>
+                        • <strong>Field</strong> – Uses select choices from a REDCap field dictionary.<br>
+                        • <strong>Local JSON</strong> – Uses a JSON structure stored in the project's settings.<br>
+                        • <strong>Another Project</strong> – Pulls the location JSON dynamically from another REDCap project ID, establishing a single source of truth across studies.
+                    </p>
+                    <p><b>Timezones</b><br>
+                        Newline-separated list of valid <code>tzDatabase</code> timezone identifiers and display aliases (e.g., <code>America/Chicago, Central</code> or <code>America/New_York, Eastern</code>).
+                        When multiple timezones are configured, a timezone selector appears on the calendar header, and all appointment & availability times dynamically render in the selected timezone.
                     </p>
                     <h5 class="text-decoration-underline">Schedulable Visit Configuration</h5>
-                    <p>All settings in this section are repeated for every schedulable event on the calendar.</p>
-                    <p><b>Display Name</b><br>
-                        The name of the event to be displayed on the calendar, in dropdowns etc.</p>
-                    <p><b>Internal Coded Value</b><br>
-                        Short unique code used on the backend for scheduling.</p>
-                    <p><b>Linked Event</b><br>
-                        A REDCap event to associate this schedulable visit to. Data is pulled from and written to this event for the Shared Schedulable Visit Config below.</p>
-                    <p><b>Notes</b><br>
-                        Any notes to be displayed on the subject summary for this event. Useful for displaying visit instructions or other information.</p>
-                    <p><b>Branching Logic</b><br>
-                        REDCap branching logic to determine when this visit type should be available for scheduling. Leave blank to always show this visit type.</p>
-                    <p><b>Duration</b><br>
-                        Duration of the event in minutes. This is used to calculate the end time of the event when scheduling.</p>
-                    <p><b>Allow Additional Time</b><br>
-                        Allow the provider to add additional time to the event when scheduling. This is useful if the provider needs to add time for a specific subject. When enabled, the duration above becomes the minimum visit duration.</p>
-                    <p><b>Allow Any Location</b><br>
-                        Allow the provider to schedule this event at any location, regardless of the location listed on the availability. This is useful for calls or other virtual visits.</p>
+                    <p>Repeatable configuration block for defining visit types available for scheduling on the calendar:</p>
+                    <p><b>Display Name</b> – Human-readable label displayed in dropdowns and on calendar events.</p>
+                    <p><b>Internal Coded Value</b> – Unique alphanumeric code identifying the visit type.</p>
+                    <p><b>Linked Event</b> – REDCap event associated with this visit type for data writeback.</p>
+                    <p><b>Notes</b> – Optional instructions or notes displayed on the subject summary card when this visit is selected.</p>
+                    <p><b>Branching Logic</b> – REDCap field, event, and value logic determining whether this visit type is available for scheduling for a given subject.</p>
+                    <p><b>Duration</b> – Default length of the appointment in minutes.</p>
+                    <p><b>Allow Additional Time</b> – When enabled, the duration becomes a minimum length, allowing providers to extend appointment times during scheduling.</p>
+                    <p><b>Allow Any Location</b> – Bypasses clinic location checks for virtual, phone, or location-independent visits.</p>
                     <h5 class="text-decoration-underline">Shared Schedulable Visit Config</h5>
-                    <p><b>Date/Time Writeback</b><br>
-                        When a subject is scheduled for an event, the date (and/or time) of the event will be written back to the linked event in this field based on the validation enabled on the field. All date, time, and datetime formats are supported. This is useful for tracking when a subject was scheduled for a visit, displaying the information in forms, etc.</p>
-                    <p><b>Provider Writeback</b><br>
-                        When a subject is scheduled for an event, the provider that the event is scheduled with will be written back to the linked event in this field. This is useful for tracking who has visits, displaying the information in forms, etc.</p>
-                    <p><b>Visit Range Start/End</b><br>
-                        If your visit has a valid schedulable range calculated or manually entered somewhere in your project, you can enter the field names here. This is useful for preventing scheduling outside of the valid range.</p>
-                    <h5 class="text-decoration-underline">Subject Summary Configuration</h5>
-                    <p><b>Additional Field</b><br>
-                        Add extra fields to the right-side subject summary. Useful for displaying email, phone, or other demographic information.</p>
-                    <h5 class="text-decoration-underline">ICS Export Config</h5>
-                    <p><b>Additional Field</b><br>
-                        Add extra fields to the description of the event in the calendar's ICS exports.</p>
+                    <p><b>Date/Time Writeback</b> – Field(s) on the linked event automatically populated with the scheduled date and/or time upon booking (supports date, time, and datetime validation types).</p>
+                    <p><b>Provider Writeback</b> – Field on the linked event automatically populated with the scheduled provider's username.</p>
+                    <p><b>Visit Range Start / End</b> – Fields indicating the recommended or valid window for scheduling the visit, displayed as a recommended range on the subject summary.</p>
+                    <h5 class="text-decoration-underline">Subject Summary & ICS Export Extra Fields</h5>
+                    <p><b>Additional Fields</b> – Select extra REDCap fields (e.g., phone, email, secondary contact) to display on the right-side subject summary panel or include in ICS calendar exports.</p>
                 </div>
             </div>
             <div id="sys" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">System Configuration</div>
                 <div class="card-body">
-                    These settings can only be set by a REDCap administrator in the Control Center.
-                    It is not necessary to update these settings for every new project, but projects that share availability will need to be configured here.
+                    System-level settings are configured by REDCap System Administrators in the Control Center under External Modules configuration.
+                    <br><br>
                     <p><b>Availability Groups</b><br>
-                        When adding availability to the calendar providers associate it with a particular group.
-                        This group can be used by one project only, or shared with other projects. It is common to have projects that use only
-                        the "local" availability group, i.e. the group associated with that project only, however if a team of providers is
-                        working on multiple studies at once they may wish to enter availability into a specific group and then share that group
-                        across projects.<br>
-                        Name - Display name for the availability group.<br>
-                        Code - Coded value for the group.</p>
+                        Defines availability group codes and display names available system-wide or shared across specific projects.<br>
+                        • <strong>Group Name</strong> – Display label for the group.<br>
+                        • <strong>Group Code</strong> – Coded value assigned to provider availability blocks.</p>
                     <p><b>Project Availability Group</b><br>
-                        To associate the created availability groups (above) with any number of projects, we update this list.<br>
-                        <strong>Project</strong> - The existing project using the module<br>
-                        <strong>Code</strong> - Coded value of the availability group. If listing multiple, then enter a comma-delimited list.
-                    </p>
+                        Maps availability group codes to specific REDCap project IDs, enabling provider availability to be shared across multiple studies.</p>
                     <p><b>Allow Global Group</b><br>
-                        The "Global Group" is an availability group that is shared across all projects. If your REDCap instance has a small
-                        number of regular users, you may wish to enable this so all, or most, availability can exist under one group.</p>
+                        Enables a shared "Global Group" accessible to all projects on the REDCap instance.</p>
                     <p><b>Prevent Local Group</b><br>
-                        By default, all projects start with a "local" availability group that only the one project can access. You can turn that
-                        feature off here if you want to ensure that custom groups are always used.</p>
+                        Disables the default project-local availability group, forcing projects to use configured system availability groups.</p>
                 </div>
             </div>
             <div id="admin" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Admin Tools</div>
                 <div class="card-body">
-                    Admin tools are available to users who are listed as "Calendar Admin" in the general settings.
-                    A handful of tools are available to these users to help manage the calendar, all located in the bottom left corner of the calendar.
-                    <p><b>Clean Up</b><br>
-                        Using the clean up tool will remove all availability in the past and/or appointments for withdrawn subjects.
-                        This is useful to keep the calendar clean, easy to use, and can (very slightly) improve performance.</p>
-                    <p><b>ICS Export/Link</b><br>
-                        Download a copy of the calendar as an ICS file that can be imported into Outlook, Google Calendar, or any other
-                        service. This calendar will contain PHI. A link can also be generated to live-stream the calendar to another application.</p>
-                    <p><b>Color Configuration</b><br>
-                        By default, users are given random colors for their availability and appointments. In the color configuration, the admin
-                        can assign permanent colors for each user.</p>
+                    Users designated as Calendar Admins can access administrative utility tools via the toolbar icon in the bottom-left corner of the calendar page:
+                    <br><br>
+                    <p><b>1. Clean Up Tool</b><br>
+                        Allows administrators to bulk-purge historical availability entries prior to a selected date or automatically cancel appointments for subjects flagged as withdrawn.</p>
+                    <p><b>2. ICS Export & Secure Live Feed</b><br>
+                        Generates an iCalendar (<code>.ics</code>) file containing upcoming appointments for import into Outlook, Apple Calendar, or Google Calendar.
+                        Admins can also copy a unique secure feed URL to subscribe to calendar updates automatically.</p>
+                    <p><b>3. User Color Configuration</b><br>
+                        Assigns fixed custom hex colors for providers on the calendar interface, overriding default random/accessible palette colors.</p>
                 </div>
             </div>
             <div id="locs" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">Location Settings Structure</div>
                 <div class="card-body">
-                    Locations are structured as a JSON object that is easily readable and can be stored in a REDCap project or pulled from another project.
-                    Currently, the location structure is only used for construction of dropdowns and display names. In the future, the structure will allow
-                    for location matching and matching to sub-locations. Two examples of the structure are below, both are very simple. Currently there is no need to build out sub-locations.
+                    Locations are structured as a JSON object containing coded values, display names, active status, and optional sub-location hierarchies.
+                    Below are two reference examples:
                     <div class="container">
                         <div class="row">
                             <div class="col-6">
@@ -220,129 +223,125 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 <code>
                                     {
                                         "WFH": {
-                                            "name": "Work From Home",
+                                            "name": "Work From Home / Virtual",
                                             "active": true,
                                             "in_person": false
                                         },
                                         "CTRIMAD": {
-                                            "name": "Madison Office",
+                                            "name": "Madison Clinic",
                                             "active": true,
                                             "sub": {
                                                 "CMADE": {
-                                                    "name": "Madison East",
+                                                    "name": "Madison East Wing",
                                                     "active": true
                                                 },
                                                 "CMADW": {
-                                                    "name": "Madison West",
+                                                    "name": "Madison West Wing",
                                                     "active": true
                                                 }
                                             }
                                         },
                                         "CTRIMKE": {
-                                            "name": "Milwaukee Office",
+                                            "name": "Milwaukee Clinic",
                                             "active": true
                                         }
                                     }
                                 </code>
                                 </pre>
-                                <p>Simple example of a location build out with multiple on-site locations and one "calls only" location.</p>
+                                <p>Multi-location setup with sub-clinic wings and a virtual/phone option.</p>
                             </div>
                             <div class="col-6">
                                 <pre>
                                 <code>
                                     {
                                         "call": {
-                                            "name": "Call",
+                                            "name": "Phone Call",
                                             "active": true,
                                             "in_person": false
                                         },
                                         "site": {
-                                            "name": "In Office",
+                                            "name": "Main Office",
                                             "active": true,
                                             "in_person": true
                                         }
                                     }
                                 </code>
                                 </pre>
-                                <p>If you have no need for locations you can list only one or two, one for calls and one for in-person visits.</p>
+                                <p>Simple 2-location setup distinguishing phone/virtual visits from in-person office visits.</p>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+            <div id="timezones" class="card my-4 card-primary">
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">Timezone Configuration & Behavior</div>
+                <div class="card-body">
+                    The module provides full multi-timezone support for studies operating across multiple geographic regions or timezones.
+                    <br><br>
+                    <p><b>Storage Standard:</b> All event and availability timestamps (<code>time_start</code>, <code>time_end</code>) are stored in the server's local timezone in the database.</p>
+                    <p><b>Dynamic Presentation:</b> When timezones are configured in Project Settings, a timezone dropdown appears on the top header bar of the calendar.
+                        When a user selects a timezone, all availability slots, scheduled appointments, popups, and subject summary visit times dynamically adjust to render in that selected timezone.</p>
+                    <p><b>Subject Summary Disclaimer:</b> When multiple timezones are configured, the subject summary card header displays a dynamic notice (e.g., <i>"Times below are in Central"</i>) clarifying the active timezone for displayed visits.</p>
+                </div>
+            </div>
             <div id="det" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient">DET Integration</div>
                 <div class="card-body">
-                    This is a technical feature and requires a developer to implement.
+                    When <b>Trigger DET</b> is enabled in Project Settings, the module dispatches an HTTP POST payload to the project's Data Entry Trigger URL whenever availability or appointments are created, updated, or deleted.
                     <br><br>
-                    If this feature is enabled in the configuration, the module will send a message to the DET endpoint,
-                    if one is set for the project, when anything (appointment or availability) is added, removed, or updated on the calendar.
-                    The message sent will be a POST request with a JSON body formatted as below. The endpoint should respond with a 200 status
-                    code immediately upon receipt of the message and carry out any additional processing asynchronously.
-                    <br><br>
-                    <strong>Note:</strong> The internal ID is a unique identifier for the appointment or availability. It is not the same as the record_id or any other identifier in REDCap.
-                    Currently it is only useful if you are able to directly query the database for more information. This limits the usefulness of the delete and update messages.
-                    In the future, all information on the deleted or updated appointment or availability will be sent in the message.
+                    <h5 class="text-decoration-underline">DET HTTP POST Payload Schema</h5>
                     <pre>
                         <code>
                             {
-                                redcap_url: Root URL of the REDCap installation,
-                                project_url: URL to the associated project ending in "/index.php?pid=[project-id]",
-                                project_id: The project id of the current project,
-                                username: The username of the current user,
-                                resource: Enum describing the resource that was impacted (Availability, Appointment),
-                                crud: Enum describing the operation that occurred (create, update, delete. Read is never sent),
-                                msg: String message describing the operation that occurred,
+                                redcap_url: "Root URL of REDCap instance",
+                                project_url: "URL to project index.php?pid=[project-id]",
+                                project_id: "Numeric Project ID",
+                                username: "Username of user performing action",
+                                resource: "Resource type (Availability or Appointment)",
+                                crud: "CRUD operation (create, update, delete)",
+                                msg: "Status or operation description message",
                                 ___
-                                // Only sent when resource is Appointment and crud is create
-                                start: Start datetime in ISO format,
-                                end: End datetime in ISO format,
-                                providers: Array of size one with provider username,
-                                locations: Array of size one with location name,
-                                subjects: Array of size one with subject record_id,
-                                visits: Array of size one with visit code,
-                                notes: Any notes that were added,
+                                // Sent when resource = Appointment and crud = create:
+                                start: "Start datetime in ISO/SQL format",
+                                end: "End datetime in ISO/SQL format",
+                                providers: ["provider_username"],
+                                locations: ["location_code"],
+                                subjects: ["record_id"],
+                                visits: ["visit_code"],
+                                notes: "Appointment notes if any",
                                 ___
-                                // Only sent when resource is Availability and crud is create
-                                start: Start datetime in ISO format,
-                                end: End datetime in ISO format,
-                                providers: Array of size one with provider username,
-                                locations: Array of size one with location name,
-                                group: Availability code (also called group code),
+                                // Sent when resource = Availability and crud = create:
+                                start: "Start datetime in ISO/SQL format",
+                                end: "End datetime in ISO/SQL format",
+                                providers: ["provider_username"],
+                                locations: ["location_code"],
+                                group: "Availability group code",
                                 ___
-                                // Only sent when crud is update
-                                id: Internal id of the appointment or availability,
-                                providers: Array of size one with the new provider username (or previous if not changed),
-                                locations: Array of size one with the new location name (or previous if not changed),
-                                ___
-                                // Only sent when crud is delete
-                                id: Internal id of the appointment or availability (now deleted),
-                                data: Full data structure of the appointment or availability that was deleted
+                                // Sent when crud = update or delete:
+                                id: "Internal database ID of calendar entry",
+                                data: "Full associative array of deleted or updated row"
                             }
                         </code>
                     </pre>
-                    If you decide to implement this feature and would like to use the internal ID to query the database for more information, see below for an example of how to do so.
-                    Normally DETs can be hosted on any server, but this DET would need to be hosted on the same server as the REDCap installation so the SQL database can be directly queried using the unique ID.
+                    <h5 class="text-decoration-underline">Direct Database Query Example (PHP)</h5>
+                    <p>If your custom DET endpoint runs on the same server, you can query the database entry directly using the internal ID:</p>
                     <pre>
                         <code>
                             define("NOAUTH", true);
-                            require_once  "../redcap_connect.php";
+                            require_once "../redcap_connect.php";
                             $sql = "SELECT * FROM em_scheduling_calendar WHERE id = ?";
-                            $result = db_query($sql, $_POST["id"]);
-                            $data = db_fetch_assoc($result)
-                            // Do something with the data:
-                            // project_id, visit, availability_code, user, 
-                            // record, location, time_start, time_end, notes
+                            $result = db_query($sql, [$_POST["id"]]);
+                            $data = db_fetch_assoc($result);
+                            // $data contains: project_id, visit, availability_code, user, record, location, time_start, time_end, notes
                         </code>
                     </pre>
                 </div>
             </div>
             <div id="query" class="card my-4 card-primary">
-                <div class="card-header text-white fw-bold bg-primary bg-gradient">URL Query Parameters</div>
+                <div class="card-header text-white fw-bold bg-primary bg-gradient">URL Query Parameters & Deep Linking</div>
                 <div class="card-body">
-                    When building a form in REDCap you might want to add a button to send the user to the calendar, probably to schedule an appointment as part of the workflow.
-                    When linking to the calendar from an instrument, or any external source, you can append a few extra query parameters to configure things.
-
+                    You can construct deep links to the calendar from REDCap data entry forms, survey instruments, or external tools using URL query parameters.
+                    <br><br>
                     <table class="table table-striped table-hover my-3">
                         <thead class="table-dark">
                             <tr>
@@ -353,43 +352,48 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                         <tbody>
                             <tr>
                                 <td class="nowrap"><b>record</b> or <b>id</b></td>
-                                <td>Preselect a subject. Useful if you are adding a link in a form to instruct the user to schedule the current subject.</td>
+                                <td>Pre-selects a subject record ID on page load. Useful for embedding scheduling links inside instruments.</td>
                             </tr>
                             <tr>
                                 <td><b>date</b></td>
-                                <td>Start date in Y-M-D format. By default the calendar shows the current week. Useful if the scheduled appointment should be some number of days out.</td>
+                                <td>Sets initial calendar view date (format <code>YYYY-MM-DD</code>). Defaults to current date.</td>
+                            </tr>
+                            <tr>
+                                <td><b>type</b></td>
+                                <td>Initial page view mode: <code>schedule</code> (default), <code>edit</code> (availability), or <code>my</code> (my calendar).</td>
+                            </tr>
+                            <tr>
+                                <td><b>tz</b></td>
+                                <td>Pre-selects an active timezone identifier (e.g., <code>tz=America/Chicago</code>).</td>
                             </tr>
                             <tr>
                                 <td><b>refer</b></td>
-                                <td>Set to either "true" or an encoded URL. When set, a "Return to workflow" button is shown in the bottom right corner that will send the user back to the referring page or to the encoded URL.</td>
+                                <td>Set to <code>true</code> or an <code>encodeURIComponent()</code> URL string. Renders a "Return to Workflow" button in the bottom right corner.</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    Custom buttons are usually added into descriptive fields and, as a result, normal REDCap field piping and smart variables can be used to build the URL.
-                    <br><br>
-                    A typical link might look like this:
+                    <h5 class="text-decoration-underline">Deep Linking Examples</h5>
+                    <p>Basic link to open calendar for current subject:</p>
                     <pre>
                         <code>
-                            [redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]
+                            [redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]
                         </code>
                     </pre>
 
-                    A URL using both date and record might look like the below. Notice we have piped the date value from a REDCap field:
+                    <p>Link passing piped target date and pre-selected subject:</p>
                     <pre>
                         <code>
-                            [redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]&date=[some_date_field]
+                            [redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]&date=[target_date_field]
                         </code>
                     </pre>
 
-                    A URL using refer can use either "true" or an encoded URL. To do the latter requires some JavaScript to encode the URL. Consider using the Shazam EM for this:
+                    <p>JavaScript link with encoded return URL (e.g., in Shazam EM or descriptive field):</p>
                     <pre>
                         <code>
-                            // Send the user to google after they are done with the calendar
-                            let refer = encodeURIComponent("https://www.google.com")
-                            // Set this URL on a button or link. redcap_version is a global variable set by REDCap. 
-                            let url = `${redcap_version}/ExternalModules/?prefix=scheduling_calendar&page=index&pid=${pid}&refer=${refer}`
-                            url = location.href.split(redcap_version)[0] + url
+                            let refer = encodeURIComponent(window.location.href);
+                            let url = `${redcap_version}/ExternalModules/?prefix=scheduling_calendar&page=index&pid=${pid}&record=${record}&refer=${refer}`;
+                            url = location.href.split(redcap_version)[0] + url;
                         </code>
                     </pre>
                 </div>
