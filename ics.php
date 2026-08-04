@@ -1,4 +1,8 @@
 <?php
+
+/** @var \UWMadison\Scheduling\LocalInstrumentLibrary $module */
+
+
 // API for downloading the ICS file
 // GET /api/?NOAUTH&type=module&prefix=scheduling_calendar&page=ics&pid={}&hash={}
 $project_id = isset($_GET['pid']) ? (int)$_GET['pid'] : null;

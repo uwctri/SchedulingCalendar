@@ -1,4 +1,7 @@
 <?php
+
+/** @var \UWMadison\Scheduling\LocalInstrumentLibrary $module */
+
 $module->initializeJavascriptModuleObject();
 $module->tt_transferToJavascriptModuleObject();
 $jsObj = $module->getJavascriptModuleObjectName();
