@@ -155,7 +155,7 @@ class Scheduling extends AbstractExternalModule
             ],
             "visit" => [
                 "read" => "getVisits",
-                "default" => "Vist resource is read only."
+                "default" => "Visit resource is read only."
             ],
             "metadata" => [
                 "read" => "getUserMetadata",
@@ -177,7 +177,7 @@ class Scheduling extends AbstractExternalModule
             $err_msg = "";
             $result = $this->$task($payload);
         } else {
-            $err_msg = $funcs[$payload["resource"]]["default"] ?? $err_msg;
+            $err_msg = $task[$payload["resource"]]["default"] ?? $err_msg;
         }
 
         // Fire DET at the end
@@ -220,7 +220,7 @@ class Scheduling extends AbstractExternalModule
         return [
             "username" => $username,
             "email" => $user->getEmail(),
-            "name" => $GLOBALS['user_firstname'] . ' ' . $GLOBALS['user_lastname'],
+            "name" => ($GLOBALS['user_firstname'] ?? '') . ' ' . ($GLOBALS['user_lastname'] ?? ''),
             "isCalendarAdmin" => $isAdmin,
             "isSuperUser" => $user->isSuperUser(),
             "icsHash" => $hash
@@ -385,7 +385,7 @@ class Scheduling extends AbstractExternalModule
 
         // Loop over every record and build out info
         foreach ($data as $record_id => $recordData) {
-            $name = htmlspecialchars_decode(htmlspecialchars_decode($recordData[$nameField])); # We are forced to double encode by Vanderbilt
+            $name = $recordData[$nameField];
             $loc = $recordData[$locationField] ?? $locationStatic;
             $withdraw = boolval($recordData[$withdrawField]);
             $subjects[$record_id] = [
@@ -440,10 +440,10 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Check if any exta info is on the subject summary (3rd query)
-        $extaFields = $this->getProjectSetting("ss-field");
-        if (!empty($extaFields)) {
-            $dd = Redcap::getDataDictionary($project_id, 'array', false, $extaFields);
-            $eData = $this->getSingleEventFields($extaFields, null, $project_id);
+        $extraFields = $this->getProjectSetting("ss-field");
+        if (!empty($extraFields)) {
+            $dd = Redcap::getDataDictionary($project_id, 'array', false, $extraFields);
+            $eData = $this->getSingleEventFields($extraFields, null, $project_id);
             foreach ($eData as $record => $recordData) {
                 foreach ($recordData as $field => $val) {
                     $subjects[$record]["summary_fields"][$field] = [
@@ -771,7 +771,7 @@ class Scheduling extends AbstractExternalModule
             $msg = "Availability Restored";
             $this->log($msg, $logData);
             $this->query($sql, [$project_id, $code, $provider, $location, $start, $end]);
-            $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, null, [
+            $this->cleanupAvailability($project_id, $dateStr, $provider, $location, $code, null, [
                 "start" => $start,
                 "end" => $end
             ]);
@@ -805,7 +805,7 @@ class Scheduling extends AbstractExternalModule
         foreach ($appts as $appt) {
             $apptStart = $appt["start"];
             $apptEnd = $appt["end"];
-            if (($apptEnd < $start) && ($apptStart > $end))
+            if (($apptEnd <= $start) || ($apptStart >= $end))
                 continue; // No overlap at all
             if (($apptStart <= $start) && ($apptEnd >= $end)) {
                 return [
@@ -851,7 +851,7 @@ class Scheduling extends AbstractExternalModule
 
         // Cleanup any existing availability that overlaps with out availability
         $msg = "Modified existing availability";
-        $mergeOccured = $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, null, [
+        $mergeOccured = $this->cleanupAvailability($project_id, $dateStr, $provider, $location, $code, null, [
             "start" => $start,
             "end" => $end
         ]);
@@ -877,7 +877,7 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
-    private function cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code, $existing = null, $working = null)
+    private function cleanupAvailability($project_id, $dateStr, $provider, $location, $code, $existing = null, $working = null)
     {
         $start_of_day = $dateStr . " 00:00";
         $end_of_day = $dateStr . " 23:59";
@@ -953,7 +953,7 @@ class Scheduling extends AbstractExternalModule
 
         // Merge occured, attempt again
         if ($resolved) {
-            $this->cleanupAvailabiltiy($project_id, $dateStr, $provider, $location, $code);
+            $this->cleanupAvailability($project_id, $dateStr, $provider, $location, $code);
             return true;
         }
 
@@ -980,7 +980,7 @@ class Scheduling extends AbstractExternalModule
         $query->add(implode(',', $conditions), $params);
         $query->add("WHERE id = ?", [$id]);
         $query->execute();
-        $msg = "Availabiltiy $id updated to range $newStart to $newEnd";
+        $msg = "Availability $id updated to range $newStart to $newEnd";
 
         $this->log(
             "Modified Availability",
@@ -1010,7 +1010,7 @@ class Scheduling extends AbstractExternalModule
             // Can't log in delete entry as we won't even know if its Avail/Appt
             $result = $this->deleteEntry($payload);
             $this->log(
-                "Deleted Availabiltiy Entry",
+                "Deleted Availability Entry",
                 [
                     "agent" => $this->getUser()->getUsername(),
                     ...$result["data"]
@@ -1140,7 +1140,7 @@ class Scheduling extends AbstractExternalModule
         $providers = $payload["providers"];
         $locations = $payload["locations"];
         $subjects = $payload["subjects"];
-        $vists = $payload["visits"];
+        $visits = $payload["visits"];
         $start = $payload["start"];
         $end = $payload["end"];
         $timezone = $payload["timezone"];
@@ -1174,8 +1174,8 @@ class Scheduling extends AbstractExternalModule
             $query->add("AND")->addInClause("record", $subjects);
         }
 
-        if (!empty($vists)) {
-            $query->add("AND")->addInClause("visit", $vists);
+        if (!empty($visits)) {
+            $query->add("AND")->addInClause("visit", $visits);
         }
 
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
@@ -1273,7 +1273,7 @@ class Scheduling extends AbstractExternalModule
 
         if (count($existing) == 0) {
             return [
-                "msg" => "Unable to add appontment, valid matching availability not found",
+                "msg" => "Unable to add appointment, valid matching availability not found",
                 "success" => false
             ];
         }
@@ -1304,7 +1304,7 @@ class Scheduling extends AbstractExternalModule
             ]);
         }
 
-        // Create JSON with info for resotring avail if deleted
+        // Create JSON with info for restoring avail if deleted
         $meta = json_encode([
             "restore" => [
                 "pid" => $project_id,
@@ -1344,7 +1344,7 @@ class Scheduling extends AbstractExternalModule
         );
 
         $this->log(
-            "Appointment Schedled",
+            "Appointment Scheduled",
             [
                 "agent" => $this->getUser()->getUsername(),
                 "provider" => $provider,
@@ -1650,7 +1650,7 @@ class Scheduling extends AbstractExternalModule
         foreach ($data as $record_id => $event_data) {
             foreach ($event_data as $event_id => $fields) {
                 foreach ($fields as $field => $value) {
-                    $results[$record_id][$field] = $this->escape($results[$record_id][$field] ?? $value);
+                    $results[$record_id][$field] = $this->escape($value);
                 }
             }
         }

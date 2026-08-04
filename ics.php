@@ -1,9 +1,9 @@
 <?php
 // API for downloading the ICS file
 // GET /api/?NOAUTH&type=module&prefix=scheduling_calendar&page=ics&pid={}&hash={}
-$project_id = $module->escape($_GET['pid']);
-$hash = $module->escape($_GET['hash']);
-if (!isset($hash) || !isset($project_id))
+$project_id = isset($_GET['pid']) ? (int)$_GET['pid'] : null;
+$hash = isset($_GET['hash']) ? preg_replace('/[^a-zA-Z0-9]/', '', $_GET['hash']) : null;
+if (empty($hash) || empty($project_id))
     exit();
 $json = json_decode($module->getProjectSetting("ics-hash-json", $project_id) ?? "{}", true);
 $user = $json[$hash];

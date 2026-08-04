@@ -5,11 +5,11 @@ $jsObj = $module->getJavascriptModuleObjectName();
 $index = $module->getUrl('index.php');
 ?>
 <script>
-    <?= $jsObj; ?>.project_name = "<?= $module->getProjectName(); ?>"
-    <?= $jsObj; ?>.router = "<?= $module->getUrl('router.php'); ?>"
-    <?= $jsObj; ?>.email = "<?= $module->getContactEmail(); ?>"
+    <?= $jsObj; ?>.project_name = <?= json_encode($module->getProjectName()); ?>;
+    <?= $jsObj; ?>.router = <?= json_encode($module->getUrl('router.php')); ?>;
+    <?= $jsObj; ?>.email = <?= json_encode($module->getContactEmail()); ?>;
     <?= $jsObj; ?>.timezones = <?= $module->getTimeZones(); ?>;
-    <?= $jsObj; ?>.user = <?= json_encode($module->currentUser()); ?>
+    <?= $jsObj; ?>.user = <?= json_encode($module->currentUser()); ?>;
 </script>
 <link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
 <script src="<?= $module->getUrl('index.js'); ?>" defer></script>
