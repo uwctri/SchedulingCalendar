@@ -155,6 +155,7 @@ class API {
             "crud": CRUD.Read,
             "resource": Resource.Subject,
             "providers": providers,
+            "timezone": Page.tz || "local",
         }
 
         // No required keys
@@ -255,6 +256,7 @@ class API {
         const data = {
             "crud": CRUD.Delete,
             "resource": Resource.Availability,
+            "timezone": Page.tz || "local",
             ...payload
         }
 
@@ -268,6 +270,7 @@ class API {
         const data = {
             "crud": CRUD.Update,
             "resource": Resource.Availability,
+            "timezone": Page.tz || "local",
             ...payload
         }
 
@@ -324,6 +327,7 @@ class API {
         const data = {
             "crud": CRUD.Update,
             "resource": Resource.Appointment,
+            "timezone": Page.tz || "local",
             ...payload
         }
 
@@ -336,6 +340,7 @@ class API {
         const data = {
             "crud": CRUD.Delete,
             "resource": Resource.Appointment,
+            "timezone": Page.tz || "local",
             ...payload
         }
 

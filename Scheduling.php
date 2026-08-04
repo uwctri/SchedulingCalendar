@@ -429,6 +429,10 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Perform a second query to get all scheduled visits for the subjects
+        $timezone = $payload["timezone"] ?? "local";
+        $server_tz = date_default_timezone_get();
+        $timezone = $timezone == $server_tz ? "local" : $timezone;
+
         $query = $this->createQuery();
         $query->add("SELECT record, visit, time_start from em_scheduling_calendar WHERE project_id = ?", $project_id);
         $query->add("AND")->addInClause("record", array_keys($subjects));
@@ -436,7 +440,13 @@ class Scheduling extends AbstractExternalModule
         while ($row = $result->fetch_assoc()) {
             $record = $row["record"];
             $visit = $row["visit"];
-            $subjects[$record]["visits"][$visit]["scheduled"][] = $row["time_start"];
+            $start = $row["time_start"];
+            if ($timezone != "local") {
+                $dtStart = new \DateTime($start, new \DateTimeZone($server_tz));
+                $dtStart->setTimezone(new \DateTimeZone($timezone));
+                $start = $dtStart->format('Y-m-d H:i:s');
+            }
+            $subjects[$record]["visits"][$visit]["scheduled"][] = $start;
         }
 
         // Check if any exta info is on the subject summary (3rd query)
@@ -739,8 +749,7 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $provider = $payload["providers"];
         $location = $payload["locations"];
-        $dateStr = substr($start, 0, 10);
-        $timezone = $payload["timezone"];
+        $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         $timezone = $timezone == $server_tz ? "local" : $timezone;
 
@@ -766,6 +775,8 @@ class Scheduling extends AbstractExternalModule
             $payload["end"] = $end;
             $payload["timezone"] = "local";
         }
+
+        $dateStr = substr($start, 0, 10);
 
         if ($restoreBypass) {
             $msg = "Availability Restored";
@@ -968,6 +979,20 @@ class Scheduling extends AbstractExternalModule
             $id = $id_or_payload["id"];
             $newStart = $id_or_payload["start"];
             $newEnd = $id_or_payload["end"];
+            $timezone = $id_or_payload["timezone"] ?? "local";
+            $server_tz = date_default_timezone_get();
+            if ($timezone != "local" && $timezone != $server_tz) {
+                if ($newStart != null) {
+                    $dtStart = new \DateTime($newStart, new \DateTimeZone($timezone));
+                    $dtStart->setTimezone(new \DateTimeZone($server_tz));
+                    $newStart = $dtStart->format('Y-m-d H:i:s');
+                }
+                if ($newEnd != null) {
+                    $dtEnd = new \DateTime($newEnd, new \DateTimeZone($timezone));
+                    $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+                    $newEnd = $dtEnd->format('Y-m-d H:i:s');
+                }
+            }
         }
         $query = $this->createQuery();
         $query->add("UPDATE em_scheduling_calendar SET");
@@ -1026,6 +1051,16 @@ class Scheduling extends AbstractExternalModule
         $start = $payload["start"];
         $end = $payload["end"];
         $id = $payload["id"];
+        $timezone = $payload["timezone"] ?? "local";
+        $server_tz = date_default_timezone_get();
+        if ($timezone != "local" && $timezone != $server_tz) {
+            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
+            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $start = $dtStart->format('Y-m-d H:i:s');
+            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
+            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $end = $dtEnd->format('Y-m-d H:i:s');
+        }
 
         // Grab existing info
         $sql = $this->query("SELECT * FROM em_scheduling_calendar WHERE id = ?", [$id]);
@@ -1069,6 +1104,16 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $providers = $payload["providers"]; // Could be * for all
         $locations = $payload["locations"]; // Could be * for all
+        $timezone = $payload["timezone"] ?? "local";
+        $server_tz = date_default_timezone_get();
+        if ($timezone != "local" && $timezone != $server_tz) {
+            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
+            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $start = $dtStart->format('Y-m-d H:i:s');
+            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
+            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $end = $dtEnd->format('Y-m-d H:i:s');
+        }
 
         $query = $this->createQuery();
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NULL");
@@ -1477,6 +1522,16 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $subjects = $payload["subjects"];
         $project_id = $payload["pid"];
+        $timezone = $payload["timezone"] ?? "local";
+        $server_tz = date_default_timezone_get();
+        if ($timezone != "local" && $timezone != $server_tz) {
+            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
+            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $start = $dtStart->format('Y-m-d H:i:s');
+            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
+            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $end = $dtEnd->format('Y-m-d H:i:s');
+        }
 
         if (empty($subjects)) {
             return [
