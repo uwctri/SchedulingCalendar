@@ -5,6 +5,8 @@ namespace UWMadison\Scheduling;
 use ExternalModules\AbstractExternalModule;
 use REDCap;
 use RestUtility;
+use DateTime;
+use DateTimeZone;
 
 class Scheduling extends AbstractExternalModule
 {
@@ -248,7 +250,7 @@ class Scheduling extends AbstractExternalModule
 
         if ($config) {
             $lines = array_map('trim', explode("\n", $config));
-            $validTimezones = \DateTimeZone::listIdentifiers(\DateTimeZone::ALL);
+            $validTimezones = DateTimeZone::listIdentifiers(DateTimeZone::ALL);
 
             foreach ($lines as $line) {
                 if (empty($line)) continue;
@@ -442,8 +444,8 @@ class Scheduling extends AbstractExternalModule
             $visit = $row["visit"];
             $start = $row["time_start"];
             if ($timezone != "local") {
-                $dtStart = new \DateTime($start, new \DateTimeZone($server_tz));
-                $dtStart->setTimezone(new \DateTimeZone($timezone));
+                $dtStart = new DateTime($start, new DateTimeZone($server_tz));
+                $dtStart->setTimezone(new DateTimeZone($timezone));
                 $start = $dtStart->format('Y-m-d H:i:s');
             }
             $subjects[$record]["visits"][$visit]["scheduled"][] = $start;
@@ -687,11 +689,11 @@ class Scheduling extends AbstractExternalModule
         }
 
         if ($timezone != "local") {
-            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
-            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $dtStart = new DateTime($start, new DateTimeZone($timezone));
+            $dtStart->setTimezone(new DateTimeZone($server_tz));
             $start = $dtStart->format('Y-m-d H:i:s');
-            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
-            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $dtEnd = new DateTime($end, new DateTimeZone($timezone));
+            $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
@@ -713,11 +715,11 @@ class Scheduling extends AbstractExternalModule
             $start = $row["time_start"];
             $end = $row["time_end"];
             if ($timezone != "local") {
-                $dtStart = new \DateTime($start, new \DateTimeZone($server_tz));
-                $dtStart->setTimezone(new \DateTimeZone($timezone));
+                $dtStart = new DateTime($start, new DateTimeZone($server_tz));
+                $dtStart->setTimezone(new DateTimeZone($timezone));
                 $start = $dtStart->format('Y-m-d H:i:s');
-                $dtEnd = new \DateTime($end, new \DateTimeZone($server_tz));
-                $dtEnd->setTimezone(new \DateTimeZone($timezone));
+                $dtEnd = new DateTime($end, new DateTimeZone($server_tz));
+                $dtEnd->setTimezone(new DateTimeZone($timezone));
                 $end = $dtEnd->format('Y-m-d H:i:s');
             }
             $availability[] = [
@@ -765,11 +767,11 @@ class Scheduling extends AbstractExternalModule
         ];
 
         if ($timezone != "local") {
-            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
-            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $dtStart = new DateTime($start, new DateTimeZone($timezone));
+            $dtStart->setTimezone(new DateTimeZone($server_tz));
             $start = $dtStart->format('Y-m-d H:i:s');
-            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
-            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $dtEnd = new DateTime($end, new DateTimeZone($timezone));
+            $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
             $payload["start"] = $start;
             $payload["end"] = $end;
@@ -983,13 +985,13 @@ class Scheduling extends AbstractExternalModule
             $server_tz = date_default_timezone_get();
             if ($timezone != "local" && $timezone != $server_tz) {
                 if ($newStart != null) {
-                    $dtStart = new \DateTime($newStart, new \DateTimeZone($timezone));
-                    $dtStart->setTimezone(new \DateTimeZone($server_tz));
+                    $dtStart = new DateTime($newStart, new DateTimeZone($timezone));
+                    $dtStart->setTimezone(new DateTimeZone($server_tz));
                     $newStart = $dtStart->format('Y-m-d H:i:s');
                 }
                 if ($newEnd != null) {
-                    $dtEnd = new \DateTime($newEnd, new \DateTimeZone($timezone));
-                    $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+                    $dtEnd = new DateTime($newEnd, new DateTimeZone($timezone));
+                    $dtEnd->setTimezone(new DateTimeZone($server_tz));
                     $newEnd = $dtEnd->format('Y-m-d H:i:s');
                 }
             }
@@ -1054,11 +1056,11 @@ class Scheduling extends AbstractExternalModule
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         if ($timezone != "local" && $timezone != $server_tz) {
-            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
-            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $dtStart = new DateTime($start, new DateTimeZone($timezone));
+            $dtStart->setTimezone(new DateTimeZone($server_tz));
             $start = $dtStart->format('Y-m-d H:i:s');
-            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
-            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $dtEnd = new DateTime($end, new DateTimeZone($timezone));
+            $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
@@ -1107,11 +1109,11 @@ class Scheduling extends AbstractExternalModule
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         if ($timezone != "local" && $timezone != $server_tz) {
-            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
-            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $dtStart = new DateTime($start, new DateTimeZone($timezone));
+            $dtStart->setTimezone(new DateTimeZone($server_tz));
             $start = $dtStart->format('Y-m-d H:i:s');
-            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
-            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $dtEnd = new DateTime($end, new DateTimeZone($timezone));
+            $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
@@ -1237,11 +1239,11 @@ class Scheduling extends AbstractExternalModule
             $start = $row["time_start"];
             $end = $row["time_end"];
             if ($timezone != "local") {
-                $dtStart = new \DateTime($start, new \DateTimeZone($server_tz));
-                $dtStart->setTimezone(new \DateTimeZone($timezone));
+                $dtStart = new DateTime($start, new DateTimeZone($server_tz));
+                $dtStart->setTimezone(new DateTimeZone($timezone));
                 $start = $dtStart->format('Y-m-d H:i:s');
-                $dtEnd = new \DateTime($end, new \DateTimeZone($server_tz));
-                $dtEnd->setTimezone(new \DateTimeZone($timezone));
+                $dtEnd = new DateTime($end, new DateTimeZone($server_tz));
+                $dtEnd->setTimezone(new DateTimeZone($timezone));
                 $end = $dtEnd->format('Y-m-d H:i:s');
             }
             $appt[] = [
@@ -1301,11 +1303,11 @@ class Scheduling extends AbstractExternalModule
         }
 
         if ($timezone != "local") {
-            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
-            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $dtStart = new DateTime($start, new DateTimeZone($timezone));
+            $dtStart->setTimezone(new DateTimeZone($server_tz));
             $start = $dtStart->format('Y-m-d H:i:s');
-            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
-            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $dtEnd = new DateTime($end, new DateTimeZone($timezone));
+            $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
             $payload["start"] = $start;
             $payload["end"] = $end;
@@ -1525,11 +1527,11 @@ class Scheduling extends AbstractExternalModule
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         if ($timezone != "local" && $timezone != $server_tz) {
-            $dtStart = new \DateTime($start, new \DateTimeZone($timezone));
-            $dtStart->setTimezone(new \DateTimeZone($server_tz));
+            $dtStart = new DateTime($start, new DateTimeZone($timezone));
+            $dtStart->setTimezone(new DateTimeZone($server_tz));
             $start = $dtStart->format('Y-m-d H:i:s');
-            $dtEnd = new \DateTime($end, new \DateTimeZone($timezone));
-            $dtEnd->setTimezone(new \DateTimeZone($server_tz));
+            $dtEnd = new DateTime($end, new DateTimeZone($timezone));
+            $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
