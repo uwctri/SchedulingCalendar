@@ -3,23 +3,29 @@
 
 class RedCap {
 
-    static user = ExternalModules.UWMadison.Scheduling?.user
-    static project_name = ExternalModules.UWMadison.Scheduling?.project_name
-    static email = ExternalModules.UWMadison.Scheduling?.email
-    static timezones = ExternalModules.UWMadison.Scheduling?.timezones
-    static btn_color = getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color")
+    static module = ExternalModules.UWMadison.Scheduling
+    static user = ExternalModules.UWMadison.Scheduling.user
+    static project_name = ExternalModules.UWMadison.Scheduling.project_name
+    static email = ExternalModules.UWMadison.Scheduling.email
+    static timezones = ExternalModules.UWMadison.Scheduling.timezones
+    static btn_color = $.getElementById("content") ? getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color") : ""
+    static tt = (key) => ExternalModules.UWMadison.Scheduling.tt(key) // Redcap EM translate func
 
-    static tt = (key) => ExternalModules.UWMadison.Scheduling?.tt(key) // Redcap EM translate func
-    static ttHTML = (html) => {
-        let match
-        const reg = /{{(.*?)}}/g;
-        while ((match = reg.exec(html)) !== null) {
-            html = html.replace(match[0], RedCap.tt(`html_${match[1]}`))
-        }
-        return html
+    static ttHTML = (html, data = {}) => {
+        if (!html) return ""
+        return html.replace(/{{(.*?)}}/g, (match, p1) => {
+            const key = p1.trim()
+            if (data) {
+                if (data[key] !== undefined) return data[key]
+                if (data[key.toLowerCase()] !== undefined) return data[key.toLowerCase()]
+                if (data[key.toUpperCase()] !== undefined) return data[key.toUpperCase()]
+            }
+            const translated = RedCap.tt(`html_${key}`)
+            return translated !== undefined && translated !== null ? translated : match
+        })
     }
-    static csrf = get_csrf_token // Redcap function
-    static popover = (target, obj) => jQuery(target).popover(obj) // Bootstrap popovers use Jquery
+    static csrf = typeof get_csrf_token !== "undefined" ? get_csrf_token : null // Redcap function
+    static popover = (target, obj) => typeof jQuery !== "undefined" ? jQuery(target).popover(obj) : null // Bootstrap popovers use Jquery
     static ajax = (action, payload) => ExternalModules.UWMadison.Scheduling.ajax(action, payload)
 
 }

@@ -1,8 +1,86 @@
 import Swal from "sweetalert2-optimized"
-
-const doc = document
+import RedCap from "./redcap"
+import "./actiontag.less"
+import tplNoSlots from "./html/actiontag_no_slots.html"
+import tplNoFilterMatch from "./html/actiontag_no_filter_match.html"
+import tplSidebar from "./html/actiontag_sidebar.html"
+import tplResetBtn from "./html/actiontag_reset_btn.html"
+import tplLoading from "./html/actiontag_loading.html"
+import tplModal from "./html/actiontag_modal.html"
+import tplSlotsPanel from "./html/actiontag_slots_panel.html"
+import tplApptCard from "./html/actiontag_appointment_card.html"
+import tplSlotCard from "./html/actiontag_slot_card.html"
+import tplSelectedBadge from "./html/actiontag_selected_badge.html"
+import tplPopup from "./html/actiontag_popup.html"
+import tplInline from "./html/actiontag_inline.html"
 
 class ActionTagScheduler {
+    static renderLoading(message = "Loading available appointment times...", iconClass = "fa-2x") {
+        return RedCap.ttHTML(tplLoading, {
+            SPINNER_CLASS: iconClass,
+            MESSAGE: message
+        })
+    }
+
+    static renderAppointmentCard(appointment, fieldConfig) {
+        const locationBlock = appointment.location_name ? `<div><strong>${RedCap.tt("html_location") || "Location"}:</strong> ${appointment.location_name}</div>` : ""
+        const providerBlock = !fieldConfig.hide_provider && appointment.provider_name ? `<div><strong>${RedCap.tt("html_provider") || "Provider"}:</strong> ${appointment.provider_name}</div>` : ""
+        const rescheduleBtn = fieldConfig.allow_reschedule ? `<button type="button" class="btn btn-sm btn-outline-primary sc-reschedule-btn mb-1"><i class="fas fa-edit"></i> ${RedCap.tt("html_reschedule") || "Reschedule"}</button>` : ""
+        const cancelBtn = fieldConfig.allow_cancel ? `<button type="button" class="btn btn-sm btn-outline-danger sc-cancel-btn"><i class="fas fa-times"></i> ${RedCap.tt("html_cancel") || "Cancel"}</button>` : ""
+
+        return RedCap.ttHTML(tplApptCard, {
+            DATE_DISPLAY: appointment.date_display,
+            TIME_DISPLAY: appointment.time_display,
+            LOCATION_BLOCK: locationBlock,
+            PROVIDER_BLOCK: providerBlock,
+            RESCHEDULE_BTN: rescheduleBtn,
+            CANCEL_BTN: cancelBtn
+        })
+    }
+
+    static renderModalDialog(title = "Select Appointment Time") {
+        const loadingHtml = ActionTagScheduler.renderLoading("Loading available appointment times...", "fa-3x")
+        return RedCap.ttHTML(tplModal, {
+            TITLE: title,
+            CONTENT: loadingHtml
+        })
+    }
+
+    static renderSlotCard(slot, fieldConfig) {
+        const locationBlock = slot.location_name ? `
+            <div class="text-secondary text-truncate mb-1" title="${slot.location_name}">
+                <i class="fas fa-map-marker-alt text-danger mr-1"></i> ${slot.location_name}
+            </div>
+        ` : ""
+        const providerBlock = !fieldConfig.hide_provider && slot.provider_name ? `
+            <div class="text-secondary text-truncate" title="${slot.provider_name}">
+                <i class="fas fa-user-md text-info mr-1"></i> ${slot.provider_name}
+            </div>
+        ` : ""
+
+        return RedCap.ttHTML(tplSlotCard, {
+            TIME_DISPLAY: slot.time_display,
+            LOCATION_BLOCK: locationBlock,
+            PROVIDER_BLOCK: providerBlock
+        })
+    }
+
+    static renderSlotsPanel(timezone) {
+        const tzDisplay = timezone === "local" ? (RedCap.tt("html_server_time") || "Server Time") : timezone
+        return RedCap.ttHTML(tplSlotsPanel, {
+            TIMEZONE: tzDisplay
+        })
+    }
+
+    static renderSelectedBadge(slot) {
+        const locationBlock = slot.location_name ? `<div class="small mt-1" style="opacity: 0.95;"><i class="fas fa-map-marker-alt mr-1"></i> ${slot.location_name}</div>` : ""
+        return RedCap.ttHTML(tplSelectedBadge, {
+            DATE_DISPLAY: slot.date_display,
+            TIME_DISPLAY: slot.time_display,
+            LOCATION_BLOCK: locationBlock
+        })
+    }
+
     constructor(config) {
         this.config = config
         this.fields = config.fields || {}
@@ -16,28 +94,24 @@ class ActionTagScheduler {
     }
 
     async init() {
-        this.injectStyles()
         for (const [fieldName, fieldConfig] of Object.entries(this.fields))
             await this.setupField(fieldName, fieldConfig)
     }
 
     async callAjax(payload) {
         console.log("[SchedulingCalendar JS] callAjax sending payload:", payload)
-        if (window.ExternalModules?.UWMadison?.Scheduling?.ajax) {
-            const res = await window.ExternalModules.UWMadison.Scheduling.ajax("survey-calendar-api", payload)
-            console.log("[SchedulingCalendar JS] callAjax received response:", res)
-            return res
-        }
-        throw new Error("REDCap ExternalModule AJAX not initialized on this page")
+        const res = await RedCap.ajax("survey-calendar-api", payload)
+        console.log("[SchedulingCalendar JS] callAjax received response:", res)
+        return res
     }
 
     findFieldInput(fieldName) {
-        return doc.querySelector(`input[name="${fieldName}"]`) ||
-            doc.querySelector(`textarea[name="${fieldName}"]`) ||
-            doc.getElementById(`${fieldName}-tr`) ||
-            doc.querySelector(`tr#${fieldName}-tr`) ||
-            doc.querySelector(`tr[sq_id="${fieldName}"]`) ||
-            doc.querySelector(`[data-rc-field="${fieldName}"]`)
+        return $.querySelector(`input[name="${fieldName}"]`) ||
+            $.querySelector(`textarea[name="${fieldName}"]`) ||
+            $.getElementById(`${fieldName}-tr`) ||
+            $.querySelector(`tr#${fieldName}-tr`) ||
+            $.querySelector(`tr[sq_id="${fieldName}"]`) ||
+            $.querySelector(`[data-rc-field="${fieldName}"]`)
     }
 
     async setupField(fieldName, fieldConfig) {
@@ -50,7 +124,7 @@ class ActionTagScheduler {
         console.log("[SchedulingCalendar JS] Found DOM element for field:", fieldName, inputEl)
 
         // Container element
-        let container = doc.createElement("div")
+        let container = $.createElement("div")
         container.className = "sc-action-tag-container my-2"
         container.dataset.field = fieldName
 
@@ -69,12 +143,7 @@ class ActionTagScheduler {
         }
 
         // Render loading state
-        container.innerHTML = `
-            <div class="sc-loading">
-                <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                <div class="small">Checking appointment status...</div>
-            </div>
-        `
+        container.innerHTML = ActionTagScheduler.renderLoading("Checking appointment status...", "fa-2x")
 
         // Check if existing appointment exists
         let appointment = null
@@ -110,18 +179,18 @@ class ActionTagScheduler {
         }
 
         if (fieldConfig.piped_location) {
-            const el = doc.querySelector(`[name="${fieldConfig.piped_location}"]`)
+            const el = $.querySelector(`[name="${fieldConfig.piped_location}"]`)
             if (el) el.addEventListener("change", checkAndReload)
         }
         if (fieldConfig.piped_provider) {
-            const el = doc.querySelector(`[name="${fieldConfig.piped_provider}"]`)
+            const el = $.querySelector(`[name="${fieldConfig.piped_provider}"]`)
             if (el) el.addEventListener("change", checkAndReload)
         }
     }
 
     getPipedValue(param, pipedParam) {
         if (pipedParam) {
-            const el = doc.querySelector(`[name="${pipedParam}"]`)
+            const el = $.querySelector(`[name="${pipedParam}"]`)
             if (el && el.value) return el.value
         }
         return param
@@ -144,31 +213,14 @@ class ActionTagScheduler {
 
         if (appointment) {
             // Already booked - centered display card
-            const wrapper = doc.createElement("div")
+            const wrapper = $.createElement("div")
             wrapper.className = "d-flex justify-content-center my-2"
 
-            const card = doc.createElement("div")
+            const card = $.createElement("div")
             card.className = "sc-appointment-card alert alert-info p-3 mb-0 shadow-sm"
             card.style.maxWidth = "700px"
             card.style.width = "100%"
-            card.innerHTML = `
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <h6 class="mb-1 font-weight-bold text-dark">
-                            <i class="fas fa-calendar-check text-success mr-1"></i> Scheduled Appointment
-                        </h6>
-                        <div class="sc-appt-details text-secondary small">
-                            <div><strong>Date & Time:</strong> ${appointment.date_display} (${appointment.time_display})</div>
-                            ${appointment.location_name ? `<div><strong>Location:</strong> ${appointment.location_name}</div>` : ""}
-                            ${!fieldConfig.hide_provider && appointment.provider_name ? `<div><strong>Provider:</strong> ${appointment.provider_name}</div>` : ""}
-                        </div>
-                    </div>
-                    <div class="sc-appt-actions text-right">
-                        ${fieldConfig.allow_reschedule ? `<button type="button" class="btn btn-sm btn-outline-primary sc-reschedule-btn mb-1"><i class="fas fa-edit"></i> Reschedule</button>` : ""}
-                        ${fieldConfig.allow_cancel ? `<button type="button" class="btn btn-sm btn-outline-danger sc-cancel-btn"><i class="fas fa-times"></i> Cancel</button>` : ""}
-                    </div>
-                </div>
-            `
+            card.innerHTML = ActionTagScheduler.renderAppointmentCard(appointment, fieldConfig)
 
             if (fieldConfig.allow_reschedule) {
                 card.querySelector(".sc-reschedule-btn")?.addEventListener("click", () => {
@@ -225,65 +277,43 @@ class ActionTagScheduler {
         container.innerHTML = ""
 
         if (fieldConfig.mode === "popup") {
-            const btnWrap = doc.createElement("div")
-            btnWrap.className = "sc-popup-wrapper text-center my-3 p-4 bg-light rounded border d-flex flex-column align-items-center justify-content-center shadow-sm"
-            btnWrap.style.margin = "0 auto"
-            btnWrap.style.maxWidth = "700px"
-            btnWrap.style.width = "100%"
-            btnWrap.style.boxSizing = "border-box"
+            const prompt = isRescheduling ? (RedCap.tt("html_reschedule_prompt") || "Reschedule your appointment:") : (RedCap.tt("html_schedule_prompt") || "Schedule an appointment:")
+            const btnText = isRescheduling ? (RedCap.tt("html_choose_new_time") || "Choose New Date & Time") : fieldConfig.btn_text
+            const cancelReschedBtn = isRescheduling && oldAppt ? `
+                <button type="button" class="btn btn-sm btn-outline-secondary mt-3 sc-keep-current-btn">
+                    <i class="fas fa-undo mr-1"></i> ${RedCap.tt("html_keep_current_appt") || "Keep Current Appointment"}
+                </button>
+            ` : ""
 
-            const promptText = doc.createElement("div")
-            promptText.className = "text-muted mb-2 font-weight-bold"
-            promptText.innerHTML = `<i class="fas fa-calendar-check text-primary mr-1"></i> ${isRescheduling ? "Reschedule your appointment:" : "Schedule an appointment:"}`
-
-            const btn = doc.createElement("button")
-            btn.type = "button"
-            btn.className = "btn btn-primary btn-lg sc-schedule-btn px-4 py-2 shadow-sm rounded-pill font-weight-bold"
-            btn.innerHTML = `<i class="fas fa-calendar-alt mr-2"></i> ${isRescheduling ? "Choose New Date & Time" : fieldConfig.btn_text}`
-            btn.addEventListener("click", () => this.openModal(container, inputEl, fieldConfig, isRescheduling, oldAppt))
-
-            const badge = doc.createElement("div")
-            badge.className = "sc-selected-badge badge bg-success text-white d-none mt-3 shadow-sm mx-auto"
-            badge.style.maxWidth = "100%"
-
-            btnWrap.appendChild(promptText)
-            btnWrap.appendChild(btn)
-            btnWrap.appendChild(badge)
-
-            if (isRescheduling && oldAppt) {
-                const cancelRescheduleBtn = doc.createElement("button")
-                cancelRescheduleBtn.type = "button"
-                cancelRescheduleBtn.className = "btn btn-sm btn-outline-secondary mt-3"
-                cancelRescheduleBtn.innerHTML = `<i class="fas fa-undo mr-1"></i> Keep Current Appointment`
-                cancelRescheduleBtn.addEventListener("click", () => {
-                    this.renderWidget(container, inputEl, fieldConfig, oldAppt)
-                })
-                btnWrap.appendChild(cancelRescheduleBtn)
-            }
+            const wrapper = $.createElement("div")
+            wrapper.innerHTML = RedCap.ttHTML(tplPopup, {
+                PROMPT: prompt,
+                BTN_TEXT: btnText,
+                CANCEL_RESCHEDULE_BTN: cancelReschedBtn
+            })
+            const btnWrap = wrapper.firstElementChild
+            btnWrap.querySelector(".sc-schedule-btn")?.addEventListener("click", () => this.openModal(container, inputEl, fieldConfig, isRescheduling, oldAppt))
+            btnWrap.querySelector(".sc-keep-current-btn")?.addEventListener("click", () => {
+                this.renderWidget(container, inputEl, fieldConfig, oldAppt)
+            })
 
             container.appendChild(btnWrap)
         } else {
             // inline mode - direct elements without nested card wrapper
-            const inlineWrap = doc.createElement("div")
-            inlineWrap.className = "sc-inline-container w-100"
-            inlineWrap.innerHTML = `
-                ${isRescheduling && oldAppt ? `
-                    <div class="d-flex justify-content-end mb-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary sc-cancel-resched">
-                            <i class="fas fa-undo mr-1"></i> Keep Current Appointment
-                        </button>
-                    </div>
-                ` : ""}
-                <div class="d-flex justify-content-center w-100">
-                    <div class="sc-selected-badge badge bg-success text-white d-none shadow-sm text-center mb-3"></div>
+            const cancelReschedBlock = isRescheduling && oldAppt ? `
+                <div class="d-flex justify-content-end mb-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary sc-cancel-resched">
+                        <i class="fas fa-undo mr-1"></i> ${RedCap.tt("html_keep_current_appt") || "Keep Current Appointment"}
+                    </button>
                 </div>
-                <div class="sc-slots-content">
-                    <div class="sc-loading">
-                        <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
-                        <div>Loading available slots...</div>
-                    </div>
-                </div>
-            `
+            ` : ""
+
+            const wrapper = $.createElement("div")
+            wrapper.innerHTML = RedCap.ttHTML(tplInline, {
+                CANCEL_RESCHEDULE_BLOCK: cancelReschedBlock,
+                LOADING: ActionTagScheduler.renderLoading("Loading available slots...")
+            })
+            const inlineWrap = wrapper.firstElementChild
 
             if (isRescheduling && oldAppt) {
                 inlineWrap.querySelector(".sc-cancel-resched")?.addEventListener("click", () => {
@@ -298,31 +328,13 @@ class ActionTagScheduler {
 
     async openModal(container, inputEl, fieldConfig, isRescheduling, oldAppt) {
         console.log("[SchedulingCalendar JS] openModal clicked")
-        let modalOverlay = doc.getElementById("sc-modal-overlay")
+        let modalOverlay = $.getElementById("sc-modal-overlay")
         if (!modalOverlay) {
-            modalOverlay = doc.createElement("div")
+            modalOverlay = $.createElement("div")
             modalOverlay.id = "sc-modal-overlay"
             modalOverlay.className = "sc-modal-overlay"
-            modalOverlay.innerHTML = `
-                <div class="sc-modal-dialog">
-                    <div class="sc-modal-header d-flex align-items-center justify-content-between px-3 py-2 border-bottom bg-white">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-calendar-alt text-primary fa-lg mr-2"></i>
-                            <h5 class="sc-modal-title m-0 font-weight-bold text-dark">${fieldConfig.field_label || "Select Appointment Time"}</h5>
-                        </div>
-                        <button type="button" class="sc-modal-close btn btn-link text-secondary p-0" aria-label="Close" style="font-size: 1.8rem; text-decoration: none; line-height: 1;">&times;</button>
-                    </div>
-                    <div class="sc-modal-body p-0 d-flex flex-column flex-grow-1" style="overflow: hidden; width: 100%;">
-                        <div class="sc-slots-content d-flex flex-column flex-grow-1 h-100 w-100" style="width: 100%;">
-                            <div class="sc-loading">
-                                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
-                                <h6 class="text-muted font-weight-normal mb-0">Loading available appointment times...</h6>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `
-            doc.body.appendChild(modalOverlay)
+            modalOverlay.innerHTML = ActionTagScheduler.renderModalDialog(fieldConfig.field_label || "Select Appointment Time")
+            $.body.appendChild(modalOverlay)
 
             modalOverlay.querySelector(".sc-modal-close").addEventListener("click", () => {
                 modalOverlay.classList.remove("sc-modal-open")
@@ -336,12 +348,7 @@ class ActionTagScheduler {
 
         modalOverlay.classList.add("sc-modal-open")
         const slotsContent = modalOverlay.querySelector(".sc-slots-content")
-        slotsContent.innerHTML = `
-            <div class="sc-loading">
-                <i class="fas fa-spinner fa-spin fa-3x text-primary"></i>
-                <h6 class="text-muted font-weight-normal mb-0">Loading available appointment times...</h6>
-            </div>
-        `
+        slotsContent.innerHTML = ActionTagScheduler.renderLoading("Loading available appointment times...", "fa-3x")
 
         await this.loadAndRenderSlots(slotsContent, inputEl, fieldConfig, container, isRescheduling, () => {
             modalOverlay.classList.remove("sc-modal-open")
@@ -369,13 +376,7 @@ class ActionTagScheduler {
 
             if (!res?.success || !res.slots || res.slots.length === 0) {
                 console.log("[SchedulingCalendar JS] No slots available in range")
-                targetElement.innerHTML = `
-                    <div class="alert alert-warning text-center m-4 p-4 shadow-sm rounded">
-                        <i class="fas fa-calendar-times fa-3x mb-3 text-warning"></i>
-                        <h5 class="alert-heading font-weight-bold">No Appointments Currently Available</h5>
-                        <p class="mb-0 text-muted">There are no open slots matching the scheduling window for this visit. Please check back later or contact study coordinators for assistance.</p>
-                    </div>
-                `
+                targetElement.innerHTML = RedCap.ttHTML(tplNoSlots)
                 return
             }
 
@@ -408,10 +409,10 @@ class ActionTagScheduler {
         // Collapse dates if more than one. If exactly one, expand it.
         let activeDate = sortedDates.length === 1 ? sortedDates[0] : null
 
-        const accordionWrapper = doc.createElement("div")
+        const accordionWrapper = $.createElement("div")
         accordionWrapper.className = "sc-inline-accordion"
 
-        const subHeader = doc.createElement("div")
+        const subHeader = $.createElement("div")
         subHeader.className = "d-flex justify-content-between align-items-center mb-3 text-muted small"
         subHeader.innerHTML = `
             <span><i class="far fa-calendar-check mr-1"></i> ${sortedDates.length} date${sortedDates.length === 1 ? "" : "s"} available</span>
@@ -419,7 +420,7 @@ class ActionTagScheduler {
         `
         accordionWrapper.appendChild(subHeader)
 
-        const groupContainer = doc.createElement("div")
+        const groupContainer = $.createElement("div")
         groupContainer.className = "sc-accordion-group d-flex flex-column gap-2"
 
         const itemElements = new Map()
@@ -428,11 +429,11 @@ class ActionTagScheduler {
             const dateSlots = grouped[dKey]
             const dDisplay = datesMap.get(dKey) || dKey
 
-            const item = doc.createElement("div")
+            const item = $.createElement("div")
             item.className = `sc-accordion-item border rounded bg-white shadow-sm ${activeDate === dKey ? "sc-accordion-open" : ""}`
             item.dataset.date = dKey
 
-            const header = doc.createElement("button")
+            const header = $.createElement("button")
             header.type = "button"
             header.className = "sc-accordion-header w-100 p-3 bg-white border-0 text-left d-flex justify-content-between align-items-center"
             header.style.cursor = "pointer"
@@ -448,34 +449,17 @@ class ActionTagScheduler {
                 </div>
             `
 
-            const body = doc.createElement("div")
+            const body = $.createElement("div")
             body.className = `sc-accordion-body p-3 bg-light border-top ${activeDate === dKey ? "" : "d-none"}`
 
-            const grid = doc.createElement("div")
+            const grid = $.createElement("div")
             grid.className = "sc-slots-grid"
 
             dateSlots.forEach((slot) => {
-                const card = doc.createElement("div")
+                const card = $.createElement("div")
                 card.className = "sc-slot-card shadow-sm"
                 card.dataset.slotStart = slot.start
-                card.innerHTML = `
-                    <div class="sc-slot-time-wrap d-flex align-items-center mb-2">
-                        <i class="far fa-clock text-primary mr-2 fa-lg"></i>
-                        <span class="sc-slot-time">${slot.time_display}</span>
-                    </div>
-                    <div class="sc-slot-meta small">
-                        ${slot.location_name ? `
-                            <div class="text-secondary text-truncate mb-1" title="${slot.location_name}">
-                                <i class="fas fa-map-marker-alt text-danger mr-1"></i> ${slot.location_name}
-                            </div>
-                        ` : ""}
-                        ${!fieldConfig.hide_provider && slot.provider_name ? `
-                            <div class="text-secondary text-truncate" title="${slot.provider_name}">
-                                <i class="fas fa-user-md text-info mr-1"></i> ${slot.provider_name}
-                            </div>
-                        ` : ""}
-                    </div>
-                `
+                card.innerHTML = ActionTagScheduler.renderSlotCard(slot, fieldConfig)
 
                 card.addEventListener("click", async () => {
                     await this.selectSlot(slot, inputEl, fieldConfig, container, isRescheduling)
@@ -539,18 +523,18 @@ class ActionTagScheduler {
             date: "all"
         }
 
-        const explorerWrapper = doc.createElement("div")
+        const explorerWrapper = $.createElement("div")
         explorerWrapper.className = "sc-explorer-wrapper d-flex flex-column flex-grow-1 h-100 w-100"
         explorerWrapper.style.width = "100%"
 
         // 1. Toolbar
-        const toolbar = doc.createElement("div")
+        const toolbar = $.createElement("div")
         toolbar.className = "sc-explorer-toolbar px-3 py-2 bg-light border-bottom d-flex flex-wrap align-items-center gap-3"
 
         // Location filter
         let locSelect = null
         if (locations.size > 1) {
-            const locGroup = doc.createElement("div")
+            const locGroup = $.createElement("div")
             locGroup.className = "sc-filter-group d-flex align-items-center"
             locGroup.innerHTML = `
                 <label class="small font-weight-bold mb-0 mr-2 text-secondary text-nowrap">
@@ -564,7 +548,7 @@ class ActionTagScheduler {
             locSelect = locGroup.querySelector("select")
             toolbar.appendChild(locGroup)
         } else if (locations.size === 1) {
-            const locItem = doc.createElement("div")
+            const locItem = $.createElement("div")
             locItem.className = "sc-filter-group small text-muted d-flex align-items-center"
             locItem.innerHTML = `<i class="fas fa-map-marker-alt text-danger mr-1"></i> <strong>Location:</strong>&nbsp;${Array.from(locations.values())[0]}`
             toolbar.appendChild(locItem)
@@ -573,7 +557,7 @@ class ActionTagScheduler {
         // Provider filter
         let provSelect = null
         if (!fieldConfig.hide_provider && providers.size > 1) {
-            const provGroup = doc.createElement("div")
+            const provGroup = $.createElement("div")
             provGroup.className = "sc-filter-group d-flex align-items-center"
             provGroup.innerHTML = `
                 <label class="small font-weight-bold mb-0 mr-2 text-secondary text-nowrap">
@@ -589,7 +573,7 @@ class ActionTagScheduler {
         }
 
         // Jump to date picker
-        const datePickerGroup = doc.createElement("div")
+        const datePickerGroup = $.createElement("div")
         datePickerGroup.className = "sc-filter-group d-flex align-items-center"
         datePickerGroup.innerHTML = `
             <label class="small font-weight-bold mb-0 mr-2 text-secondary text-nowrap">
@@ -601,55 +585,36 @@ class ActionTagScheduler {
         toolbar.appendChild(datePickerGroup)
 
         // Reset button
-        const summaryGroup = doc.createElement("div")
+        const summaryGroup = $.createElement("div")
         summaryGroup.className = "ml-auto d-flex align-items-center"
-        summaryGroup.innerHTML = `
-            <button type="button" class="btn btn-sm btn-outline-secondary sc-reset-btn d-none" title="Reset filters">
-                <i class="fas fa-undo mr-1"></i> Reset
-            </button>
-        `
+        summaryGroup.innerHTML = RedCap.ttHTML(tplResetBtn)
         const resetBtn = summaryGroup.querySelector(".sc-reset-btn")
         toolbar.appendChild(summaryGroup)
 
         explorerWrapper.appendChild(toolbar)
 
         // 2. Main 2-Column Split
-        const mainSplit = doc.createElement("div")
+        const mainSplit = $.createElement("div")
         mainSplit.className = "sc-explorer-main d-flex flex-grow-1 w-100"
         mainSplit.style.minHeight = "0"
         mainSplit.style.overflow = "hidden"
         mainSplit.style.width = "100%"
 
         // Left Sidebar: Dates List
-        const sidebar = doc.createElement("div")
+        const sidebar = $.createElement("div")
         sidebar.className = "sc-dates-sidebar border-right bg-white p-2 d-flex flex-column"
         sidebar.style.width = "250px"
         sidebar.style.flexShrink = "0"
         sidebar.style.overflowY = "auto"
-        sidebar.innerHTML = `
-            <div class="small font-weight-bold text-uppercase text-muted px-2 py-1 mb-1">
-                Available Dates
-            </div>
-            <div class="sc-dates-list d-flex flex-column gap-1"></div>
-        `
+        sidebar.innerHTML = RedCap.ttHTML(tplSidebar)
         const datesListEl = sidebar.querySelector(".sc-dates-list")
         mainSplit.appendChild(sidebar)
 
         // Right Content: Slots Panel
-        const slotsPanel = doc.createElement("div")
+        const slotsPanel = $.createElement("div")
         slotsPanel.className = "sc-slots-panel flex-grow-1 p-3 bg-light d-flex flex-column"
         slotsPanel.style.overflowY = "auto"
-        slotsPanel.innerHTML = `
-            <div class="sc-slots-panel-header d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
-                <h6 class="sc-active-date-heading font-weight-bold m-0 text-dark">
-                    Showing All Dates
-                </h6>
-                <span class="text-muted small">
-                    <i class="fas fa-clock mr-1"></i> ${timezone === "local" ? "Server Time" : timezone}
-                </span>
-            </div>
-            <div class="sc-slots-container"></div>
-        `
+        slotsPanel.innerHTML = ActionTagScheduler.renderSlotsPanel(timezone)
         const activeHeadingEl = slotsPanel.querySelector(".sc-active-date-heading")
         const slotsContainerEl = slotsPanel.querySelector(".sc-slots-container")
         mainSplit.appendChild(slotsPanel)
@@ -707,7 +672,7 @@ class ActionTagScheduler {
             datesListEl.innerHTML = ""
 
             // "All Dates" button
-            const allDatesBtn = doc.createElement("button")
+            const allDatesBtn = $.createElement("button")
             allDatesBtn.type = "button"
             allDatesBtn.className = `sc-date-nav-btn ${filterState.date === "all" ? "active" : "text-dark"}`
             allDatesBtn.innerHTML = `
@@ -730,7 +695,7 @@ class ActionTagScheduler {
                 const parts = dDisplay.split(",")
                 const shortLabel = parts.length > 1 ? parts[0].substring(0, 3) + "," + parts[1] : dDisplay
 
-                const dateBtn = doc.createElement("button")
+                const dateBtn = $.createElement("button")
                 dateBtn.type = "button"
                 dateBtn.className = `sc-date-nav-btn ${filterState.date === dKey ? "active" : "text-dark"}`
                 dateBtn.innerHTML = `
@@ -748,16 +713,7 @@ class ActionTagScheduler {
             // Render Slots Container
             slotsContainerEl.innerHTML = ""
             if (filtered.length === 0) {
-                slotsContainerEl.innerHTML = `
-                    <div class="alert alert-info text-center p-4 rounded shadow-sm bg-white border">
-                        <i class="fas fa-info-circle fa-2x mb-2 text-info"></i>
-                        <h6 class="font-weight-bold">No appointment slots match your current filter</h6>
-                        <p class="small text-muted mb-2">Try clearing your date or location filter to view other available slots.</p>
-                        <button type="button" class="btn btn-sm btn-primary sc-clear-filters-btn">
-                            <i class="fas fa-undo mr-1"></i> Clear Filters
-                        </button>
-                    </div>
-                `
+                slotsContainerEl.innerHTML = RedCap.ttHTML(tplNoFilterMatch)
                 slotsContainerEl.querySelector(".sc-clear-filters-btn")?.addEventListener("click", () => {
                     filterState.location = ""
                     filterState.provider = ""
@@ -775,10 +731,10 @@ class ActionTagScheduler {
                 const dateSlots = grouped[dKey]
                 const dDisplay = datesMap.get(dKey) || dKey
 
-                const dateBlock = doc.createElement("div")
+                const dateBlock = $.createElement("div")
                 dateBlock.className = "sc-date-block mb-4"
 
-                const blockHeader = doc.createElement("div")
+                const blockHeader = $.createElement("div")
                 blockHeader.className = "sc-date-block-header font-weight-bold text-dark py-2 px-3 mb-2 bg-white rounded border d-flex justify-content-between align-items-center shadow-sm"
                 blockHeader.innerHTML = `
                     <span class="text-primary font-weight-bold">
@@ -788,30 +744,13 @@ class ActionTagScheduler {
                 `
                 dateBlock.appendChild(blockHeader)
 
-                const grid = doc.createElement("div")
+                const grid = $.createElement("div")
                 grid.className = "sc-slots-grid"
 
                 dateSlots.forEach((slot) => {
-                    const card = doc.createElement("div")
+                    const card = $.createElement("div")
                     card.className = "sc-slot-card shadow-sm"
-                    card.innerHTML = `
-                        <div class="sc-slot-time-wrap d-flex align-items-center mb-2">
-                            <i class="far fa-clock text-primary mr-2 fa-lg"></i>
-                            <span class="sc-slot-time">${slot.time_display}</span>
-                        </div>
-                        <div class="sc-slot-meta small">
-                            ${slot.location_name ? `
-                                <div class="text-secondary text-truncate mb-1" title="${slot.location_name}">
-                                    <i class="fas fa-map-marker-alt text-danger mr-1"></i> ${slot.location_name}
-                                </div>
-                            ` : ""}
-                            ${!fieldConfig.hide_provider && slot.provider_name ? `
-                                <div class="text-secondary text-truncate" title="${slot.provider_name}">
-                                    <i class="fas fa-user-md text-info mr-1"></i> ${slot.provider_name}
-                                </div>
-                            ` : ""}
-                        </div>
-                    `
+                    card.innerHTML = ActionTagScheduler.renderSlotCard(slot, fieldConfig)
 
                     card.addEventListener("click", async () => {
                         await this.selectSlot(slot, inputEl, fieldConfig, container, isRescheduling, closeModalFn)
@@ -918,12 +857,12 @@ class ActionTagScheduler {
         }
 
         // 2. Attach hidden booking payload input to parent form
-        const form = inputEl.closest("form") || doc.forms["form"] || doc.forms[0]
+        const form = inputEl.closest("form") || $.forms["form"] || $.forms[0]
         if (form) {
             const hiddenInputName = `__scheduling_calendar_booking[${fieldConfig.field_name}]`
             let hiddenInput = form.querySelector(`input[name="${hiddenInputName}"]`)
             if (!hiddenInput) {
-                hiddenInput = doc.createElement("input")
+                hiddenInput = $.createElement("input")
                 hiddenInput.type = "hidden"
                 hiddenInput.name = hiddenInputName
                 form.appendChild(hiddenInput)
@@ -941,10 +880,7 @@ class ActionTagScheduler {
         // 3. Update visible badge in container
         const badge = container.querySelector(".sc-selected-badge")
         if (badge) {
-            badge.innerHTML = `
-                <div class="sc-selected-datetime"><i class="fas fa-check-circle mr-1"></i> <strong>Selected:</strong> ${slot.date_display} (${slot.time_display})</div>
-                ${slot.location_name ? `<div class="small mt-1" style="opacity: 0.95;"><i class="fas fa-map-marker-alt mr-1"></i> ${slot.location_name}</div>` : ""}
-            `
+            badge.innerHTML = ActionTagScheduler.renderSelectedBadge(slot)
             badge.classList.remove("d-none")
         }
 
@@ -955,142 +891,11 @@ class ActionTagScheduler {
 
         if (closeModalFn) closeModalFn()
     }
-
-    injectStyles() {
-        if (doc.getElementById("sc-action-tag-injected-styles")) return
-        const style = doc.createElement("style")
-        style.id = "sc-action-tag-injected-styles"
-        style.textContent = `
-            .sc-action-tag-container { font-family: inherit; }
-            .sc-loading {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
-                width: 100%;
-                margin: auto;
-                padding: 2rem 1rem;
-                color: #6c757d;
-                box-sizing: border-box;
-            }
-            .sc-loading i {
-                margin-bottom: 0.5rem;
-            }
-            .sc-popup-wrapper {
-                background-color: #f8f9fa;
-                border: 1px solid #dee2e6;
-                width: 100%;
-                max-width: 700px;
-                box-sizing: border-box;
-            }
-            .sc-selected-badge {
-                white-space: normal !important;
-                word-break: normal;
-                overflow-wrap: break-word;
-                line-height: 1.5 !important;
-                border-radius: 8px !important;
-                padding: 12px 24px !important;
-                font-size: 0.95rem !important;
-                font-weight: 400 !important;
-                box-sizing: border-box !important;
-                text-align: center !important;
-                max-width: 650px;
-                box-shadow: 0 3px 10px rgba(40, 167, 69, 0.25) !important;
-            }
-            .sc-selected-badge:not(.d-none) {
-                display: inline-block !important;
-            }
-            @media (min-width: 576px) {
-                .sc-selected-datetime {
-                    white-space: nowrap;
-                }
-            }
-            .sc-appointment-card {
-                border-left: 4px solid #28a745;
-                border-radius: 6px;
-                background-color: #f8f9fa;
-                max-width: 700px;
-            }
-            .sc-modal-overlay {
-                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.55); z-index: 10500; align-items: center; justify-content: center;
-                backdrop-filter: blur(2px);
-            }
-            .sc-modal-overlay.sc-modal-open { display: flex; }
-            .sc-modal-dialog {
-                background: #fff; width: 95%; max-width: 980px; height: 86vh; max-height: 840px; border-radius: 10px;
-                box-shadow: 0 10px 35px rgba(0,0,0,0.3); display: flex; flex-direction: column; overflow: hidden;
-            }
-            .sc-modal-header {
-                padding: 0.85rem 1.25rem; border-bottom: 1px solid #dee2e6; display: flex;
-                align-items: center; justify-content: space-between; background-color: #fff;
-            }
-            .sc-modal-close { background: none; border: none; font-size: 1.8rem; line-height: 1; cursor: pointer; color: #6c757d; }
-            .sc-modal-body { overflow: hidden; flex: 1; display: flex; flex-direction: column; width: 100%; }
-            .sc-slots-content { width: 100%; flex: 1; display: flex; flex-direction: column; }
-            .sc-explorer-wrapper { width: 100%; flex: 1; display: flex; flex-direction: column; }
-            .sc-explorer-main { width: 100%; flex: 1; display: flex; }
-            .sc-dates-sidebar { background-color: #fafbfc; }
-            .sc-date-nav-btn {
-                display: flex; justify-content: space-between; align-items: center; width: 100%;
-                padding: 8px 12px; border-radius: 6px; border: 1px solid transparent; font-size: 0.875rem;
-                font-weight: 500; text-align: left; transition: all 0.15s ease; cursor: pointer; background: transparent;
-            }
-            .sc-date-nav-btn:hover { background-color: #e9ecef; }
-            .sc-date-nav-btn.active { background-color: #007bff; color: #fff !important; }
-            .sc-date-nav-btn.active .badge { background-color: #fff; color: #007bff; }
-            .sc-slots-grid {
-                display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px;
-            }
-            .sc-slot-card {
-                background: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 14px 16px;
-                transition: all 0.18s ease-in-out; cursor: pointer; display: flex; flex-direction: column;
-                user-select: none;
-            }
-            .sc-slot-card:hover {
-                border-color: #007bff; background-color: #f8fbff; box-shadow: 0 4px 14px rgba(0,123,255,0.18); transform: translateY(-2px);
-            }
-            .sc-slot-card:active { transform: translateY(0); }
-            .sc-slot-card .sc-slot-time { font-size: 1rem; font-weight: 700; color: #212529; transition: color 0.15s ease; }
-            .sc-slot-card:hover .sc-slot-time { color: #007bff; }
-            .sc-slot-card.sc-slot-selected {
-                border-color: #28a745 !important;
-                background-color: #eafaf1 !important;
-                box-shadow: 0 0 0 2px rgba(40,167,69,0.25) !important;
-            }
-            .sc-slot-card.sc-slot-selected .sc-slot-time {
-                color: #28a745 !important;
-            }
-            .sc-accordion-item { overflow: hidden; transition: all 0.2s ease; }
-            .sc-accordion-header { transition: background-color 0.15s ease; outline: none !important; }
-            .sc-accordion-header:hover { background-color: #f8f9fa !important; }
-            .sc-accordion-chevron { transition: transform 0.2s ease; }
-            .sc-accordion-open .sc-accordion-chevron { transform: rotate(180deg); }
-            .sc-accordion-open .sc-accordion-header { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
-            .gap-1 { gap: 0.25rem; }
-            .gap-2 { gap: 0.5rem; }
-            .gap-3 { gap: 1rem; }
-            @media (max-width: 768px) {
-                .sc-modal-dialog { width: 98%; height: 94vh; max-height: 94vh; }
-                .sc-explorer-main { flex-direction: column !important; }
-                .sc-dates-sidebar {
-                    width: 100% !important; max-height: 85px; flex-direction: row !important;
-                    overflow-x: auto !important; overflow-y: hidden !important; border-right: none !important;
-                    border-bottom: 1px solid #dee2e6;
-                }
-                .sc-dates-list { flex-direction: row !important; }
-                .sc-date-nav-btn { width: auto !important; white-space: nowrap; }
-                .sc-slots-grid { grid-template-columns: 1fr; }
-            }
-        `
-        doc.head.appendChild(style)
-    }
 }
 
 const initActionTag = () => {
-    console.log("[SchedulingCalendar JS] initActionTag executing. readyState:", doc.readyState)
-    const config = window.ExternalModules?.UWMadison?.Scheduling?.actionTagConfig || window.actionTagConfig
+    console.log("[SchedulingCalendar JS] initActionTag executing. readyState:", $.readyState)
+    const config = RedCap.module.actionTagConfig
     console.log("[SchedulingCalendar JS] Discovered actionTagConfig:", config)
     if (config && !window.__scActionTagInitialized) {
         window.__scActionTagInitialized = true
@@ -1098,8 +903,8 @@ const initActionTag = () => {
     }
 }
 
-if (doc.readyState === "loading") {
-    doc.addEventListener("DOMContentLoaded", initActionTag)
+if ($.readyState === "loading") {
+    $.addEventListener("DOMContentLoaded", initActionTag)
 } else {
     initActionTag()
 }

@@ -359,12 +359,13 @@ class Scheduling extends AbstractExternalModule
         ];
         $configJson = json_encode($actionTagConfig);
         $scriptUrl = $this->getUrl('actionTag.js');
-        $styleUrl = $this->getUrl('style.css');
+        $styleUrl = $this->getUrl('actiontag.css');
+        if (!file_exists($this->getModulePath() . 'actiontag.css'))
+            $styleUrl = $this->getUrl('style.css');
 
         echo "<script>console.log('[SchedulingCalendar] Action tag active. Injecting bundle with config:', " . $configJson . ");</script>";
         echo "<link rel='stylesheet' href='{$styleUrl}'>";
         echo "<script>
-            if (typeof {$jsObj} === 'undefined') window.{$jsObj} = {};
             {$jsObj}.actionTagConfig = {$configJson};
         </script>";
         echo "<script src='{$scriptUrl}' defer></script>";

@@ -4,7 +4,11 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin")
 
 module.exports = {
     plugins: [
-        new MiniCssExtractPlugin({ filename: 'style.css' }),
+        new MiniCssExtractPlugin({
+            filename: (pathData) => {
+                return pathData.chunk.name === "actionTag" ? "actiontag.css" : "style.css"
+            }
+        }),
         new webpack.ProvidePlugin({ $: ['./dollar', 'default'] })
     ],
     entry: {
