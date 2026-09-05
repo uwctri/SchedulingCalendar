@@ -93,9 +93,16 @@ class Scheduling extends AbstractExternalModule
     */
     public function process()
     {
-        $request = RestUtility::processRequest(false);
-        $payload = $request->getRequestVars();
-        $project_id = $payload["projectid"] ?? $this->escape($_GET["pid"]);
+        $rawInput = file_get_contents('php://input');
+        $jsonPayload = !empty($rawInput) ? json_decode($rawInput, true) : null;
+        if (is_array($jsonPayload)) {
+            $payload = $jsonPayload;
+        } else {
+            $request = RestUtility::processRequest(false);
+            $payload = $request->getRequestVars();
+        }
+
+        $project_id = $payload["projectid"] ?? ($payload["pid"] ?? $this->escape($_GET["pid"] ?? null));
         $payload["pid"] = $project_id;
         $err_msg = "Not supported. Invalid resource or CRUD operation.";
         $result = null;
@@ -103,7 +110,7 @@ class Scheduling extends AbstractExternalModule
 
         // Replace placeholders for empty arrays
         $payload = array_map(function ($x) {
-            return $x == "[]" ? [] : $x;
+            return $x === "[]" ? [] : $x;
         }, $payload);
 
         // Check if its the non-CRUD utility function
@@ -112,6 +119,7 @@ class Scheduling extends AbstractExternalModule
                 "data" => $this->makeICS($payload),
                 "success" => true
             ];
+            http_response_code(200);
             return json_encode($result);
         }
 
@@ -168,35 +176,50 @@ class Scheduling extends AbstractExternalModule
 
         if ($schemaError) {
             $err_msg = "Missing parameters for operation";
-        } elseif ($payload["bundle"] && !empty($task)) {
+        } elseif (!empty($payload["bundle"]) && !empty($task)) {
             $result = [];
             $err_msg = "";
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
-                $result[] = $this->$task($subPayload);
+                $res = $this->$task($subPayload);
+                if (is_array($res) && isset($res["success"]) && !$res["success"]) {
+                    $err_msg = $res["msg"] ?? "Operation failed";
+                }
+                $result[] = $res;
             }
         } elseif (!empty($task)) {
             $err_msg = "";
             $result = $this->$task($payload);
+            if (is_array($result) && isset($result["success"]) && !$result["success"]) {
+                $err_msg = $result["msg"] ?? "Operation failed";
+            }
         } else {
             $err_msg = $task[$payload["resource"]]["default"] ?? $err_msg;
         }
 
-        // Fire DET at the end
+        // Fire DET at the end only if operation succeeded
         if (
+            empty($err_msg) &&
             $this->getProjectSetting('fire-det') &&
             in_array($payload["crud"], ["create", "update", "delete"]) &&
             in_array($payload["resource"], ["availability", "appointment"])
         ) {
-            $this->fireDataEntryTrigger(array_merge($result, $payload));
+            $detPayload = is_array($result) ? array_merge($result, $payload) : $payload;
+            $this->fireDataEntryTrigger($detPayload);
         }
 
         // Return the error or result
-        return $err_msg ? json_encode([
-            "success" => false,
-            "msg" => $err_msg,
-            "payload" => $payload
-        ]) : json_encode($result);
+        if (!empty($err_msg)) {
+            http_response_code(400);
+            return json_encode([
+                "success" => false,
+                "msg" => $err_msg,
+                "payload" => $payload
+            ]);
+        }
+
+        http_response_code(200);
+        return json_encode($result);
     }
 
     /*

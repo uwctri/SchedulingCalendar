@@ -5,7 +5,13 @@
 
 try {
     $result = $module->process();
-    RestUtility::sendResponse(200, $result, 'json');
+    $status = http_response_code();
+    if (!$status || $status === 200)
+        $status = 200;
+    RestUtility::sendResponse($status, $result, 'json');
 } catch (Exception $ex) {
-    RestUtility::sendResponse(400, $ex->getMessage());
+    RestUtility::sendResponse(400, json_encode([
+        "success" => false,
+        "msg" => $ex->getMessage()
+    ]), 'json');
 }

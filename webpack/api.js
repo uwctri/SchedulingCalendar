@@ -404,67 +404,57 @@ class API {
         data["redcap_csrf_token"] = RedCap.csrf()
         console.log("SENDING", data)
 
-        // Format times to be compatible with Postgress Timestamps
+        // Format times to be compatible with DB Timestamps
         // Trash the microseconds and swap T for space
-        // Swap bools to 1 or 0, and empty arrays to a placeholder
+        // Swap bools to 1 or 0
         const format = (obj) => {
             for (const [key, value] of Object.entries(obj)) {
-                if (API._time_fields.includes(key))
+                if (API._time_fields.includes(key) && typeof value === "string")
                     obj[key] = value.split('.')[0].replace("T", " ")
                 if (typeof value == "boolean")
                     obj[key] = value ? 1 : 0
-                if (Array.isArray(value) && value.length === 0)
-                    obj[key] = '[]'
             }
         }
         format(data)
-        if ("bundle" in data)
+        if ("bundle" in data && Array.isArray(data["bundle"]))
             for (const obj of data["bundle"])
                 format(obj)
 
         Calendar.showLoading()
         await fetch(RedCap.router, {
             method: 'POST',
-            body: API.toFormData(data)
-        }).then((response) => {
-            return response.ok ? response.json() : Promise.reject(response)
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(data)
+        }).then(async (response) => {
+            const respData = await response.json().catch(() => null)
+            if (!response.ok) {
+                const errMsg = respData?.msg || `Server returned error (${response.status})`
+                return Promise.reject(new Error(errMsg))
+            }
+            return respData
         }).then((data) => {
-            const success = data.success ?? true
+            const success = data?.success ?? true
             result = data
             Calendar.hideLoading()
             console[success ? 'log' : 'warn'](data)
             if (success) return
             Toast.fire({
                 icon: 'warning',
-                title: 'Unable to perfrom action',
+                title: data?.msg || 'Unable to perform action',
             })
         }).catch((error) => {
+            Calendar.hideLoading()
             Toast.fire({
                 icon: 'error',
-                title: 'Fatal Server Error',
+                title: error.message || 'Fatal Server Error',
             })
             console.error('Something went wrong in API.js', error, data)
         })
 
         return result
-    }
-
-    static toFormData(obj) {
-
-        const form = new FormData()
-
-        const phpArray = (obj, outerKey, depth) => {
-            for (let [key, value] of Object.entries(obj)) {
-                key = depth > 0 ? `[${key}]` : key
-                if (typeof value == "object")
-                    phpArray(value, `${outerKey}${key}`, depth + 1)
-                else
-                    form.append(`${outerKey}${key}`, value)
-            }
-        }
-
-        phpArray(obj, "", 0)
-        return form
     }
 
 }
