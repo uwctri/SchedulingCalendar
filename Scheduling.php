@@ -6,6 +6,7 @@ use ExternalModules\AbstractExternalModule;
 use REDCap;
 use DateTime;
 use DateTimeZone;
+use Throwable;
 
 class Scheduling extends AbstractExternalModule
 {
@@ -91,24 +92,30 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
+    public function getSafeUser($username = null)
+    {
+        try {
+            return $this->getUser($username);
+        } catch (Throwable $e) {
+            return null;
+        }
+    }
+
     public function isCalendarAdmin($project_id = null, $username = null)
     {
-        $user = $this->getUser();
-        if ($user && $user->isSuperUser()) {
+        $user = $this->getSafeUser($username);
+        if ($user && $user->isSuperUser())
             return true;
-        }
-        $username = $username ?? ($user ? $user->getUsername() : null);
-        if (empty($username)) {
+        $username = $user ? $user->getUsername() : $username;
+        if (empty($username))
             return false;
-        }
         $admins = $this->getProjectSetting("calendar-admin", $project_id) ?? [];
         return in_array($username, (array)$admins);
     }
 
     public function canManageAvailability($targetProvider, $project_id = null, $actingUsername = null)
     {
-        $user = $this->getUser();
-        $actingUsername = $actingUsername ?? ($user ? $user->getUsername() : null);
+        $actingUsername = $actingUsername ?? $this->getSafeUser()?->getUsername();
         if (empty($actingUsername))
             return false;
         // Providers can always manage their own availability
@@ -249,16 +256,14 @@ class Scheduling extends AbstractExternalModule
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
                 $res = $this->$task($subPayload);
-                if (is_array($res) && isset($res["success"]) && !$res["success"]) {
+                if (is_array($res) && isset($res["success"]) && !$res["success"])
                     $err_msg = $res["msg"] ?? "Operation failed";
-                }
                 $result[] = $res;
             }
         } else {
             $result = $this->$task($payload);
-            if (is_array($result) && isset($result["success"]) && !$result["success"]) {
+            if (is_array($result) && isset($result["success"]) && !$result["success"])
                 $err_msg = $result["msg"] ?? "Operation failed";
-            }
         }
 
         // Fire DET at the end only if operation succeeded
@@ -291,13 +296,23 @@ class Scheduling extends AbstractExternalModule
     */
     public function currentUser()
     {
-        $admins = $this->getProjectSetting("calendar-admin");
-        $user = $this->getUser();
-        $username = $user->getUsername();
-        $isAdmin = in_array($username, $admins);
+        $user = $this->getSafeUser();
+        $username = $user?->getUsername();
+        if (empty($username))
+            return [
+                "username" => "",
+                "email" => "",
+                "name" => "",
+                "isCalendarAdmin" => false,
+                "isSuperUser" => false,
+                "icsHash" => ""
+            ];
+        $isAdmin = $this->isCalendarAdmin(null, $username);
         $hash = "";
         if ($isAdmin) {
             $json = json_decode($this->getProjectSetting("ics-hash-json") ?? "{}", true);
+            if (!is_array($json))
+                $json = [];
             if (in_array($username, array_values($json))) {
                 $hash = array_search($username, $json);
             } else {
@@ -308,10 +323,10 @@ class Scheduling extends AbstractExternalModule
         }
         return [
             "username" => $username,
-            "email" => $user->getEmail(),
-            "name" => ($GLOBALS['user_firstname'] ?? '') . ' ' . ($GLOBALS['user_lastname'] ?? ''),
+            "email" => $user ? $user->getEmail() : "",
+            "name" => trim(($GLOBALS['user_firstname'] ?? '') . ' ' . ($GLOBALS['user_lastname'] ?? '')) ?: $username,
             "isCalendarAdmin" => $isAdmin,
-            "isSuperUser" => $user->isSuperUser(),
+            "isSuperUser" => $user ? $user->isSuperUser() : false,
             "icsHash" => $hash
         ];
     }
@@ -395,14 +410,13 @@ class Scheduling extends AbstractExternalModule
         $noParams = [];
         $sql = $this->query("SELECT DISTINCT user FROM em_scheduling_calendar", $noParams);
         $globalProviders = [];
-        while ($row = db_fetch_assoc($sql)) {
+        while ($row = db_fetch_assoc($sql))
             $globalProviders[] = $row["user"];
-        }
 
         // Get all local users & Settings
-        $localProviders = REDCap::getUsers();
-        $unschedulables = $this->getProjectSetting("unschedulable");
-        $admins = $this->getProjectSetting("calendar-admin");
+        $localProviders = (array)(REDCap::getUsers() ?? []);
+        $unschedulables = (array)($this->getProjectSetting("unschedulable") ?? []);
+        $admins = (array)($this->getProjectSetting("calendar-admin") ?? []);
 
         // Get all user info for the RC instance
         $allUsers = $this->getAllUsers();
@@ -436,9 +450,8 @@ class Scheduling extends AbstractExternalModule
         $users = [];
         $noParams = [];
         $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", $noParams);
-        while ($row = db_fetch_assoc($sql)) {
+        while ($row = db_fetch_assoc($sql))
             $users[$row["username"]] = $row["displayname"];
-        }
         return $users;
     }
 
@@ -571,9 +584,8 @@ class Scheduling extends AbstractExternalModule
 
         $data = [];
         $subjects = [];
-        while ($row = db_fetch_assoc($sql)) {
+        while ($row = db_fetch_assoc($sql))
             $data[$row["project_id"]][$row["record"]] = $row["location"];
-        }
         foreach ($data as $pid => $records) {
             $nameField = $this->getProjectSetting("name-field", $pid);
             $projectData = $this->getSingleEventFields([$nameField], array_keys($records), $pid);
@@ -666,29 +678,26 @@ class Scheduling extends AbstractExternalModule
             $this->getSystemSetting("group-name") ?? []
         );
         $result = [];
-        if ($globalFlag) {
+        if ($globalFlag)
             $result["global"] = [
                 "value" => "global",
                 "label" => "Global",
                 "isLocal" => false
             ];
-        }
-        if ($localFlag) {
+        if ($localFlag)
             $result[$project_id] = [
                 "value" => $project_id,
                 "label" => "This Project",
                 "isLocal" => true
             ];
-        }
         foreach ($allCodes as $code => $name) {
             $isLocal = in_array($code, $localCodes);
-            if ($allFlag || $isLocal) {
+            if ($allFlag || $isLocal)
                 $result[$code] = [
                     "value" => $code,
                     "label" => $name,
                     "isLocal" => $isLocal
                 ];
-            }
         }
         return $result;
     }
@@ -723,7 +732,7 @@ class Scheduling extends AbstractExternalModule
             $visits[$tmp["code"]] = $tmp;
         }
 
-        if ($includeSharedConfig) {
+        if ($includeSharedConfig)
             $visits = [
                 "visits" => $visits,
                 "wbDateTimes" => $this->getProjectSetting("wb-datetime"),
@@ -731,7 +740,6 @@ class Scheduling extends AbstractExternalModule
                 "rangeStart" => $this->getProjectSetting("range-start"),
                 "rangeEnd" => $this->getProjectSetting("range-end"),
             ];
-        }
 
         $this->visitCache[$cacheName] = $visits;
         return $visits;
@@ -753,9 +761,8 @@ class Scheduling extends AbstractExternalModule
 
         $codes = $this->getAvailabilityCodes($payload);
         $codes_keys = array_keys($codes);
-        if (empty($codes_keys) && !$allFlag) {
+        if (empty($codes_keys) && !$allFlag)
             return $availability;
-        }
 
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure($project_id, true);
@@ -763,17 +770,14 @@ class Scheduling extends AbstractExternalModule
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
 
-        if (!$allFlag) {
+        if (!$allFlag)
             $query->add("AND")->addInClause("availability_code", $codes_keys);
-        }
 
-        if (!empty($providers)) {
+        if (!empty($providers))
             $query->add("AND")->addInClause("user", $providers);
-        }
 
-        if (!empty($locations)) {
+        if (!empty($locations))
             $query->add("AND")->addInClause("location", $locations);
-        }
 
         if ($timezone != "local") {
             $dtStart = new DateTime($start, new DateTimeZone($timezone));
@@ -838,19 +842,18 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $provider = $payload["providers"];
         $location = $payload["locations"];
-        if (!$restoreBypass && !$this->canManageAvailability($provider, $project_id)) {
+        if (!$restoreBypass && !$this->canManageAvailability($provider, $project_id))
             return [
                 "msg" => "Permission denied: Only calendar administrators or the provider can set this availability",
                 "success" => false
             ];
-        }
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         $timezone = $timezone == $server_tz ? "local" : $timezone;
 
         $sql = "INSERT INTO em_scheduling_calendar (project_id, availability_code, user, location, time_start, time_end) VALUES (?, ?, ?, ?, ?, ?)";
         $logData = [
-            "agent" => $this->getUser()->getUsername(),
+            "agent" => $this->getSafeUser()?->getUsername(),
             "provider" => $provider,
             "location" => $location,
             "start" => $start,
@@ -913,12 +916,11 @@ class Scheduling extends AbstractExternalModule
             $apptEnd = $appt["end"];
             if (($apptEnd <= $start) || ($apptStart >= $end))
                 continue; // No overlap at all
-            if (($apptStart <= $start) && ($apptEnd >= $end)) {
+            if (($apptStart <= $start) && ($apptEnd >= $end))
                 return [
                     "msg" => "Availability overlaps with existing appointment",
                     "success" => false
                 ];
-            }
             if (($apptStart <= $start) && ($apptEnd < $end) && ($start < $apptEnd)) {
                 $this->log(
                     "Requested availability overlaps with existing appointment, modifying request.",
@@ -1032,10 +1034,9 @@ class Scheduling extends AbstractExternalModule
             $availStart = $avail["start"];
             $availEnd = $avail["end"];
 
-            if (($availStart <= $start) && ($availEnd >= $end)) {
-                // Skip creation, its a duplicate
+            // Skip creation, its a duplicate
+            if (($availStart <= $start) && ($availEnd >= $end))
                 $resolved = true;
-            }
             if (($availStart <= $start) && ($end > $availEnd) && ($start <= $availEnd)) {
                 // Extend the end of the existing availability
                 $resolved = true;
@@ -1054,9 +1055,8 @@ class Scheduling extends AbstractExternalModule
         }
 
         // Some merge occured, delete the working availability
-        if ($resolved && $performDelete) {
+        if ($resolved && $performDelete)
             $this->deleteEntry($working["internal_id"]);
-        }
 
         // Merge occured, attempt again
         if ($resolved) {
@@ -1075,12 +1075,11 @@ class Scheduling extends AbstractExternalModule
             $id = $id_or_payload["id"];
             $slotSql = $this->query("SELECT user, project_id FROM em_scheduling_calendar WHERE id = ?", [$id]);
             if ($slotRow = db_fetch_assoc($slotSql)) {
-                if (!$this->canManageAvailability($slotRow["user"], $slotRow["project_id"] ?? ($id_or_payload["pid"] ?? null))) {
+                if (!$this->canManageAvailability($slotRow["user"], $slotRow["project_id"] ?? ($id_or_payload["pid"] ?? null)))
                     return [
                         "msg" => "Permission denied: Only calendar administrators or the provider can modify this availability",
                         "success" => false
                     ];
-                }
             }
             $newStart = $id_or_payload["start"];
             $newEnd = $id_or_payload["end"];
@@ -1115,7 +1114,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Modified Availability",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 "start" => $newStart,
                 "end" => $newEnd,
                 "id" => $id
@@ -1134,27 +1133,24 @@ class Scheduling extends AbstractExternalModule
         if ($id) {
             $slotSql = $this->query("SELECT user, project_id FROM em_scheduling_calendar WHERE id = ?", [$id]);
             if ($slotRow = db_fetch_assoc($slotSql)) {
-                if (!$this->canManageAvailability($slotRow["user"], $slotRow["project_id"] ?? ($payload["pid"] ?? null))) {
+                if (!$this->canManageAvailability($slotRow["user"], $slotRow["project_id"] ?? ($payload["pid"] ?? null)))
                     return [
                         "msg" => "Permission denied: Only calendar administrators or the provider can delete this availability",
                         "success" => false
                     ];
-                }
             }
         }
-        if (isset($payload["start"]) && isset($payload["end"]) && isset($payload["id"])) {
+        if (isset($payload["start"]) && isset($payload["end"]) && isset($payload["id"]))
             return $this->deleteSplitAvailability($payload);
-        }
-        if (isset($payload["start"]) && isset($payload["end"])) {
+        if (isset($payload["start"]) && isset($payload["end"]))
             return $this->deleteRangeAvailability($payload);
-        }
         if (isset($payload["id"])) {
             // Can't log in delete entry as we won't even know if its Avail/Appt
             $result = $this->deleteEntry($payload);
             $this->log(
                 "Deleted Availability Entry",
                 [
-                    "agent" => $this->getUser()->getUsername(),
+                    "agent" => $this->getSafeUser()?->getUsername(),
                     ...$result["data"]
                 ]
             );
@@ -1202,7 +1198,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Split Availability",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 "split" => $start,
                 "id" => $id
             ]
@@ -1224,20 +1220,18 @@ class Scheduling extends AbstractExternalModule
         $project_id = $payload["pid"] ?? null;
 
         if (!empty($providers) && $providers[0] === "*") {
-            if (!$this->isCalendarAdmin($project_id)) {
+            if (!$this->isCalendarAdmin($project_id))
                 return [
                     "msg" => "Permission denied: Only calendar administrators can delete all providers' availability",
                     "success" => false
                 ];
-            }
         } elseif (!empty($providers)) {
             foreach ((array)$providers as $prov) {
-                if (!$this->canManageAvailability($prov, $project_id)) {
+                if (!$this->canManageAvailability($prov, $project_id))
                     return [
                         "msg" => "Permission denied: Only calendar administrators or the provider can delete this availability range",
                         "success" => false
                     ];
-                }
             }
         }
         $timezone = $payload["timezone"] ?? "local";
@@ -1254,17 +1248,14 @@ class Scheduling extends AbstractExternalModule
         $query = $this->createQuery();
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NULL");
 
-        if (!empty($codes) && $codes[0] != "*") {
+        if (!empty($codes) && $codes[0] != "*")
             $query->add("AND")->addInClause("availability_code", $codes);
-        }
 
-        if (!empty($providers) && $providers[0] != "*") {
+        if (!empty($providers) && $providers[0] != "*")
             $query->add("AND")->addInClause("user", $providers);
-        }
 
-        if (!empty($locations) && $locations[0] != "*") {
+        if (!empty($locations) && $locations[0] != "*")
             $query->add("AND")->addInClause("location", $locations);
-        }
 
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
@@ -1272,7 +1263,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Deleted Availability Range",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 "start" => $start,
                 "end" => $end,
                 "providers" => $providers,
@@ -1289,22 +1280,19 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteEntry($id)
     {
-        if (is_array($id)) {
+        if (is_array($id))
             $id = $id["internal_id"] ?? $id["id"];
-        }
-        if (empty($id)) {
+        if (empty($id))
             return [
                 "msg" => "No id provided",
                 "success" => false
             ];
-        }
         $result = $this->query("SELECT * FROm em_scheduling_calendar WHERE id = ?", [$id]);
-        if ($result->num_rows == 0) {
+        if ($result->num_rows == 0)
             return [
                 "msg" => "No entry found for id $id",
                 "success" => false
             ];
-        }
         $data = db_fetch_assoc($result);
         $this->query("DELETE FROM em_scheduling_calendar WHERE id = ?", [$id]);
         return [
@@ -1319,11 +1307,10 @@ class Scheduling extends AbstractExternalModule
         $project_id = $payload["pid"];
         $allFlag = $payload["all_appointments"];
         if ($allFlag) {
-            $user = $this->getUser();
-            $current_user = $user ? $user->getUsername() : null;
-            if (!empty($current_user) && !$user->isSuperUser()) {
+            $user = $this->getSafeUser();
+            $current_user = $user?->getUsername();
+            if (!empty($current_user) && !$user->isSuperUser())
                 $payload["providers"] = [$current_user];
-            }
         }
         $providers = $payload["providers"];
         $locations = $payload["locations"];
@@ -1346,25 +1333,20 @@ class Scheduling extends AbstractExternalModule
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
 
-        if (!$allFlag) {
+        if (!$allFlag)
             $query->add("AND project_id = ?", $project_id);
-        }
 
-        if (!empty($providers)) {
+        if (!empty($providers))
             $query->add("AND")->addInClause("user", $providers);
-        }
 
-        if (!empty($locations)) {
+        if (!empty($locations))
             $query->add("AND")->addInClause("location", $locations);
-        }
 
-        if (!empty($subjects)) {
+        if (!empty($subjects))
             $query->add("AND")->addInClause("record", $subjects);
-        }
 
-        if (!empty($visits)) {
+        if (!empty($visits))
             $query->add("AND")->addInClause("visit", $visits);
-        }
 
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $result = $query->execute();
@@ -1435,12 +1417,11 @@ class Scheduling extends AbstractExternalModule
                 $msg = "Appointment duration must be at least $config[duration] minutes";
             if (!$config["isExtendable"] && ($duration != $config["duration"]))
                 $msg = "Appointment duration must be exactly $config[duration] minutes";
-            if ($msg) {
+            if ($msg)
                 return [
                     "msg" => "Appointment duration must be exactly $config[duration] minutes",
                     "success" => false
                 ];
-            }
         }
 
         if ($timezone != "local") {
@@ -1459,12 +1440,11 @@ class Scheduling extends AbstractExternalModule
         $payload["allow_overflow"] = true;
         $existing = $this->getAvailability($payload);
 
-        if (count($existing) == 0) {
+        if (count($existing) == 0)
             return [
                 "msg" => "Unable to add appointment, valid matching availability not found",
                 "success" => false
             ];
-        }
         $existing = $existing[0];
         $id = $existing["internal_id"];
         $exStart = $existing["start"];
@@ -1534,7 +1514,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Appointment Scheduled",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 "provider" => $provider,
                 "location" => $location,
                 "start" => $start,
@@ -1596,7 +1576,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Appointment Modified",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 "provider" => $provider,
                 "location" => $location,
                 "record" => $record,
@@ -1645,7 +1625,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Deleted Appointment Entry",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 ...$result["data"]
             ]
         );
@@ -1686,12 +1666,11 @@ class Scheduling extends AbstractExternalModule
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
-        if (empty($subjects)) {
+        if (empty($subjects))
             return [
                 "msg" => "Unable to delete appointment range, missing subject(s)",
                 "success" => false
             ];
-        }
 
         // Note: We don't touch writeback here. This func is used for in-the-past cleanup
         // and we don't want to junk the WB data.
@@ -1706,7 +1685,7 @@ class Scheduling extends AbstractExternalModule
         $this->log(
             "Deleted Appointment Range",
             [
-                "agent" => $this->getUser()->getUsername(),
+                "agent" => $this->getSafeUser()?->getUsername(),
                 "start" => $start,
                 "end" => $end,
                 "subjects" => $subjects
@@ -1733,12 +1712,11 @@ class Scheduling extends AbstractExternalModule
     private function setUserMetadata($payload)
     {
         $project_id = $payload["pid"] ?? $this->getProjectId();
-        if (!$this->isCalendarAdmin($project_id)) {
+        if (!$this->isCalendarAdmin($project_id))
             return [
                 "msg" => "Permission denied: Only calendar administrators can modify user colors/metadata",
                 "success" => false
             ];
-        }
         $meta = $payload["metadata"];
         $this->setProjectSetting("user-metadata", json_encode($meta), $project_id);
         return [
@@ -1799,9 +1777,8 @@ class Scheduling extends AbstractExternalModule
             $desc[$this->tt('ics_link')] = "$url?pid=$project_id&id={$a['record']}";
 
             $text = "";
-            foreach ($desc as $title => $value) {
+            foreach ($desc as $title => $value)
                 $text = "{$text}{$title}: $value\\n";
-            }
 
             $start = preg_replace("/[-:]/", "", str_replace(" ", "T", $a['start']));
             $end = preg_replace("/[-:]/", "", str_replace(" ", "T", $a['end']));
@@ -1828,9 +1805,8 @@ class Scheduling extends AbstractExternalModule
         global $data_entry_trigger_url, $data_entry_trigger_enabled;
 
         // Check if enabled
-        if (!$data_entry_trigger_enabled || $data_entry_trigger_url == '') {
+        if (!$data_entry_trigger_enabled || $data_entry_trigger_url == '')
             return false;
-        }
 
         // Build HTTP Post request parameters to send
         $params = [
@@ -1847,9 +1823,8 @@ class Scheduling extends AbstractExternalModule
         $timeout = 10; // seconds
         // If $data_entry_trigger_url is a relative URL, then prepend with server domain
         $pre_url = "";
-        if (substr($data_entry_trigger_url, 0, 1) == "/") {
+        if (substr($data_entry_trigger_url, 0, 1) == "/")
             $pre_url = (SSL ? "https://" : "http://") . SERVER_NAME;
-        }
         // Send Post request
         $response = http_post($pre_url . $data_entry_trigger_url, $params, $timeout);
         // Return boolean for success
@@ -1865,9 +1840,8 @@ class Scheduling extends AbstractExternalModule
         foreach ($data as $record_id => $event_data) {
             foreach ($event_data as $event_id => $event_fields) {
                 foreach ($event_fields as $field => $value) {
-                    if (!isset($results[$record_id][$field]) || ($value !== '' && $value !== null)) {
+                    if (!isset($results[$record_id][$field]) || ($value !== '' && $value !== null))
                         $results[$record_id][$field] = $this->escape($value);
-                    }
                 }
             }
         }
