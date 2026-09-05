@@ -1105,32 +1105,82 @@ America/Los_Angeles, Pacific Time</code></pre>
 }</code></pre>
 
                     <div class="section-title">
-                        <i class="fab fa-python"></i> Receiver Implementation (Python & FastAPI)
+                        <i class="fab fa-python"></i> Receiver Implementation (Python, FastAPI & Twilio)
                     </div>
                     <p>
-                        REDCap transmits the DET notification via an HTTP POST request. You can capture and process these arguments using a Python service built with <strong>FastAPI</strong>. The following complete script captures the incoming POST arguments and appends each scheduling event to a local CSV file:
+                        REDCap transmits the DET notification via an HTTP POST request. Because REDCap's cURL request has a 10-second timeout, the receiver responds with an <strong>HTTP 200 acknowledgment immediately</strong> and offloads all processing to FastAPI's <code>BackgroundTasks</code>.
                     </p>
-                    <pre><code><span class="code-comment"># Install requirements: pip install fastapi uvicorn</span>
+                    <p>
+                        In the background worker, CSV column headers are dynamically pulled directly from the incoming DET POST parameters, an SMS notification is dispatched via Twilio using event details, and additional institutional integrations (e.g. EHR/FHIR sync, email alerts) can be connected:
+                    </p>
+                    <pre><code><span class="code-comment"># Install requirements: pip install fastapi uvicorn twilio</span>
 <span class="code-keyword">import</span> csv
 <span class="code-keyword">from</span> datetime <span class="code-keyword">import</span> datetime
 <span class="code-keyword">from</span> pathlib <span class="code-keyword">import</span> Path
-<span class="code-keyword">from</span> fastapi <span class="code-keyword">import</span> FastAPI, Request, HTTPException
+<span class="code-keyword">from</span> fastapi <span class="code-keyword">import</span> FastAPI, BackgroundTasks, Request, HTTPException
+<span class="code-keyword">from</span> twilio.rest <span class="code-keyword">import</span> Client
 
 app = FastAPI(title=<span class="code-string">"REDCap Scheduling DET Receiver"</span>)
 CSV_FILE = Path(<span class="code-string">"scheduling_events.csv"</span>)
 
-CSV_COLUMNS = [
-    <span class="code-string">"received_at"</span>, <span class="code-string">"project_id"</span>, <span class="code-string">"resource"</span>, <span class="code-string">"crud"</span>,
-    <span class="code-string">"start"</span>, <span class="code-string">"end"</span>, <span class="code-string">"subjects"</span>, <span class="code-string">"providers"</span>,
-    <span class="code-string">"locations"</span>, <span class="code-string">"visits"</span>, <span class="code-string">"id"</span>, <span class="code-string">"username"</span>, <span class="code-string">"notes"</span>
-]
+<span class="code-keyword">def</span> <span class="code-function">log_to_csv</span>(payload: dict):
+    <span class="code-comment"># Pull CSV columns dynamically from the parameters sent in the DET POST</span>
+    file_exists = CSV_FILE.exists()
+    fieldnames = list(payload.keys())
+
+    <span class="code-comment"># If CSV exists, merge existing headers with any new keys from this post</span>
+    <span class="code-keyword">if</span> file_exists:
+        <span class="code-keyword">with</span> open(CSV_FILE, mode=<span class="code-string">"r"</span>, newline=<span class="code-string">""</span>, encoding=<span class="code-string">"utf-8"</span>) <span class="code-keyword">as</span> f:
+            reader = csv.reader(f)
+            existing_headers = next(reader, [])
+            fieldnames = existing_headers + [k <span class="code-keyword">for</span> k <span class="code-keyword">in</span> fieldnames <span class="code-keyword">if</span> k <span class="code-keyword">not in</span> existing_headers]
+
+    <span class="code-keyword">with</span> open(CSV_FILE, mode=<span class="code-string">"a"</span>, newline=<span class="code-string">""</span>, encoding=<span class="code-string">"utf-8"</span>) <span class="code-keyword">as</span> f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames, extrasaction=<span class="code-string">"ignore"</span>)
+        <span class="code-keyword">if not</span> file_exists:
+            writer.writeheader()
+        writer.writerow(payload)
+
+<span class="code-keyword">def</span> <span class="code-function">send_twilio_sms</span>(payload: dict):
+    <span class="code-comment"># Example: Dispatch SMS via Twilio using captured DET event details</span>
+    account_sid = <span class="code-string">"AC_FAKE_TWILIO_ACCOUNT_SID"</span>
+    auth_token = <span class="code-string">"fake_twilio_auth_token"</span>
+    client = Client(account_sid, auth_token)
+
+    resource = payload.get(<span class="code-string">"resource"</span>, <span class="code-string">"Calendar Event"</span>)
+    action = payload.get(<span class="code-string">"crud"</span>, <span class="code-string">"updated"</span>)
+    start_time = payload.get(<span class="code-string">"start"</span>, <span class="code-string">"scheduled time"</span>)
+    subjects = payload.get(<span class="code-string">"subjects"</span>) <span class="code-keyword">or</span> payload.get(<span class="code-string">"record"</span>, <span class="code-string">"participant"</span>)
+
+    sms_body = f<span class="code-string">"REDCap Alert: {resource} {action} for record {subjects} at {start_time}."</span>
+    
+    client.messages.create(
+        body=sms_body,
+        from_=<span class="code-string">"+15551234567"</span>,  <span class="code-comment"># Fake Twilio sender number</span>
+        to=<span class="code-string">"+15559876543"</span>      <span class="code-comment"># Fake recipient phone number</span>
+    )
+
+<span class="code-keyword">def</span> <span class="code-function">process_det_event</span>(payload: dict):
+    <span class="code-comment"># 1. Log event parameters to CSV</span>
+    log_to_csv(payload)
+
+    <span class="code-comment"># 2. Example: Send SMS notification via Twilio</span>
+    send_twilio_sms(payload)
+
+    <span class="code-comment"># -------------------------------------------------------------</span>
+    <span class="code-comment"># NOTE: Other integrations could go here!</span>
+    <span class="code-comment"># Examples:</span>
+    <span class="code-comment">#  - Synchronize appointment with institutional EHR / FHIR endpoints</span>
+    <span class="code-comment">#  - Send staff calendar invites via Microsoft Graph or Google Calendar</span>
+    <span class="code-comment">#  - Post real-time audit notifications to an MS Teams or Slack channel</span>
+    <span class="code-comment">#  - Enqueue ingestion tasks in an institutional data warehouse</span>
+    <span class="code-comment"># -------------------------------------------------------------</span>
 
 <span class="code-keyword">@app.post</span>(<span class="code-string">"/det"</span>)
-<span class="code-keyword">async def</span> <span class="code-function">receive_det</span>(request: Request):
-    <span class="code-comment"># 1. Capture POST arguments (handles standard form-data and JSON bodies)</span>
+<span class="code-keyword">async def</span> <span class="code-function">receive_det</span>(background_tasks: BackgroundTasks, request: Request):
+    <span class="code-comment"># Capture all parameters from HTTP POST (form-data with JSON fallback)</span>
     form_data = <span class="code-keyword">await</span> request.form()
     payload = dict(form_data)
-    
     <span class="code-keyword">if not</span> payload:
         <span class="code-keyword">try</span>:
             payload = <span class="code-keyword">await</span> request.json()
@@ -1140,23 +1190,12 @@ CSV_COLUMNS = [
     <span class="code-keyword">if not</span> payload:
         <span class="code-keyword">raise</span> HTTPException(status_code=400, detail=<span class="code-string">"No payload received in POST request"</span>)
 
-    <span class="code-comment"># 2. Attach a server-side timestamp for logging</span>
     payload[<span class="code-string">"received_at"</span>] = datetime.now().isoformat()
 
-    <span class="code-comment"># 3. Save captured arguments to CSV (creates headers on first row)</span>
-    file_exists = CSV_FILE.exists()
-    <span class="code-keyword">with</span> open(CSV_FILE, mode=<span class="code-string">"a"</span>, newline=<span class="code-string">""</span>, encoding=<span class="code-string">"utf-8"</span>) <span class="code-keyword">as</span> f:
-        writer = csv.DictWriter(f, fieldnames=CSV_COLUMNS, extrasaction=<span class="code-string">"ignore"</span>)
-        <span class="code-keyword">if not</span> file_exists:
-            writer.writeheader()
-        writer.writerow(payload)
+    <span class="code-comment"># Run processing in background so REDCap receives an immediate HTTP 200 response</span>
+    background_tasks.add_task(process_det_event, payload)
 
-    <span class="code-comment"># 4. Return HTTP 200 acknowledgment to REDCap</span>
-    <span class="code-keyword">return</span> {
-        <span class="code-string">"status"</span>: <span class="code-string">"success"</span>,
-        <span class="code-string">"message"</span>: <span class="code-string">f"Logged {payload.get('resource')} {payload.get('crud')} event"</span>,
-        <span class="code-string">"id"</span>: payload.get(<span class="code-string">"id"</span>)
-    }
+    <span class="code-keyword">return</span> {<span class="code-string">"status"</span>: <span class="code-string">"success"</span>, <span class="code-string">"message"</span>: <span class="code-string">"DET event scheduled for background processing"</span>}
 
 <span class="code-comment"># Run receiver: uvicorn main:app --host 0.0.0.0 --port 8000</span></code></pre>
                 </div>
