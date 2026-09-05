@@ -449,6 +449,9 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id)
     {
+        if (session_status() === PHP_SESSION_ACTIVE)
+            session_write_close();
+
         if ($action === 'calendar-api')
             return $this->process($payload, $project_id, $user_id);
         if ($action === 'survey-calendar-api')
@@ -1933,6 +1936,34 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
+    /**
+     * Efficiently resolves display labels for a specific set of records in a project,
+     * avoiding loading the entire project cohort into memory.
+     */
+    private function getRecordLabels($recordIds, $project_id)
+    {
+        if (empty($recordIds))
+            return [];
+
+        $labels = [];
+        $nameField = $this->getProjectSetting("name-field", $project_id);
+
+        if (!empty($nameField)) {
+            $data = $this->getSingleEventFields([$nameField], $recordIds, $project_id);
+            foreach ($recordIds as $record_id) {
+                $rawName = $data[$record_id][$nameField] ?? '';
+                $name = htmlspecialchars_decode(htmlspecialchars_decode($rawName));
+                $labels[$record_id] = !empty($name) ? $name : "$record_id";
+            }
+        } else {
+            foreach ($recordIds as $record_id) {
+                $labels[$record_id] = "$record_id";
+            }
+        }
+
+        return $labels;
+    }
+
     private function getAppointments($payload)
     {
         $project_id = $payload["pid"];
@@ -1952,14 +1983,6 @@ class Scheduling extends AbstractExternalModule
         $timezone = $payload["timezone"];
         $server_tz = date_default_timezone_get();
         $timezone = $timezone == $server_tz ? "local" : $timezone;
-
-        $allUsers = $this->getAllUsers();
-        $allSubjects = $allFlag ? $this->getGlobalSubjects($providers) : $this->getSubjects($payload);
-
-        if (!$allFlag) {
-            $allLocations = $this->getLocationStructure($project_id, true);
-            $allVisits = $this->getVisits($payload);
-        }
 
         // Query appointments using idx_proj_time (project_id, time_start, time_end)
         $query = $this->createQuery();
@@ -1985,14 +2008,60 @@ class Scheduling extends AbstractExternalModule
 
         $result = $query->execute();
 
+        // Buffer all rows first to avoid holding the database result open
+        $rows = [];
+        while ($row = $result->fetch_assoc())
+            $rows[] = $row;
+
+        // Fast path: If no appointments in range, return immediately
+        if (empty($rows))
+            return [];
+
+        $allUsers = $this->getAllUsers();
+
+        // Resolve subject display labels only for records actually present in this view
+        $recordLabels = [];
+        if (!$allFlag) {
+            $allLocations = $this->getLocationStructure($project_id, true);
+            $allVisits = $this->getVisits($payload);
+            $recordIds = array_values(array_unique(array_filter(array_column($rows, 'record'))));
+            $recordLabels = $this->getRecordLabels($recordIds, $project_id);
+        } else {
+            // Group records by project_id for multi-project lookup
+            $recordsByPid = [];
+            foreach ($rows as $r) {
+                if (!empty($r["record"])) {
+                    $recordsByPid[$r["project_id"]][$r["record"]] = true;
+                }
+            }
+            foreach ($recordsByPid as $pid => $records) {
+                $pLabels = $this->getRecordLabels(array_keys($records), $pid);
+                foreach ($pLabels as $recId => $label) {
+                    $recordLabels["$pid:$recId"] = $label;
+                }
+            }
+        }
+
+        $allVisitsCache = [];
+        $allLocationsCache = [];
+
         $appt = [];
-        while ($row = $result->fetch_assoc()) {
+        foreach ($rows as $row) {
             $pid = $row["project_id"];
             if ($allFlag) {
-                $allVisits = $this->getVisits(["pid" => $pid]);
-                $allLocations = $this->getLocationStructure($pid, true);
+                if (!isset($allVisitsCache[$pid])) {
+                    $allVisitsCache[$pid] = $this->getVisits(["pid" => $pid]);
+                    $allLocationsCache[$pid] = $this->getLocationStructure($pid, true);
+                }
+                $curVisits = $allVisitsCache[$pid];
+                $curLocations = $allLocationsCache[$pid];
+                $recordKey = "$pid:$row[record]";
+            } else {
+                $curVisits = $allVisits;
+                $curLocations = $allLocations;
+                $recordKey = $row["record"];
             }
-            $allSubjectsRecord = $allFlag ? "$row[project_id]:$row[record]" : $row["record"];
+
             $start = $row["time_start"];
             $end = $row["time_end"];
             if ($timezone != "local") {
@@ -2010,13 +2079,13 @@ class Scheduling extends AbstractExternalModule
                 "start" => $start,
                 "end" => $end,
                 "location" => $row["location"],
-                "location_display" => $allLocations[$row["location"]]["name"] ?? $row["location"],
+                "location_display" => $curLocations[$row["location"]]["name"] ?? $row["location"],
                 "user" => $row["user"],
                 "user_display" => $allUsers[$row["user"]] ?? $row["user"],
                 "visit" => $row["visit"],
-                "visit_display" => $allVisits[$row["visit"]]["label"] ?? $row["visit"],
+                "visit_display" => $curVisits[$row["visit"]]["label"] ?? $row["visit"],
                 "record" => $row["record"],
-                "record_display" => $allSubjects[$allSubjectsRecord]["label"] ?? $row["record"],
+                "record_display" => $recordLabels[$recordKey] ?? $row["record"],
                 "notes" => $row["notes"],
                 "metadata" => json_decode($row["metadata"], true) ?? [],
                 "is_availability" => false,

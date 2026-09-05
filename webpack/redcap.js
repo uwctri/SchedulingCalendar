@@ -1,6 +1,16 @@
 // This class is used to wrap interfacing with native RC functions and
 // libraries that ship with RC. We also use the FontAwesome that ships with RC
 
+
+/**
+ * Disable Vanderbilt REDCap's ajax queueing because it is not compatible with our code.
+ * See note from Vandy:
+ * We queue ajax requests because concurrent requests for the same browser tab
+ * sometimes fail because they trigger REDCap's duplicate query protection.
+ * See this issue for details: https://github.com/vanderbilt-redcap/external-module-framework/issues/619
+ */
+window.ExternalModules.__ajaxQueue = (fn) => fn()
+
 class RedCap {
 
     static module = ExternalModules.UWMadison.Scheduling

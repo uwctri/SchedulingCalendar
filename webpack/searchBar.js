@@ -103,11 +103,6 @@ class SearchBar {
                     filter: others.length > 0 ? others.join(",") : null,
                     id: null,
                     subject: null,
-                    subjects: null,
-                    providers: null,
-                    locations: null,
-                    visits: null,
-                    filters: null
                 })
             }
 
@@ -182,7 +177,10 @@ class SearchBar {
 
             // Fetch data for the dropdown
             let providers, subjects, locations, visits
-            await Promise.all([API.providers(), API.subjects(), API.locations(), API.visits()]).then((values) => {
+            let subjectsPromise = Page.type !== "edit" ? API.subjects() : Promise.resolve({})
+            let visitsPromise = Page.type !== "edit" ? API.visits() : Promise.resolve({})
+
+            await Promise.all([API.providers(), subjectsPromise, API.locations(), visitsPromise]).then((values) => {
                 providers = values[0]
                 subjects = values[1]
                 locations = values[2]
@@ -303,12 +301,53 @@ class SearchBar {
         return $.getElementsByClassName(titleClassName)[0].classList.contains("d-none")
     }
 
+    static getInitialFilters(filterType = null) {
+        const userConfig = UserConfig.get()
+        const parse = (val) => {
+            if (!val) return []
+            return String(val).split(",").map(s => s.trim()).filter(Boolean)
+        }
+
+        const providers = parse(Page.provider)
+        const locations = parse(Page.location)
+        const visits = parse(Page.visit)
+        const subjects = parse(Page.record || Page.id)
+
+        if (Page.type == "edit" && userConfig.filterToSelf && providers.length === 0 && locations.length === 0 && visits.length === 0 && subjects.length === 0) {
+            if (RedCap.user && RedCap.user.username) {
+                providers.push(RedCap.user.username)
+            }
+        }
+
+        if (filterType === "provider") return providers
+        if (filterType === "location") return locations
+        if (filterType === "visit") return visits
+        if (filterType === "subject") return subjects
+
+        return {
+            provider: providers,
+            location: locations,
+            visit: visits,
+            subject: subjects
+        }
+    }
+
     static getPicked(valueOnly = false, filterType = null) {
-        if (SearchBar._choices == null)
+        if (SearchBar._choices == null) {
+            const initial = SearchBar.getInitialFilters(filterType)
+            if (Array.isArray(initial)) {
+                if (valueOnly) return initial
+                return initial.map(val => ({
+                    value: val,
+                    label: val,
+                    customProperties: { type: filterType }
+                }))
+            }
             return []
+        }
         let picked = SearchBar._choices.getValue()
         if (filterType)
-            picked = picked.filter(item => item.customProperties.type == filterType)
+            picked = picked.filter(item => item.customProperties && item.customProperties.type == filterType)
         if (valueOnly)
             picked = picked.map(x => x.value)
         return picked
@@ -316,8 +355,16 @@ class SearchBar {
 
     static getPickedProviders(valueOnly = false) {
         let picked = SearchBar.getPicked(valueOnly, "provider")
-        if (Page.type == "my")
-            picked.push(RedCap.user.username)
+        if (Page.type == "my") {
+            const myUser = RedCap.user.username
+            if (valueOnly) {
+                if (!picked.includes(myUser)) picked.push(myUser)
+            } else {
+                if (!picked.some(x => x.value === myUser)) {
+                    picked.push({ value: myUser, label: myUser, customProperties: { type: "provider" } })
+                }
+            }
+        }
         return picked
     }
 
