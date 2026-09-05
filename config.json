@@ -15,7 +15,11 @@
     ],
     "framework-version": 16,
     "auth-ajax-actions": [
-        "calendar-api"
+        "calendar-api",
+        "survey-calendar-api"
+    ],
+    "no-auth-ajax-actions": [
+        "survey-calendar-api"
     ],
     "no-auth-pages": [
         "ics"
@@ -34,7 +38,7 @@
     "action-tags": [
         {
             "tag": "@SCHEDULING-CALENDAR",
-            "description": "Insert a scheduling calendar for the user to schedule an appointment as apart of an instrument workflow. Usable by both a logged-in user and survey user. Configurable as @SCHEDULING-CALENDAR([start_date], [end_date], \"visit code or linked [event_name]\", time_in_minutes, [provider], [location], \"popup-or-inline\"). All fields that support piping also support static strings."
+            "description": "Insert an interactive scheduling calendar into a data entry form or survey instrument. Configurable with labeled parameters, e.g. @SCHEDULING-CALENDAR(visit=\"visit_1\", start=\"now\", end=\"+30d\", mode=\"popup\"). Supports start, end, duration, provider, location, mode, allow_reschedule, allow_cancel, hide_provider, save_mode, btn_text, and timezone. Field piping is supported for start, end, provider, and location."
         }
     ],
     "project-settings": [

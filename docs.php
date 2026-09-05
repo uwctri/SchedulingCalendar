@@ -103,27 +103,123 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
             <div id="actiontag" class="card my-4 card-primary">
                 <div class="card-header text-white fw-bold bg-primary bg-gradient d-flex justify-content-between align-items-center">
                     <span>Action Tag Integration</span>
-                    <span class="badge bg-warning text-dark font-weight-bold px-2 py-1">Coming Soon</span>
+                    <span class="badge bg-success text-white font-weight-bold px-2 py-1">Available</span>
                 </div>
                 <div class="card-body">
-                    The module supports the <code>@SCHEDULING-CALENDAR</code> action tag to embed an interactive scheduling calendar directly into data entry forms or survey instruments.
+                    The module supports the <code>@SCHEDULING-CALENDAR</code> action tag to embed an interactive self-scheduling or staff-scheduling interface directly into data entry forms and public survey instruments.
                     <br><br>
                     <h5 class="text-decoration-underline">Action Tag Syntax</h5>
-                    <pre>
-                        <code>
-                            @SCHEDULING-CALENDAR([start_date], [end_date], "visit code or linked [event_name]", time_in_minutes, [provider], [location], "popup-or-inline")
-                        </code>
-                    </pre>
-                    <p><b>Parameters:</b><br>
-                        1. <b>start_date</b> – Optional start date for scheduling range (can be a static string like <code>"2026-08-01"</code> or a piped field <code>[baseline_date]</code>).<br>
-                        2. <b>end_date</b> – Optional end date for scheduling range (static string or piped field <code>[visit_window_end]</code>).<br>
-                        3. <b>visit_code</b> – The visit code or linked event name configured in project settings.<br>
-                        4. <b>time_in_minutes</b> – Visit duration override in minutes (e.g., <code>30</code> or <code>60</code>).<br>
-                        5. <b>provider</b> – Optional pre-selected provider username or piped field.<br>
-                        6. <b>location</b> – Optional pre-selected location code or piped field.<br>
-                        7. <b>mode</b> – Rendering mode: <code>"popup"</code> (launches modal) or <code>"inline"</code> (embeds inside form).
-                    </p>
-                    <p>All parameter positions support REDCap field piping as well as static string values. This allows dynamic scheduling workflows based on participant data entered earlier in a survey or instrument.</p>
+                    <p>Parameters are configured using labeled key-value syntax within parentheses (e.g., <code>param="value"</code> or <code>param=true</code>):</p>
+                    <pre class="bg-light p-3 rounded"><code># Standard popup scheduling modal (starts 1 hour from now as a buffer):
+@SCHEDULING-CALENDAR(visit="baseline_visit", start="now +1h", end="+30d", mode="popup")
+
+# Survey self-scheduling with dynamic event name resolution and rescheduling enabled:
+@SCHEDULING-CALENDAR(visit="[event-name]", start="+1d", end="+14d", allow_reschedule=true, allow_cancel=true, btn_text="Choose Appointment Time")
+
+# Embedded inline picker with literal event name and piped field filters:
+@SCHEDULING-CALENDAR(visit="visit_1_arm_1", start="[baseline_date]", end="+60d", provider="[assigned_doctor]", location="[clinic_site]", mode="inline")</code></pre>
+
+                    <h5 class="text-decoration-underline mt-4">Parameter Reference</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm mt-2 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 20%;">Parameter</th>
+                                    <th style="width: 15%;">Default</th>
+                                    <th>Description & Examples</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><code>visit</code></td>
+                                    <td><em>Required</em></td>
+                                    <td>
+                                        The visit identifier. Can be specified in any of three formats:
+                                        <ul class="mb-1 mt-1 pl-3">
+                                            <li><b>Internal Coded Value</b>: The coded value assigned to the visit in the module's project settings (e.g., <code>visit="screen_v1"</code> or <code>visit="v1"</code>).</li>
+                                            <li><b>Piped Smart Variable</b>: A REDCap smart variable such as <code>visit="[event-name]"</code>, which dynamically evaluates to the unique event name of the current event.</li>
+                                            <li><b>Literal Event Name</b>: The unique REDCap event name configured as the visit's linked event (e.g., <code>visit="baseline_arm_1"</code> or <code>visit="visit_1_arm_1"</code>).</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>start</code></td>
+                                    <td><code>"now"</code></td>
+                                    <td>Start boundary of the scheduling window (includes time so past slots are excluded). Accepts <code>"now"</code>, relative time offsets with buffers (e.g., <code>"now +1h"</code>, <code>"now +30m"</code>, <code>"+2h"</code>), relative date offsets (<code>"+1d"</code>, <code>"+2w"</code>), <code>"today"</code>, fixed ISO dates (<code>"2026-10-01"</code>), or piped fields (<code>start="[baseline_date]"</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>end</code></td>
+                                    <td><code>"+30d"</code></td>
+                                    <td>End boundary of the scheduling window. Accepts relative offsets (<code>"+14d"</code>, <code>"+1m"</code>), fixed ISO dates (<code>"2026-11-15"</code>), or piped fields (<code>end="[visit_window_end]"</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>duration</code></td>
+                                    <td><em>Visit default</em></td>
+                                    <td>Visit duration override in minutes (e.g., <code>duration=45</code> or <code>duration=60</code>). If omitted, uses the visit length configured in project settings.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>provider</code></td>
+                                    <td><em>All providers</em></td>
+                                    <td>Restrict available slots to specific provider username(s). Accepts a single username (<code>provider="dr_smith"</code>), comma-separated usernames (<code>provider="dr_smith,dr_jones"</code>), or a piped field (<code>provider="[assigned_staff]"</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>location</code></td>
+                                    <td><em>All locations</em></td>
+                                    <td>Restrict available slots to specific clinic location code(s). Accepts a single location code (<code>location="main_clinic"</code>), comma-separated codes (<code>location="clinic_east,clinic_west"</code>), or a piped field (<code>location="[site_choice]"</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>mode</code></td>
+                                    <td><code>"popup"</code></td>
+                                    <td>
+                                        Display presentation for the scheduling interface:
+                                        <ul class="mb-0 mt-1 pl-3">
+                                            <li><code>"popup"</code>: Displays a button that opens a modal dialog with interactive date navigation and filters.</li>
+                                            <li><code>"inline"</code>: Embeds a simplified accordion directly into the form/survey layout (dates collapse into a single-expand accordion with no toolbar filters).</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>allow_reschedule</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Set to <code>true</code> to allow participants or staff viewing a record with an existing appointment to click "Reschedule" and pick a new slot.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>allow_cancel</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Set to <code>true</code> to display a "Cancel" button on the scheduled appointment card, allowing participants or staff to cancel the booking.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>hide_provider</code></td>
+                                    <td><code>false</code></td>
+                                    <td>Set to <code>true</code> to hide provider names from available slot cards, the modal toolbar provider filter, and scheduled appointment cards (useful for participant-facing surveys or anonymous staffing workflows).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>save_mode</code></td>
+                                    <td><code>"on_submit"</code></td>
+                                    <td>
+                                        Booking commit behavior:
+                                        <ul class="mb-0 mt-1 pl-3">
+                                            <li><code>"on_submit"</code>: The selected slot is reserved and committed atomically when the user saves or submits the REDCap form/survey.</li>
+                                            <li><code>"immediate"</code>: The appointment is booked immediately via AJAX as soon as a slot is selected.</li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><code>btn_text</code></td>
+                                    <td><code>"Schedule Appointment"</code></td>
+                                    <td>Custom text for the trigger button when using <code>mode="popup"</code> (e.g., <code>btn_text="Book Follow-up Appointment"</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>timezone</code></td>
+                                    <td><code>"browser"</code></td>
+                                    <td>Target display timezone for appointment slots. Defaults to <code>"browser"</code>, which automatically detects the participant's or user's local browser timezone (e.g., <code>America/Chicago</code>). Can also be set to an explicit IANA timezone identifier (e.g., <code>timezone="America/New_York"</code>) or <code>"local"</code> to display times in the REDCap server's local timezone.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <h5 class="text-decoration-underline mt-4">Piping & Dynamic Reactivity</h5>
+                    <p>When using piped variables such as <code>provider="[assigned_doctor]"</code> or <code>location="[clinic_location]"</code>, the scheduler automatically attaches DOM change listeners to the corresponding fields on the page. Selecting or changing a location dropdown or provider field dynamically re-filters available appointment slots in real time without requiring a page reload.</p>
                 </div>
             </div>
             <div id="config" class="card my-4 card-primary">

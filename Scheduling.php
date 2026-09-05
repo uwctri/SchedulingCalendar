@@ -4,6 +4,7 @@ namespace UWMadison\Scheduling;
 
 use ExternalModules\AbstractExternalModule;
 use REDCap;
+use Piping;
 use DateTime;
 use DateTimeZone;
 use Throwable;
@@ -57,25 +58,316 @@ class Scheduling extends AbstractExternalModule
     /*
     Check for action tag on data entry forms
     */
-    public function redcap_data_entry_form($project_id, $record, $instrument, $event_id)
+    public function redcap_data_entry_form($project_id, $record = null, $instrument = null, $event_id = null, $group_id = null, $repeat_instance = 1)
     {
-        $this->loadActionTag($project_id, $record, $event_id, $instrument);
+        echo "<script>console.log('[SchedulingCalendar] redcap_data_entry_form hook fired:', " . json_encode([
+            'project_id' => $project_id,
+            'record' => $record,
+            'instrument' => $instrument,
+            'event_id' => $event_id
+        ]) . ");</script>";
+        $this->loadActionTag($project_id, $record, $instrument, $event_id);
     }
 
     /*
     Check for action tag on survey pages
     */
-    public function redcap_survey_page($project_id, $record, $instrument, $event_id)
+    public function redcap_survey_page($project_id, $record = null, $instrument = null, $event_id = null, $group_id = null, $survey_hash = null, $response_id = null, $repeat_instance = 1)
     {
-        $this->loadActionTag($project_id, $record, $event_id, $instrument);
+        echo "<script>console.log('[SchedulingCalendar] redcap_survey_page hook fired:', " . json_encode([
+            'project_id' => $project_id,
+            'record' => $record,
+            'instrument' => $instrument,
+            'event_id' => $event_id
+        ]) . ");</script>";
+        $this->loadActionTag($project_id, $record, $instrument, $event_id);
     }
 
-    private function loadActionTag($project_id, $record, $event_id, $instrument)
+    /*
+    Save pending appointment on form or survey submit
+    */
+    public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id = null, $survey_hash = null, $response_id = null, $repeat_instance = 1)
     {
-        // TODO pull datadict, 
-        // check to see if this instrument has the action tag
-        // parse and pull out any info from the action tag
-        // pass everything to JS to render the calendar
+        if (empty($_POST['__scheduling_calendar_booking']) || !is_array($_POST['__scheduling_calendar_booking']))
+            return;
+
+        foreach ($_POST['__scheduling_calendar_booking'] as $fieldName => $bookingRaw) {
+            $booking = is_array($bookingRaw) ? $bookingRaw : json_decode(stripslashes($bookingRaw), true);
+            if (empty($booking) || empty($booking["visit"]) || empty($booking["start"]) || empty($booking["end"]))
+                continue;
+
+            $booking["visit"] = $this->resolveVisitCode($project_id, $booking["visit"]);
+
+            // Check if there was an existing appointment on this record + visit to replace/reschedule
+            $existingSql = $this->query(
+                "SELECT id FROM em_scheduling_calendar WHERE project_id = ? AND record = ? AND visit = ? AND record IS NOT NULL",
+                [$project_id, $record, $booking["visit"]]
+            );
+            while ($exRow = db_fetch_assoc($existingSql))
+                $this->deleteAppointments(["pid" => $project_id, "id" => $exRow["id"]]);
+
+            // Set appointment
+            $payload = [
+                "pid" => $project_id,
+                "visits" => $booking["visit"],
+                "start" => $booking["start"],
+                "end" => $booking["end"],
+                "providers" => $booking["provider"],
+                "locations" => $booking["location"],
+                "subjects" => $record,
+                "notes" => "Scheduled via @SCHEDULING-CALENDAR on $instrument",
+                "timezone" => "local"
+            ];
+            $this->setAppointments($payload);
+        }
+    }
+
+    public function parseActionTag($annotation)
+    {
+        if (!preg_match('/@SCHEDULING-CALENDAR(?:\((.*?)\))?/is', $annotation, $matches))
+            return null;
+
+        $rawArgs = isset($matches[1]) ? trim($matches[1]) : "";
+        $config = [
+            "visit" => null,
+            "start" => "now",
+            "end" => "+30d",
+            "duration" => null,
+            "provider" => null,
+            "location" => null,
+            "mode" => "popup",
+            "allow_reschedule" => false,
+            "allow_cancel" => false,
+            "hide_provider" => false,
+            "save_mode" => "on_submit",
+            "btn_text" => "Schedule Appointment",
+            "timezone" => "browser"
+        ];
+        if (empty($rawArgs))
+            return $config;
+
+        if (str_contains($rawArgs, '=')) {
+            preg_match_all('/([a-zA-Z_]+)\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s,]+))/is', $rawArgs, $pairs, PREG_SET_ORDER);
+            foreach ($pairs as $p) {
+                $key = strtolower(trim($p[1]));
+                $val = !empty($p[2]) ? $p[2] : (!empty($p[3]) ? $p[3] : ($p[4] ?? ""));
+                if ($val === "true")
+                    $val = true;
+                elseif ($val === "false")
+                    $val = false;
+                elseif (is_numeric($val) && in_array($key, ["duration"]))
+                    $val = (int)$val;
+                $config[$key] = $val;
+            }
+        } else {
+            $parts = str_getcsv($rawArgs, ",", "\"", "\\");
+            $positionMap = [0 => "start", 1 => "end", 2 => "visit", 3 => "duration", 4 => "provider", 5 => "location", 6 => "mode"];
+            foreach ($parts as $idx => $val) {
+                $val = trim($val);
+                if (isset($positionMap[$idx]) && $val !== "") {
+                    $key = $positionMap[$idx];
+                    if ($key === "duration" && is_numeric($val))
+                        $val = (int)$val;
+                    $config[$key] = $val;
+                }
+            }
+        }
+        if ($config["mode"] === "slot-list")
+            $config["mode"] = "inline";
+        return $config;
+    }
+
+    private function parseRelativeDate($raw, $server_tz, $isEnd = false)
+    {
+        $raw = trim($raw ?? "");
+        $now = new DateTime("now", new DateTimeZone($server_tz));
+
+        if (empty($raw))
+            return $isEnd ? $now->format("Y-m-d 23:59:59") : $now->format("Y-m-d H:i:s");
+
+        if (strtolower($raw) === "now")
+            return $now->format("Y-m-d H:i:s");
+
+        if (strtolower($raw) === "today")
+            return $isEnd ? $now->format("Y-m-d 23:59:59") : $now->format("Y-m-d 00:00:00");
+
+        if (preg_match('/^(?:(now|today)\s*)?([+-]?\s*\d+)\s*([a-zA-Z]+)$/i', $raw, $m)) {
+            $base = strtolower($m[1] ?? "");
+            $qty = (int)str_replace(' ', '', $m[2]);
+            $unitRaw = strtolower($m[3]);
+
+            $unit = null;
+            $isTime = false;
+
+            if (in_array($unitRaw, ['h', 'hr', 'hrs', 'hour', 'hours'])) {
+                $unit = 'hours';
+                $isTime = true;
+            } elseif (in_array($unitRaw, ['min', 'mins', 'minute', 'minutes'])) {
+                $unit = 'minutes';
+                $isTime = true;
+            } elseif (in_array($unitRaw, ['s', 'sec', 'secs', 'second', 'seconds'])) {
+                $unit = 'seconds';
+                $isTime = true;
+            } elseif (in_array($unitRaw, ['d', 'day', 'days'])) {
+                $unit = 'days';
+                $isTime = ($base === 'now');
+            } elseif (in_array($unitRaw, ['w', 'week', 'weeks'])) {
+                $unit = 'weeks';
+                $isTime = ($base === 'now');
+            } elseif (in_array($unitRaw, ['mo', 'mon', 'month', 'months'])) {
+                $unit = 'months';
+                $isTime = ($base === 'now');
+            } elseif (in_array($unitRaw, ['y', 'yr', 'year', 'years'])) {
+                $unit = 'years';
+                $isTime = ($base === 'now');
+            } elseif ($unitRaw === 'm') {
+                if ($base === 'now' || abs($qty) >= 15) {
+                    $unit = 'minutes';
+                    $isTime = true;
+                } else {
+                    $unit = 'months';
+                    $isTime = false;
+                }
+            }
+
+            if ($unit) {
+                $dt = clone $now;
+                if ($base === 'today')
+                    $dt->setTime(0, 0, 0);
+                $dt->modify("$qty $unit");
+                if ($isTime)
+                    return $dt->format("Y-m-d H:i:s");
+                return $isEnd ? $dt->format("Y-m-d 23:59:59") : $dt->format("Y-m-d 00:00:00");
+            }
+        }
+
+        $ts = strtotime($raw);
+        if ($ts !== false) {
+            if (strlen($raw) <= 10 && !str_contains($raw, ':'))
+                return date($isEnd ? "Y-m-d 23:59:59" : "Y-m-d 00:00:00", $ts);
+            return date("Y-m-d H:i:s", $ts);
+        }
+
+        return $isEnd ? $now->format("Y-m-d 23:59:59") : $now->format("Y-m-d 00:00:00");
+    }
+
+    public function resolveVisitCode($project_id, $visit)
+    {
+        if (empty($visit))
+            return $visit;
+
+        $visitConfigs = $this->getVisits(["pid" => $project_id]);
+        if (isset($visitConfigs[$visit]))
+            return $visit;
+
+        foreach ($visitConfigs as $code => $cfg) {
+            if ($code === $visit || (string)($cfg["link"] ?? "") === (string)$visit)
+                return $code;
+
+            if (!empty($cfg["link"]) && is_numeric($cfg["link"])) {
+                $uniqueName = Piping::replaceVariablesInLabel("[event-name]", null, $cfg["link"], 1, null, false, $project_id, false);
+                if ($uniqueName === $visit)
+                    return $code;
+            }
+        }
+
+        return $visit;
+    }
+
+    private function loadActionTag($project_id, $record, $instrument, $event_id)
+    {
+        echo "<script>console.log('[SchedulingCalendar] loadActionTag scanning instrument: " . json_encode($instrument) . " on project $project_id');</script>";
+
+        $taggedFields = [];
+        $fieldsScanned = 0;
+
+        // Query redcap_metadata
+        $metaSql = $this->createQuery();
+        $metaSql->add("SELECT field_name, element_type, element_label, misc FROM redcap_metadata WHERE project_id = ?", [$project_id]);
+        if (!empty($instrument))
+            $metaSql->add("AND form_name = ?", [$instrument]);
+        $metaResult = $metaSql->execute();
+        while ($row = $metaResult->fetch_assoc()) {
+            $fieldsScanned++;
+            $annotation = $row['misc'] ?? '';
+            if (str_contains($annotation, '@SCHEDULING-CALENDAR')) {
+                $parsed = $this->parseActionTag($annotation);
+                if ($parsed) {
+                    $parsed['field_name'] = $row['field_name'];
+                    $parsed['field_label'] = $row['element_label'];
+                    if (!empty($parsed['visit'])) {
+                        if (str_contains($parsed['visit'], '['))
+                            $parsed['visit'] = Piping::replaceVariablesInLabel($parsed['visit'], $record, $event_id, 1, null, false, $project_id, false);
+                        $parsed['visit'] = $this->resolveVisitCode($project_id, $parsed['visit']);
+                    }
+                    foreach (['provider', 'location', 'start', 'end'] as $param) {
+                        if (!empty($parsed[$param]) && is_string($parsed[$param]) && preg_match('/^\[([a-zA-Z0-9_]+)\]$/', $parsed[$param], $m))
+                            $parsed['piped_' . $param] = $m[1];
+                    }
+                    $taggedFields[$row['field_name']] = $parsed;
+                }
+            }
+        }
+
+        // If not found, also check redcap_metadata_temp (in case instrument changes are in draft mode)
+        if (empty($taggedFields)) {
+            $draftSql = $this->createQuery();
+            $draftSql->add("SELECT field_name, element_type, element_label, misc FROM redcap_metadata_temp WHERE project_id = ?", [$project_id]);
+            if (!empty($instrument))
+                $draftSql->add("AND form_name = ?", [$instrument]);
+            $draftResult = $draftSql->execute();
+            while ($row = $draftResult->fetch_assoc()) {
+                $fieldsScanned++;
+                $annotation = $row['misc'] ?? '';
+                if (str_contains($annotation, '@SCHEDULING-CALENDAR')) {
+                    $parsed = $this->parseActionTag($annotation);
+                    if ($parsed) {
+                        $parsed['field_name'] = $row['field_name'];
+                        $parsed['field_label'] = $row['element_label'];
+                        if (!empty($parsed['visit'])) {
+                            if (str_contains($parsed['visit'], '['))
+                                $parsed['visit'] = Piping::replaceVariablesInLabel($parsed['visit'], $record, $event_id, 1, null, false, $project_id, false);
+                            $parsed['visit'] = $this->resolveVisitCode($project_id, $parsed['visit']);
+                        }
+                        foreach (['provider', 'location', 'start', 'end'] as $param) {
+                            if (!empty($parsed[$param]) && is_string($parsed[$param]) && preg_match('/^\[([a-zA-Z0-9_]+)\]$/', $parsed[$param], $m))
+                                $parsed['piped_' . $param] = $m[1];
+                        }
+                        $taggedFields[$row['field_name']] = $parsed;
+                    }
+                }
+            }
+        }
+
+        echo "<script>console.log('[SchedulingCalendar] Scanned $fieldsScanned fields on instrument \"$instrument\". Found " . count($taggedFields) . " tagged fields:', " . json_encode($taggedFields) . ");</script>";
+
+        if (empty($taggedFields)) {
+            echo "<script>console.warn('[SchedulingCalendar] No fields with @SCHEDULING-CALENDAR were found on this instrument ($instrument). If you just edited the field in Online Designer, make sure you clicked \"Save\" on the field.');</script>";
+            return;
+        }
+
+        $this->initializeJavascriptModuleObject();
+        $this->tt_transferToJavascriptModuleObject();
+        $jsObj = $this->getJavascriptModuleObjectName();
+        $actionTagConfig = [
+            "projectId" => $project_id,
+            "record" => $record,
+            "eventId" => $event_id,
+            "instrument" => $instrument,
+            "fields" => $taggedFields,
+            "timezones" => json_decode($this->getTimeZones($project_id), true)
+        ];
+        $configJson = json_encode($actionTagConfig);
+        $scriptUrl = $this->getUrl('actionTag.js');
+        $styleUrl = $this->getUrl('style.css');
+
+        echo "<script>console.log('[SchedulingCalendar] Action tag active. Injecting bundle with config:', " . $configJson . ");</script>";
+        echo "<link rel='stylesheet' href='{$styleUrl}'>";
+        echo "<script>
+            if (typeof {$jsObj} === 'undefined') window.{$jsObj} = {};
+            {$jsObj}.actionTagConfig = {$configJson};
+        </script>";
+        echo "<script src='{$scriptUrl}' defer></script>";
     }
 
     /*
@@ -85,10 +377,260 @@ class Scheduling extends AbstractExternalModule
     {
         if ($action === 'calendar-api')
             return $this->process($payload, $project_id, $user_id);
+        if ($action === 'survey-calendar-api')
+            return $this->processSurveyApi($payload, $project_id, $record);
         http_response_code(400);
         return [
             "success" => false,
             "msg" => "Invalid action: $action"
+        ];
+    }
+
+    public function processSurveyApi($payload, $project_id, $record)
+    {
+        if (empty($payload) || !is_array($payload)) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Payload is required and cannot be empty"
+            ];
+        }
+
+        $action = $payload["action"];
+        if (!empty($payload["visit"]))
+            $payload["visit"] = $this->resolveVisitCode($project_id, $payload["visit"]);
+
+        if ($action === "get-slots")
+            return $this->getSurveySlots($payload, $project_id);
+
+        if ($action === "get-appointment") {
+            $visit = $payload["visit"];
+            if (empty($record) || empty($visit)) {
+                http_response_code(200);
+                return [
+                    "success" => true,
+                    "has_appointment" => false
+                ];
+            }
+            return $this->getSurveyAppointment($project_id, $record, $visit, $payload["timezone"] ?? "browser");
+        }
+
+        if ($action === "book-appointment") {
+            $payload["pid"] = $project_id;
+            $payload["subjects"] = $record;
+            return $this->setAppointments($payload);
+        }
+
+        if ($action === "cancel-appointment") {
+            $appointment_id = $payload["id"];
+            if (empty($appointment_id)) {
+                http_response_code(400);
+                return [
+                    "success" => false,
+                    "msg" => "Appointment ID is required to cancel"
+                ];
+            }
+            // Verify appointment belongs to this project and record
+            $sql = $this->query("SELECT id FROM em_scheduling_calendar WHERE id = ? AND project_id = ? AND record = ?", [$appointment_id, $project_id, $record]);
+            if (db_num_rows($sql) == 0) {
+                http_response_code(403);
+                return [
+                    "success" => false,
+                    "msg" => "Appointment not found or unauthorized to cancel"
+                ];
+            }
+            return $this->deleteAppointments(["pid" => $project_id, "id" => $appointment_id]);
+        }
+
+        http_response_code(400);
+        return [
+            "success" => false,
+            "msg" => "Unknown survey action: $action"
+        ];
+    }
+
+    private function getSurveySlots($payload, $project_id)
+    {
+        $visit = $payload["visit"];
+        if (empty($visit)) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Visit code is required"
+            ];
+        }
+
+        $visitConfigs = $this->getVisits(["pid" => $project_id]);
+        $visitConfig = $visitConfigs[$visit] ?? null;
+        $duration = !empty($payload["duration"]) ? (int)$payload["duration"] : (!empty($visitConfig["duration"]) ? (int)$visitConfig["duration"] : 30);
+        $duration = max(5, $duration);
+
+        $timezone = $payload["timezone"] ?? "browser";
+        $server_tz = date_default_timezone_get();
+        $target_tz = ($timezone === "local" || $timezone === "browser" || empty($timezone)) ? $server_tz : $timezone;
+
+        $rawStart = $payload["start"] ?? "now";
+        $rawEnd = $payload["end"] ?? "+30d";
+        $startDate = $this->parseRelativeDate($rawStart, $server_tz);
+        $endDate = $this->parseRelativeDate($rawEnd, $server_tz, true);
+
+        $providerFilter = !empty($payload["provider"]) ? array_map('trim', explode(',', $payload["provider"])) : [];
+        $locationFilter = !empty($payload["location"]) ? array_map('trim', explode(',', $payload["location"])) : [];
+
+        $unschedulables = (array)($this->getProjectSetting("unschedulable", $project_id) ?? []);
+
+        $codes = $this->getAvailabilityCodes(["pid" => $project_id]);
+        $codes_keys = array_keys($codes);
+        if (empty($codes_keys)) {
+            http_response_code(200);
+            return ["success" => true, "slots" => [], "grouped" => []];
+        }
+
+        $query = $this->createQuery();
+        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
+        $query->add("AND")->addInClause("availability_code", $codes_keys);
+        $query->add("AND time_end > ? AND time_start < ?", [$startDate, $endDate]);
+        if (!empty($providerFilter))
+            $query->add("AND")->addInClause("user", $providerFilter);
+        if (!empty($locationFilter))
+            $query->add("AND")->addInClause("location", $locationFilter);
+        $result = $query->execute();
+
+        $availBlocks = [];
+        while ($row = $result->fetch_assoc()) {
+            if (in_array($row["user"], $unschedulables))
+                continue;
+            $availBlocks[] = $row;
+        }
+
+        if (empty($availBlocks)) {
+            http_response_code(200);
+            return ["success" => true, "slots" => [], "grouped" => []];
+        }
+
+        $apptQuery = $this->createQuery();
+        $apptQuery->add("SELECT user, location, time_start, time_end FROM em_scheduling_calendar WHERE record IS NOT NULL");
+        $apptQuery->add("AND project_id = ?", [$project_id]);
+        $apptQuery->add("AND time_end > ? AND time_start < ?", [$startDate, $endDate]);
+        $apptResult = $apptQuery->execute();
+        $bookedAppts = [];
+        while ($row = $apptResult->fetch_assoc())
+            $bookedAppts[] = $row;
+
+        $allUsers = $this->getAllUsers();
+        $allLocations = $this->getLocationStructure($project_id, true);
+
+        $now = date('Y-m-d H:i:s');
+        $minStart = max(strtotime($startDate), strtotime($now));
+        $maxEnd = strtotime($endDate);
+        $slots = [];
+        $slotStepSec = $duration * 60;
+
+        foreach ($availBlocks as $block) {
+            $bStart = strtotime($block["time_start"]);
+            $bEnd = min(strtotime($block["time_end"]), $maxEnd);
+            $provider = $block["user"];
+            $loc = $block["location"];
+
+            for ($slotStart = $bStart; $slotStart + $slotStepSec <= $bEnd; $slotStart += $slotStepSec) {
+                if ($slotStart < $minStart)
+                    continue;
+                $slotEnd = $slotStart + $slotStepSec;
+                $slotStartStr = date('Y-m-d H:i:s', $slotStart);
+                $slotEndStr = date('Y-m-d H:i:s', $slotEnd);
+
+                $overlap = false;
+                foreach ($bookedAppts as $b) {
+                    if ($b["user"] === $provider) {
+                        $bStart = strtotime($b["time_start"]);
+                        $bEnd = strtotime($b["time_end"]);
+                        if ($slotStart < $bEnd && $slotEnd > $bStart) {
+                            $overlap = true;
+                            break;
+                        }
+                    }
+                }
+                if ($overlap)
+                    continue;
+
+                $dtStart = new DateTime($slotStartStr, new DateTimeZone($server_tz));
+                $dtStart->setTimezone(new DateTimeZone($target_tz));
+                $dtEnd = new DateTime($slotEndStr, new DateTimeZone($server_tz));
+                $dtEnd->setTimezone(new DateTimeZone($target_tz));
+
+                $slots[] = [
+                    "start" => $slotStartStr,
+                    "end" => $slotEndStr,
+                    "provider" => $provider,
+                    "provider_name" => $allUsers[$provider] ?? $provider,
+                    "location" => $loc,
+                    "location_name" => $allLocations[$loc]["name"] ?? $loc,
+                    "date_key" => $dtStart->format('Y-m-d'),
+                    "date_display" => $dtStart->format('l, F j, Y'),
+                    "time_display" => $dtStart->format('g:i A') . ' - ' . $dtEnd->format('g:i A'),
+                    "start_display" => $dtStart->format('g:i A'),
+                    "end_display" => $dtEnd->format('g:i A')
+                ];
+            }
+        }
+
+        usort($slots, function ($a, $b) {
+            return strcmp($a["start"], $b["start"]);
+        });
+
+        $grouped = [];
+        foreach ($slots as $s)
+            $grouped[$s["date_key"]][] = $s;
+
+        http_response_code(200);
+        return [
+            "success" => true,
+            "duration" => $duration,
+            "timezone" => $target_tz,
+            "slots" => $slots,
+            "grouped" => $grouped
+        ];
+    }
+
+    private function getSurveyAppointment($project_id, $record, $visit, $timezone = "browser")
+    {
+        $server_tz = date_default_timezone_get();
+        $target_tz = ($timezone === "local" || $timezone === "browser" || empty($timezone)) ? $server_tz : $timezone;
+
+        $sql = $this->query(
+            "SELECT * FROM em_scheduling_calendar WHERE project_id = ? AND record = ? AND visit = ? AND record IS NOT NULL ORDER BY time_start DESC LIMIT 1",
+            [$project_id, $record, $visit]
+        );
+        if ($row = db_fetch_assoc($sql)) {
+            $allUsers = $this->getAllUsers();
+            $allLocations = $this->getLocationStructure($project_id, true);
+
+            $dtStart = new DateTime($row["time_start"], new DateTimeZone($server_tz));
+            $dtStart->setTimezone(new DateTimeZone($target_tz));
+            $dtEnd = new DateTime($row["time_end"], new DateTimeZone($server_tz));
+            $dtEnd->setTimezone(new DateTimeZone($target_tz));
+
+            http_response_code(200);
+            return [
+                "success" => true,
+                "has_appointment" => true,
+                "appointment" => [
+                    "id" => (int)$row["id"],
+                    "start" => $row["time_start"],
+                    "end" => $row["time_end"],
+                    "provider" => $row["user"],
+                    "provider_name" => $allUsers[$row["user"]] ?? $row["user"],
+                    "location" => $row["location"],
+                    "location_name" => $allLocations[$row["location"]]["name"] ?? $row["location"],
+                    "date_display" => $dtStart->format('l, F j, Y'),
+                    "time_display" => $dtStart->format('g:i A') . ' - ' . $dtEnd->format('g:i A')
+                ]
+            ];
+        }
+        http_response_code(200);
+        return [
+            "success" => true,
+            "has_appointment" => false
         ];
     }
 
@@ -344,10 +886,11 @@ class Scheduling extends AbstractExternalModule
         return $this->escape(db_fetch_assoc($sql)["value"]);
     }
 
-    public function getTimeZones()
+    public function getTimeZones($project_id = null)
     {
+        $project_id = $project_id ?? $this->getProjectId();
         $local = date_default_timezone_get();
-        $config = $this->getProjectSetting("timezones");
+        $config = $project_id ? $this->getProjectSetting("timezones", $project_id) : $this->getProjectSetting("timezones");
         $timezones = [];
 
         if ($config) {
@@ -725,20 +1268,29 @@ class Scheduling extends AbstractExternalModule
             return $this->getProjectSetting("visit-$setting", $project_id);
         }, array_keys($names));
 
+        $numVisits = !empty($values[0]) && is_array($values[0]) ? count($values[0]) : 0;
         $visits = [];
-        for ($i = 0; $i < count($values[0]); $i++) {
-            $tmp = array_combine(array_values($names), array_column($values, $i));
-            $tmp["value"] = $tmp["code"]; // Duplicate one item
-            $visits[$tmp["code"]] = $tmp;
+        if ($numVisits > 0) {
+            for ($i = 0; $i < $numVisits; $i++) {
+                $tmp = [];
+                $k = 0;
+                foreach ($names as $setting => $alias) {
+                    $tmp[$alias] = $values[$k][$i] ?? null;
+                    $k++;
+                }
+                $tmp["value"] = $tmp["code"] ?? "";
+                if (!empty($tmp["code"]))
+                    $visits[$tmp["code"]] = $tmp;
+            }
         }
 
         if ($includeSharedConfig)
             $visits = [
                 "visits" => $visits,
-                "wbDateTimes" => $this->getProjectSetting("wb-datetime"),
-                "wbUser" => $this->getProjectSetting("wb-user"),
-                "rangeStart" => $this->getProjectSetting("range-start"),
-                "rangeEnd" => $this->getProjectSetting("range-end"),
+                "wbDateTimes" => $this->getProjectSetting("wb-datetime", $project_id),
+                "wbUser" => $this->getProjectSetting("wb-user", $project_id),
+                "rangeStart" => $this->getProjectSetting("range-start", $project_id),
+                "rangeEnd" => $this->getProjectSetting("range-end", $project_id),
             ];
 
         $this->visitCache[$cacheName] = $visits;

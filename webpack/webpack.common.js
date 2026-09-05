@@ -9,6 +9,7 @@ module.exports = {
     ],
     entry: {
         "index": "./index.js",
+        "actionTag": "./actionTag.js",
     },
     performance: {
         maxEntrypointSize: 1000000,

@@ -1,5 +1,6 @@
 .vscode
 index.js
+actionTag.js
 *.js.LICENSE.txt
 *.css
 webpack/node_modules
