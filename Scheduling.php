@@ -2019,7 +2019,8 @@ class Scheduling extends AbstractExternalModule
 
         $allUsers = $this->getAllUsers();
 
-        // Resolve subject display labels only for records actually present in this view
+        $allLocations = [];
+        $allVisits = [];
         $recordLabels = [];
         if (!$allFlag) {
             $allLocations = $this->getLocationStructure($project_id, true);
