@@ -298,7 +298,7 @@ class API {
             return cache.promise
 
         const promise = API.post(data)
-        API.cache.availability.stor[hash] = { promise: promise }
+        API.cache.appointments.stor[hash] = { promise: promise }
         const response = await promise
         API.cache.appointments.stor[hash] = {
             data: response,
@@ -318,6 +318,7 @@ class API {
         }
 
         API.requiredKeys(data)
+        API.expireAvailabilityCache()
         API.expireAppointmentsCache()
         return await API.post(data)
     }
@@ -332,6 +333,8 @@ class API {
         }
 
         API.requiredKeys(data)
+        API.expireAvailabilityCache()
+        API.expireAppointmentsCache()
         return await API.post(data)
     }
 

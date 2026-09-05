@@ -724,7 +724,7 @@ class Scheduling extends AbstractExternalModule
             }
             $availability[] = [
                 "internal_id" => $row["id"],
-                "project_id" => $row["pid"],
+                "project_id" => $row["project_id"],
                 "title" => "Default Title",
                 "start" => $start,
                 "end" => $end,
@@ -903,7 +903,8 @@ class Scheduling extends AbstractExternalModule
                 "locations" => $location,
                 "start" => $start_of_day,
                 "end" => $end_of_day,
-                "timezone" => "local"
+                "timezone" => "local",
+                "all_availability" => true
             ]);
 
             // Filter to those with correct code
@@ -1436,10 +1437,20 @@ class Scheduling extends AbstractExternalModule
                 REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => [$vShared["wbUser"] => $provider]]]);
         }
 
+        // Preserve and update metadata restore parameters for updated provider/location
+        $meta = $this->getRowMetadata($id);
+        $metaJson = null;
+        if (!empty($meta["restore"])) {
+            $meta["restore"]["providers"] = $provider;
+            $meta["restore"]["locations"] = $location;
+            unset($meta["start"], $meta["end"]);
+            $metaJson = json_encode($meta);
+        }
+
         // Do the update
         $this->query(
-            "UPDATE em_scheduling_calendar SET user = ?, location = ?, metadata = NULL WHERE id = ?",
-            [$provider, $location, $id]
+            "UPDATE em_scheduling_calendar SET user = ?, location = ?, metadata = ? WHERE id = ?",
+            [$provider, $location, $metaJson, $id]
         );
 
         $this->log(
