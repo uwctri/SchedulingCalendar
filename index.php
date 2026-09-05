@@ -9,7 +9,6 @@ $index = $module->getUrl('index.php');
 ?>
 <script>
     <?= $jsObj; ?>.project_name = <?= json_encode($module->getProjectName()); ?>;
-    <?= $jsObj; ?>.router = <?= json_encode($module->getUrl('router.php')); ?>;
     <?= $jsObj; ?>.email = <?= json_encode($module->getContactEmail()); ?>;
     <?= $jsObj; ?>.timezones = <?= $module->getTimeZones(); ?>;
     <?= $jsObj; ?>.user = <?= json_encode($module->currentUser()); ?>;

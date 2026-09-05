@@ -421,21 +421,9 @@ class API {
                 format(obj)
 
         Calendar.showLoading()
-        await fetch(RedCap.router, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify(data)
-        }).then(async (response) => {
-            const respData = await response.json().catch(() => null)
-            if (!response.ok) {
-                const errMsg = respData?.msg || `Server returned error (${response.status})`
-                return Promise.reject(new Error(errMsg))
-            }
-            return respData
-        }).then((data) => {
+        await RedCap.ajax('calendar-api', data).then((data) => {
+            if (typeof data === "string")
+                try { data = JSON.parse(data) } catch (e) { }
             const success = data?.success ?? true
             result = data
             Calendar.hideLoading()
@@ -447,9 +435,10 @@ class API {
             })
         }).catch((error) => {
             Calendar.hideLoading()
+            const errorMsg = error?.responseJSON?.msg || error?.message || 'Fatal Server Error'
             Toast.fire({
                 icon: 'error',
-                title: error.message || 'Fatal Server Error',
+                title: errorMsg,
             })
             console.error('Something went wrong in API.js', error, data)
         })

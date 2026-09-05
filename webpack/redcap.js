@@ -3,7 +3,6 @@
 
 class RedCap {
 
-    static router = ExternalModules.UWMadison.Scheduling?.router
     static user = ExternalModules.UWMadison.Scheduling?.user
     static project_name = ExternalModules.UWMadison.Scheduling?.project_name
     static email = ExternalModules.UWMadison.Scheduling?.email
@@ -21,6 +20,7 @@ class RedCap {
     }
     static csrf = get_csrf_token // Redcap function
     static popover = (target, obj) => jQuery(target).popover(obj) // Bootstrap popovers use Jquery
+    static ajax = (action, payload) => ExternalModules.UWMadison.Scheduling.ajax(action, payload)
 
 }
 

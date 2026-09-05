@@ -4,7 +4,6 @@ namespace UWMadison\Scheduling;
 
 use ExternalModules\AbstractExternalModule;
 use REDCap;
-use RestUtility;
 use DateTime;
 use DateTimeZone;
 
@@ -79,6 +78,47 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
+    Process AJAX request via External Module Framework native hook
+    */
+    public function redcap_module_ajax($action, $payload, $project_id, $record, $instrument, $event_id, $repeat_instance, $survey_hash, $response_id, $survey_queue_hash, $page, $page_full, $user_id, $group_id)
+    {
+        if ($action === 'calendar-api')
+            return $this->process($payload, $project_id, $user_id);
+        http_response_code(400);
+        return [
+            "success" => false,
+            "msg" => "Invalid action: $action"
+        ];
+    }
+
+    public function isCalendarAdmin($project_id = null, $username = null)
+    {
+        $user = $this->getUser();
+        if ($user && $user->isSuperUser()) {
+            return true;
+        }
+        $username = $username ?? ($user ? $user->getUsername() : null);
+        if (empty($username)) {
+            return false;
+        }
+        $admins = $this->getProjectSetting("calendar-admin", $project_id) ?? [];
+        return in_array($username, (array)$admins);
+    }
+
+    public function canManageAvailability($targetProvider, $project_id = null, $actingUsername = null)
+    {
+        $user = $this->getUser();
+        $actingUsername = $actingUsername ?? ($user ? $user->getUsername() : null);
+        if (empty($actingUsername))
+            return false;
+        // Providers can always manage their own availability
+        if ($targetProvider === $actingUsername)
+            return true;
+        // Otherwise must be a calendar admin
+        return $this->isCalendarAdmin($project_id, $actingUsername);
+    }
+
+    /*
     Cache the API schema from JSON when it is requested
     */
     public function getSchema()
@@ -89,55 +129,54 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
-    Process a post request from router
+    Process a request from ajax hook
     */
-    public function process()
+    public function process($payload, $context_project_id = null, $context_user_id = null)
     {
-        $rawInput = file_get_contents('php://input');
-        $jsonPayload = !empty($rawInput) ? json_decode($rawInput, true) : null;
-        if (is_array($jsonPayload)) {
-            $payload = $jsonPayload;
-        } else {
-            $request = RestUtility::processRequest(false);
-            $payload = $request->getRequestVars();
+        if (empty($payload) || !is_array($payload)) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Payload is required and cannot be empty"
+            ];
         }
 
-        $project_id = $payload["projectid"] ?? ($payload["pid"] ?? $this->escape($_GET["pid"] ?? null));
+        $project_id = $context_project_id ?? $this->getProjectId();
+        if (empty($project_id)) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Project ID is required",
+                "payload" => $payload
+            ];
+        }
         $payload["pid"] = $project_id;
-        $err_msg = "Not supported. Invalid resource or CRUD operation.";
-        $result = null;
-        $schemaError = false;
-
-        // Replace placeholders for empty arrays
-        $payload = array_map(function ($x) {
-            return $x === "[]" ? [] : $x;
-        }, $payload);
 
         // Check if its the non-CRUD utility function
-        if (!empty($payload["utility"]) && $payload["utility"] == "ics") {
-            $result = [
+        if (!empty($payload["utility"]) && $payload["utility"] === "ics") {
+            http_response_code(200);
+            return [
                 "data" => $this->makeICS($payload),
                 "success" => true
             ];
-            http_response_code(200);
-            return json_encode($result);
         }
 
-        // Check Schema if any
-        $schema = $this->getSchema()[$payload["resource"]][$payload["crud"]];
-        if ($schema) {
-            $schemaError = true;
-            $innerPayload = isset($payload["bundle"]) ? $payload["bundle"][0] : $payload;
-            foreach ($schema as $schemOption)
-                if (count(array_intersect_key(array_flip($schemOption), $innerPayload)) === count($schemOption))
-                    $schemaError = false; // All required keys are present
+        if (empty($payload["resource"]) || empty($payload["crud"])) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Payload must specify 'resource' and 'crud'",
+                "payload" => $payload
+            ];
         }
 
-        // CRUD functions
-        $task = [
+        $resource = $payload["resource"];
+        $crud = $payload["crud"];
+
+        // CRUD task mapping
+        $taskMap = [
             "availabilitycode" => [
                 "read" => "getAvailabilityCodes",
-                "default" => "Availability Code resource is read only"
             ],
             "availability" => [
                 "create" => "setAvailability",
@@ -153,32 +192,60 @@ class Scheduling extends AbstractExternalModule
             ],
             "provider" => [
                 "read" => "getProviders",
-                "default" => "Provider resource is read only."
             ],
             "subject" => [
                 "read" => "getSubjects",
-                "default" => "Subject resource is read only."
             ],
             "location" => [
                 "read" => "getLocations",
-                "default" => "Location resource is read only."
             ],
             "visit" => [
                 "read" => "getVisits",
-                "default" => "Visit resource is read only."
             ],
             "metadata" => [
                 "read" => "getUserMetadata",
                 "update" => "setUserMetadata",
-                "default" => "Metadata resource can be read and updated only."
             ],
-        ][$payload["resource"]][$payload["crud"]];
+        ];
 
-        if ($schemaError) {
-            $err_msg = "Missing parameters for operation";
-        } elseif (!empty($payload["bundle"]) && !empty($task)) {
+        if (!isset($taskMap[$resource][$crud])) {
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Unsupported operation: resource '{$resource}', action '{$crud}'",
+                "payload" => $payload
+            ];
+        }
+        $task = $taskMap[$resource][$crud];
+
+        // Validate against API schema
+        $schema = $this->getSchema()[$resource][$crud] ?? null;
+        if (!empty($schema)) {
+            $schemaValid = false;
+            $innerPayload = (isset($payload["bundle"]) && is_array($payload["bundle"]) && !empty($payload["bundle"]))
+                ? $payload["bundle"][0]
+                : $payload;
+            foreach ($schema as $schemaOption) {
+                if (count(array_intersect_key(array_flip($schemaOption), $innerPayload)) === count($schemaOption)) {
+                    $schemaValid = true;
+                    break;
+                }
+            }
+            if (!$schemaValid) {
+                http_response_code(400);
+                return [
+                    "success" => false,
+                    "msg" => "Missing required parameters for '{$resource}' '{$crud}'",
+                    "payload" => $payload
+                ];
+            }
+        }
+
+        $err_msg = "";
+        $result = null;
+
+        if (!empty($payload["bundle"]) && is_array($payload["bundle"])) {
             $result = [];
-            $err_msg = "";
             foreach ($payload["bundle"] as $subPayload) {
                 $subPayload["pid"] = $project_id;
                 $res = $this->$task($subPayload);
@@ -187,22 +254,19 @@ class Scheduling extends AbstractExternalModule
                 }
                 $result[] = $res;
             }
-        } elseif (!empty($task)) {
-            $err_msg = "";
+        } else {
             $result = $this->$task($payload);
             if (is_array($result) && isset($result["success"]) && !$result["success"]) {
                 $err_msg = $result["msg"] ?? "Operation failed";
             }
-        } else {
-            $err_msg = $task[$payload["resource"]]["default"] ?? $err_msg;
         }
 
         // Fire DET at the end only if operation succeeded
         if (
             empty($err_msg) &&
-            $this->getProjectSetting('fire-det') &&
-            in_array($payload["crud"], ["create", "update", "delete"]) &&
-            in_array($payload["resource"], ["availability", "appointment"])
+            $this->getProjectSetting('fire-det', $project_id) &&
+            in_array($crud, ["create", "update", "delete"]) &&
+            in_array($resource, ["availability", "appointment"])
         ) {
             $detPayload = is_array($result) ? array_merge($result, $payload) : $payload;
             $this->fireDataEntryTrigger($detPayload);
@@ -211,15 +275,15 @@ class Scheduling extends AbstractExternalModule
         // Return the error or result
         if (!empty($err_msg)) {
             http_response_code(400);
-            return json_encode([
+            return [
                 "success" => false,
                 "msg" => $err_msg,
                 "payload" => $payload
-            ]);
+            ];
         }
 
         http_response_code(200);
-        return json_encode($result);
+        return $result;
     }
 
     /*
@@ -774,6 +838,12 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $provider = $payload["providers"];
         $location = $payload["locations"];
+        if (!$restoreBypass && !$this->canManageAvailability($provider, $project_id)) {
+            return [
+                "msg" => "Permission denied: Only calendar administrators or the provider can set this availability",
+                "success" => false
+            ];
+        }
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         $timezone = $timezone == $server_tz ? "local" : $timezone;
@@ -1003,6 +1073,15 @@ class Scheduling extends AbstractExternalModule
         $id = $id_or_payload;
         if (is_array($id_or_payload)) {
             $id = $id_or_payload["id"];
+            $slotSql = $this->query("SELECT user, project_id FROM em_scheduling_calendar WHERE id = ?", [$id]);
+            if ($slotRow = db_fetch_assoc($slotSql)) {
+                if (!$this->canManageAvailability($slotRow["user"], $slotRow["project_id"] ?? ($id_or_payload["pid"] ?? null))) {
+                    return [
+                        "msg" => "Permission denied: Only calendar administrators or the provider can modify this availability",
+                        "success" => false
+                    ];
+                }
+            }
             $newStart = $id_or_payload["start"];
             $newEnd = $id_or_payload["end"];
             $timezone = $id_or_payload["timezone"] ?? "local";
@@ -1051,6 +1130,18 @@ class Scheduling extends AbstractExternalModule
 
     private function deleteAvailability($payload)
     {
+        $id = $payload["id"] ?? ($payload["internal_id"] ?? null);
+        if ($id) {
+            $slotSql = $this->query("SELECT user, project_id FROM em_scheduling_calendar WHERE id = ?", [$id]);
+            if ($slotRow = db_fetch_assoc($slotSql)) {
+                if (!$this->canManageAvailability($slotRow["user"], $slotRow["project_id"] ?? ($payload["pid"] ?? null))) {
+                    return [
+                        "msg" => "Permission denied: Only calendar administrators or the provider can delete this availability",
+                        "success" => false
+                    ];
+                }
+            }
+        }
         if (isset($payload["start"]) && isset($payload["end"]) && isset($payload["id"])) {
             return $this->deleteSplitAvailability($payload);
         }
@@ -1130,6 +1221,25 @@ class Scheduling extends AbstractExternalModule
         $end = $payload["end"];
         $providers = $payload["providers"]; // Could be * for all
         $locations = $payload["locations"]; // Could be * for all
+        $project_id = $payload["pid"] ?? null;
+
+        if (!empty($providers) && $providers[0] === "*") {
+            if (!$this->isCalendarAdmin($project_id)) {
+                return [
+                    "msg" => "Permission denied: Only calendar administrators can delete all providers' availability",
+                    "success" => false
+                ];
+            }
+        } elseif (!empty($providers)) {
+            foreach ((array)$providers as $prov) {
+                if (!$this->canManageAvailability($prov, $project_id)) {
+                    return [
+                        "msg" => "Permission denied: Only calendar administrators or the provider can delete this availability range",
+                        "success" => false
+                    ];
+                }
+            }
+        }
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         if ($timezone != "local" && $timezone != $server_tz) {
@@ -1208,6 +1318,13 @@ class Scheduling extends AbstractExternalModule
     {
         $project_id = $payload["pid"];
         $allFlag = $payload["all_appointments"];
+        if ($allFlag) {
+            $user = $this->getUser();
+            $current_user = $user ? $user->getUsername() : null;
+            if (!empty($current_user) && !$user->isSuperUser()) {
+                $payload["providers"] = [$current_user];
+            }
+        }
         $providers = $payload["providers"];
         $locations = $payload["locations"];
         $subjects = $payload["subjects"];
@@ -1615,8 +1732,15 @@ class Scheduling extends AbstractExternalModule
 
     private function setUserMetadata($payload)
     {
+        $project_id = $payload["pid"] ?? $this->getProjectId();
+        if (!$this->isCalendarAdmin($project_id)) {
+            return [
+                "msg" => "Permission denied: Only calendar administrators can modify user colors/metadata",
+                "success" => false
+            ];
+        }
         $meta = $payload["metadata"];
-        $this->setProjectSetting("user-metadata", json_encode($meta));
+        $this->setProjectSetting("user-metadata", json_encode($meta), $project_id);
         return [
             "msg" => "User metadata updated",
             "success" => true

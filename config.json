@@ -14,6 +14,9 @@
         }
     ],
     "framework-version": 16,
+    "auth-ajax-actions": [
+        "calendar-api"
+    ],
     "no-auth-pages": [
         "ics"
     ],
