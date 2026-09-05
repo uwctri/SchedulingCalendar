@@ -16,10 +16,11 @@ class Scheduling extends AbstractExternalModule
     private $locationCache = []; // Cache for location data
 
     /*
-    Create the core scheduling and availability table on module enable
+    Create the core scheduling and availability table on module enable / upgrade
     */
-    public function redcap_module_system_enable()
+    public function redcap_module_system_enable($version)
     {
+        // 1.5.0 upgrade: Table definition includes composite indexes for fresh installations
         db_query("CREATE TABLE IF NOT EXISTS em_scheduling_calendar (
             `id` INT AUTO_INCREMENT,
             `project_id` INT,
@@ -32,10 +33,53 @@ class Scheduling extends AbstractExternalModule
             `time_end` timestamp DEFAULT 0, 
             `notes` TEXT, 
             `metadata` JSON,
-            PRIMARY KEY (`id`)
+            PRIMARY KEY (`id`),
+            INDEX `idx_proj_time` (`project_id`, `time_start`, `time_end`),
+            INDEX `idx_proj_record_visit` (`project_id`, `record`, `visit`),
+            INDEX `idx_avail_time` (`availability_code`, `time_start`, `time_end`)
         );");
         // Note: timestamps must be defaulted as we don't know the value of explicit_defaults_for_timestamp
         // w/o a DEFAULT or ON UPDATE clause the timestamp will default to CURRENT_TIMESTAMP
+
+        // Migration for 1.5.0 upgrade: Run migration when enabling or upgrading to 1.5.0 or above
+        if ($this->getSystemSetting("migration_version_1_5_0") !== true)
+            $this->migrateDatabaseFor1_5_0();
+    }
+
+    /**
+     * Migration for 1.5.0 upgrade:
+     * Inspects table status and existing indexes on em_scheduling_calendar,
+     * adding composite indexes to dramatically improve query performance and responsiveness.
+     */
+    public function migrateDatabaseFor1_5_0()
+    {
+        // Inspect existing index status on em_scheduling_calendar
+        $existingIndexes = [];
+        $indexSql = db_query("SHOW INDEX FROM em_scheduling_calendar");
+        if ($indexSql) {
+            while ($row = db_fetch_assoc($indexSql)) {
+                $existingIndexes[$row['Key_name']] = true;
+            }
+        }
+
+        // Migration for 1.5.0 upgrade:
+        // Define targeted composite indexes covering core calendar and survey queries:
+        // - idx_proj_time: Optimizes calendar appointments & survey conflict lookups by project and date range
+        // - idx_proj_record_visit: Optimizes record-specific visit queries and booking checks
+        // - idx_avail_time: Optimizes availability slot searches by group and date range
+        $indexesToCreate = [
+            'idx_proj_time' => 'ADD INDEX `idx_proj_time` (`project_id`, `time_start`, `time_end`)',
+            'idx_proj_record_visit' => 'ADD INDEX `idx_proj_record_visit` (`project_id`, `record`, `visit`)',
+            'idx_avail_time' => 'ADD INDEX `idx_avail_time` (`availability_code`, `time_start`, `time_end`)'
+        ];
+
+        foreach ($indexesToCreate as $indexName => $alterClause) {
+            if (!isset($existingIndexes[$indexName])) {
+                db_query("ALTER TABLE em_scheduling_calendar $alterClause");
+            }
+        }
+
+        $this->setSystemSetting("migration_version_1_5_0", true);
     }
 
     /*
@@ -516,10 +560,11 @@ class Scheduling extends AbstractExternalModule
             return ["success" => true, "slots" => [], "grouped" => []];
         }
 
+        // Query availability blocks using idx_avail_time (availability_code, time_start, time_end)
         $query = $this->createQuery();
         $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
         $query->add("AND")->addInClause("availability_code", $codes_keys);
-        $query->add("AND time_end > ? AND time_start < ?", [$startDate, $endDate]);
+        $query->add("AND time_start < ? AND time_end > ?", [$endDate, $startDate]);
         if (!empty($providerFilter))
             $query->add("AND")->addInClause("user", $providerFilter);
         if (!empty($locationFilter))
@@ -538,10 +583,11 @@ class Scheduling extends AbstractExternalModule
             return ["success" => true, "slots" => [], "grouped" => []];
         }
 
+        // Query booked appointments using idx_proj_time (project_id, time_start, time_end)
         $apptQuery = $this->createQuery();
-        $apptQuery->add("SELECT user, location, time_start, time_end FROM em_scheduling_calendar WHERE record IS NOT NULL");
-        $apptQuery->add("AND project_id = ?", [$project_id]);
-        $apptQuery->add("AND time_end > ? AND time_start < ?", [$startDate, $endDate]);
+        $apptQuery->add("SELECT user, location, time_start, time_end FROM em_scheduling_calendar WHERE project_id = ?", [$project_id]);
+        $apptQuery->add("AND time_start < ? AND time_end > ?", [$endDate, $startDate]);
+        $apptQuery->add("AND record IS NOT NULL");
         $apptResult = $apptQuery->execute();
         $bookedAppts = [];
         while ($row = $apptResult->fetch_assoc())
@@ -572,9 +618,9 @@ class Scheduling extends AbstractExternalModule
                 $overlap = false;
                 foreach ($bookedAppts as $b) {
                     if ($b["user"] === $provider) {
-                        $bStart = strtotime($b["time_start"]);
-                        $bEnd = strtotime($b["time_end"]);
-                        if ($slotStart < $bEnd && $slotEnd > $bStart) {
+                        $apptStart = strtotime($b["time_start"]);
+                        $apptEnd = strtotime($b["time_end"]);
+                        if ($slotStart < $apptEnd && $slotEnd > $apptStart) {
                             $overlap = true;
                             break;
                         }
@@ -1349,18 +1395,6 @@ class Scheduling extends AbstractExternalModule
         $allUsers = $this->getAllUsers();
         $allLocations = $this->getLocationStructure($project_id, true);
 
-        $query = $this->createQuery();
-        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
-
-        if (!$allFlag)
-            $query->add("AND")->addInClause("availability_code", $codes_keys);
-
-        if (!empty($providers))
-            $query->add("AND")->addInClause("user", $providers);
-
-        if (!empty($locations))
-            $query->add("AND")->addInClause("location", $locations);
-
         if ($timezone != "local") {
             $dtStart = new DateTime($start, new DateTimeZone($timezone));
             $dtStart->setTimezone(new DateTimeZone($server_tz));
@@ -1369,6 +1403,13 @@ class Scheduling extends AbstractExternalModule
             $dtEnd->setTimezone(new DateTimeZone($server_tz));
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
+
+        // Query availability using idx_avail_time (availability_code, time_start, time_end)
+        $query = $this->createQuery();
+        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NULL");
+
+        if (!$allFlag)
+            $query->add("AND")->addInClause("availability_code", $codes_keys);
 
         if (!$overflowFlag) {
             $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
@@ -1379,6 +1420,12 @@ class Scheduling extends AbstractExternalModule
             // This is a known limitation of the current design. That availabilty will be overlooked
             // and an "unable to schedule" message will be shown to the user. This is a rare case and can be fixed in a future version.
         }
+
+        if (!empty($providers))
+            $query->add("AND")->addInClause("user", $providers);
+
+        if (!empty($locations))
+            $query->add("AND")->addInClause("location", $locations);
 
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
@@ -1827,11 +1874,14 @@ class Scheduling extends AbstractExternalModule
             $end = $dtEnd->format('Y-m-d H:i:s');
         }
 
+        // Delete range using idx_avail_time (availability_code, time_start, time_end)
         $query = $this->createQuery();
         $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NULL");
 
         if (!empty($codes) && $codes[0] != "*")
             $query->add("AND")->addInClause("availability_code", $codes);
+
+        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
 
         if (!empty($providers) && $providers[0] != "*")
             $query->add("AND")->addInClause("user", $providers);
@@ -1839,7 +1889,6 @@ class Scheduling extends AbstractExternalModule
         if (!empty($locations) && $locations[0] != "*")
             $query->add("AND")->addInClause("location", $locations);
 
-        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $query->execute();
 
         $this->log(
@@ -1912,11 +1961,15 @@ class Scheduling extends AbstractExternalModule
             $allVisits = $this->getVisits($payload);
         }
 
+        // Query appointments using idx_proj_time (project_id, time_start, time_end)
         $query = $this->createQuery();
-        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
+        $query->add("SELECT * FROM em_scheduling_calendar WHERE");
 
-        if (!$allFlag)
-            $query->add("AND project_id = ?", $project_id);
+        if (!$allFlag) {
+            $query->add("project_id = ? AND time_start >= ? AND time_end <= ? AND record IS NOT NULL", [$project_id, $start, $end]);
+        } else {
+            $query->add("record IS NOT NULL AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        }
 
         if (!empty($providers))
             $query->add("AND")->addInClause("user", $providers);
@@ -1930,7 +1983,6 @@ class Scheduling extends AbstractExternalModule
         if (!empty($visits))
             $query->add("AND")->addInClause("visit", $visits);
 
-        $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
         $result = $query->execute();
 
         $appt = [];
@@ -2257,11 +2309,12 @@ class Scheduling extends AbstractExternalModule
         // Note: We don't touch writeback here. This func is used for in-the-past cleanup
         // and we don't want to junk the WB data.
 
+        // Delete appointments range using idx_proj_time (project_id, time_start, time_end)
         $query = $this->createQuery();
-        $query->add("DELETE FROM em_scheduling_calendar WHERE record IS NOT NULL");
-        $query->add("AND project_id = ?", [$project_id]);
-        $query->add("AND")->addInClause("record", $subjects);
+        $query->add("DELETE FROM em_scheduling_calendar WHERE project_id = ?", [$project_id]);
         $query->add("AND time_start >= ? AND time_end <= ?", [$start, $end]);
+        $query->add("AND record IS NOT NULL");
+        $query->add("AND")->addInClause("record", $subjects);
         $query->execute();
 
         $this->log(
