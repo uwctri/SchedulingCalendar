@@ -15,10 +15,30 @@ import ICS from "./ics"
 import CleanUp from "./cleanup"
 import SearchBar from "./searchBar"
 import API from "./api"
-import Page from "./page"
+import Page, { updateUrlState } from "./page"
 import RedCap from "./redcap"
 
 const autoRefreshTime = 120 // seconds
+
+const resolveInitialView = () => {
+    if (!Page.view) return "singleWeek"
+    const v = String(Page.view).toLowerCase()
+    if (v === "month" || v === "singlemonth") return "singleMonth"
+    if (v === "day" || v === "singleday") return "singleDay"
+    if (v === "agenda" || v === "list") return (Page.type === "edit" ? "singleWeek" : "agenda")
+    if (v === "week" || v === "singleweek") return "singleWeek"
+    return "singleWeek"
+}
+
+const viewToUrlParam = (type) => {
+    switch (type) {
+        case "singleMonth": return "month"
+        case "singleDay": return "day"
+        case "agenda": return "agenda"
+        case "singleWeek":
+        default: return "week"
+    }
+}
 
 class Calendar {
 
@@ -232,17 +252,51 @@ class Calendar {
             editable: false, // Set Dynamically
             eventResizableFromStart: false, // Set Dynamically
             dayMaxEvents: true,
-            initialView: "singleWeek",
+            initialView: resolveInitialView(),
             slotMinTime: startTime,
             slotMaxTime: endTime,
             expandRows: expandRows,
             selectable: Page.type != "my",
             datesSet: (dateInfo) => {
-                const newStart = DateTime.fromISO(dateInfo.startStr).toFormat("yyyy-MM-dd")
-                for (const type of ["my", "schedule", "edit"]) {
-                    const typeLink = $.getElementByClassName(`type-${type}`).href.split("&date")[0]
-                    $.getElementByClassName(`type-${type}`).href = `${typeLink}&date=${newStart}`
+                let dateStr = ""
+                if (dateInfo.view.type === "singleDay") {
+                    dateStr = DateTime.fromJSDate(dateInfo.start).toFormat("yyyy-MM-dd")
+                } else if (dateInfo.view.type === "singleMonth") {
+                    dateStr = DateTime.fromJSDate(dateInfo.view.currentStart).toFormat("yyyy-MM-dd")
+                } else if (dateInfo.view.type === "agenda") {
+                    dateStr = DateTime.fromJSDate(Calendar._fc.getDate()).toFormat("yyyy-MM-dd")
+                } else {
+                    // singleWeek
+                    dateStr = DateTime.fromJSDate(dateInfo.view.currentStart || dateInfo.start).toFormat("yyyy-MM-dd")
                 }
+
+                const today = DateTime.now().startOf("day")
+                const viewParam = viewToUrlParam(dateInfo.view.type)
+                const isDefaultView = viewParam === "week"
+
+                let isDefaultDate = false
+                if (dateInfo.view.type === "singleWeek") {
+                    const viewStart = DateTime.fromJSDate(dateInfo.view.currentStart || dateInfo.start).startOf("day")
+                    const viewEnd = dateInfo.view.currentEnd ? DateTime.fromJSDate(dateInfo.view.currentEnd).startOf("day") : null
+                    const thisWeekStartUS = today.minus({ days: today.weekday % 7 }).startOf("day")
+                    const thisWeekEndUS = thisWeekStartUS.plus({ days: 7 })
+
+                    isDefaultDate = (viewEnd && today >= viewStart && today < viewEnd) ||
+                        (viewStart >= thisWeekStartUS && viewStart < thisWeekEndUS)
+                } else if (dateInfo.view.type === "singleMonth") {
+                    const viewStart = DateTime.fromJSDate(dateInfo.view.currentStart || dateInfo.start).startOf("day")
+                    isDefaultDate = today.hasSame(viewStart, "month")
+                } else if (dateInfo.view.type === "singleDay") {
+                    const viewStart = DateTime.fromJSDate(dateInfo.start).startOf("day")
+                    isDefaultDate = today.hasSame(viewStart, "day")
+                } else if (dateInfo.view.type === "agenda") {
+                    isDefaultDate = true
+                }
+
+                updateUrlState({
+                    date: isDefaultDate ? null : dateStr,
+                    view: isDefaultView ? null : viewParam
+                })
             },
             dateClick: (dateClickInfo) => {
                 if (dateClickInfo.view.type == "singleMonth") {

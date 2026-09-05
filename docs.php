@@ -1204,33 +1204,60 @@ CSV_FILE = Path(<span class="code-string">"scheduling_events.csv"</span>)
             <!-- 10. URL Deep Linking -->
             <div id="query" class="docs-card" data-toc-title="URL Deep Linking">
                 <div class="docs-card-header d-flex align-items-center">
-                    <i class="fas fa-link mr-2"></i> URL Deep Linking
+                    <i class="fas fa-link mr-2"></i> URL Deep Linking & State Sharing
                 </div>
                 <div class="docs-card-body">
                     <p>
-                        You can construct direct links to specific calendar views from REDCap instrument descriptive text fields, automated survey invitations, or external dashboards using URL query parameters:
+                        The module features <strong>bi-directional URL state synchronization</strong>. As coordinators navigate between calendar views, move across dates, or select search filters, the browser address bar updates automatically in real time without reloading the page:
                     </p>
 
+                    <div class="alert alert-info border-0 mb-3" style="background-color: #e0f2fe; border-left: 4px solid #0284c7 !important; border-radius: 6px; color: #0369a1; font-size: 15px;">
+                        <strong><i class="fas fa-share-alt mr-1"></i> Instant Shareability:</strong> You can copy the URL directly from your browser address bar at any moment to share an exact operational view with colleagues, paste into communication channels, or bookmark specific clinic schedules. When opened, the link restores the exact date, view, and applied filters. To keep URLs clean, default values (the <code>week</code> view and the current week's date) are automatically omitted from the URL.
+                    </div>
+
+                    <div class="section-title">
+                        <i class="fas fa-table"></i> Supported Query Parameters
+                    </div>
                     <div class="table-responsive docs-table mb-3">
                         <table class="table table-bordered mb-0">
                             <thead>
                                 <tr>
                                     <th style="width: 22%;">Parameter</th>
-                                    <th>Function & Description</th>
+                                    <th>Function & Supported Values</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><code>record</code> or <code>id</code></td>
-                                    <td>Pre-selects a subject record ID on page load. Automatically opens scheduling sidebar for that record.</td>
+                                    <td><code>view</code></td>
+                                    <td>Sets the calendar presentation view: <code>month</code>, <code>week</code>, <code>day</code>, or <code>agenda</code> (e.g., <code>view=month</code>). Defaults to <code>week</code>. Automatically omitted from the URL when set to the default week view to keep links clean and uncluttered.</td>
                                 </tr>
                                 <tr>
                                     <td><code>date</code></td>
-                                    <td>Sets the initial calendar date view (format <code>YYYY-MM-DD</code>). Defaults to today.</td>
+                                    <td>Sets the active calendar date in ISO format (<code>YYYY-MM-DD</code>). Automatically omitted from the URL when viewing the current week (the default) to prevent unnecessary query clutter; populated whenever navigating to other dates.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>provider</code></td>
+                                    <td>Filters calendar events to one or more provider usernames (comma-separated for multiples, e.g., <code>provider=dr_smith</code> or <code>provider=user1,user2</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>location</code></td>
+                                    <td>Filters calendar events to one or more clinic location codes (comma-separated for multiples, e.g., <code>location=CLINIC_MAIN</code> or <code>location=east,west</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>record</code> / <code>id</code></td>
+                                    <td>Pre-selects a participant record ID (e.g., <code>record=1001</code>). When a single participant is selected, automatically opens the participant summary and protocol visit scheduling sidebar.</td>
+                                </tr>
+                                <tr>
+                                    <td><code>visit</code></td>
+                                    <td>Filters calendar events to one or more visit type codes (comma-separated for multiples, e.g., <code>visit=v1_baseline</code> or <code>visit=v1,v2</code>).</td>
+                                </tr>
+                                <tr>
+                                    <td><code>filter</code></td>
+                                    <td>Generic comma-separated filter query that pre-selects any matching locations, providers, subjects, or visits in the search bar.</td>
                                 </tr>
                                 <tr>
                                     <td><code>type</code></td>
-                                    <td>Sets initial operational view mode: <code>schedule</code> (default scheduling view), <code>edit</code> (availability management), or <code>my</code> (my personal calendar).</td>
+                                    <td>Sets initial operational workspace mode: <code>schedule</code> (default scheduling view), <code>edit</code> (availability management), or <code>my</code> (my personal calendar).</td>
                                 </tr>
                                 <tr>
                                     <td><code>tz</code></td>
@@ -1245,13 +1272,19 @@ CSV_FILE = Path(<span class="code-string">"scheduling_events.csv"</span>)
                     </div>
 
                     <div class="section-title">
-                        <i class="fas fa-external-link-alt"></i> Deep Linking Examples
+                        <i class="fas fa-external-link-alt"></i> Practical Deep Linking Patterns
                     </div>
-                    <p><strong>Open scheduling view for current participant:</strong></p>
-                    <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]</code></pre>
-
-                    <p><strong>Open scheduling view for a specific date with return navigation:</strong></p>
+                    <p><strong>1. Participant scheduling view with date and return navigation (ideal for survey invitations or instrument links):</strong></p>
                     <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&record=[record-name]&date=[target_visit_date]&refer=true</code></pre>
+
+                    <p><strong>2. Month overview filtered to a specific clinic facility:</strong></p>
+                    <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&type=schedule&view=month&date=2026-10-01&location=CLINIC_MAIN</code></pre>
+
+                    <p><strong>3. Day agenda view focused on a specific provider:</strong></p>
+                    <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&type=schedule&view=day&date=2026-10-15&provider=dr_smith</code></pre>
+
+                    <p><strong>4. Availability management tab focused on a future month for schedule planning:</strong></p>
+                    <pre><code>[redcap-version-url]ExternalModules/?prefix=scheduling_calendar&page=index&pid=[project-id]&type=edit&view=month&date=2026-11-01&provider=dr_smith</code></pre>
                 </div>
             </div>
 

@@ -2,7 +2,7 @@ import Choices from "choices.js"
 import API from "./api"
 import UserConfig from "./userConfig"
 import Calendar from './calendar'
-import Page from "./page"
+import Page, { updateUrlState } from "./page"
 import RedCap from "./redcap"
 import Summary from "./summary"
 
@@ -67,6 +67,41 @@ class SearchBar {
             $.querySelector(`.${centerClassName} input`).focus()
         }
 
+        const syncFiltersToUrl = () => {
+            if (!SearchBar._choices) return
+            const picked = SearchBar.getPicked()
+            const providers = []
+            const locations = []
+            const subjects = []
+            const visits = []
+            const others = []
+
+            picked.forEach(item => {
+                const val = String(item.value)
+                const type = item.customProperties ? item.customProperties.type : null
+                if (type === "provider") providers.push(val)
+                else if (type === "location") locations.push(val)
+                else if (type === "subject") subjects.push(val)
+                else if (type === "visit") visits.push(val)
+                else others.push(val)
+            })
+
+            updateUrlState({
+                record: subjects.length > 0 ? subjects.join(",") : null,
+                provider: providers.length > 0 ? providers.join(",") : null,
+                location: locations.length > 0 ? locations.join(",") : null,
+                visit: visits.length > 0 ? visits.join(",") : null,
+                filter: others.length > 0 ? others.join(",") : null,
+                id: null,
+                subject: null,
+                subjects: null,
+                providers: null,
+                locations: null,
+                visits: null,
+                filters: null
+            })
+        }
+
         const changeEvent = (event) => {
             Calendar.refresh()
             const count = $.querySelector(choicesSelector).childElementCount
@@ -77,6 +112,7 @@ class SearchBar {
             el.style.minWidth = `${text.length || placeholder.length}ch`
             updateFilterText()
             Summary.open()
+            syncFiltersToUrl()
         }
 
         const addProperty = (data, key, value) => {
@@ -198,13 +234,26 @@ class SearchBar {
         $.addEventListener("keyup", keyEvent)
         SearchBar.ready = true
 
-        if (Page.id || Page.record) {
-            SearchBar._choices.setChoiceByValue(Page.id || Page.record)
+        const initialFilters = []
+        const addInitial = (val) => {
+            if (!val) return
+            String(val).split(",").map(s => s.trim()).filter(Boolean).forEach(v => {
+                if (!initialFilters.includes(v)) initialFilters.push(v)
+            })
+        }
+        addInitial(Page.provider)
+        addInitial(Page.location)
+        addInitial(Page.visit)
+        addInitial(Page.record || Page.id)
+        addInitial(Page.filter)
+
+        if (initialFilters.length > 0) {
+            initialFilters.forEach(v => {
+                SearchBar._choices.setChoiceByValue(v)
+            })
             Summary.open()
             changeEvent()
-        }
-
-        if (Page.type == "edit" && userConfig.filterToSelf) {
+        } else if (Page.type == "edit" && userConfig.filterToSelf) {
             // If the user is not listed then the search bar just skips it
             SearchBar._choices.setChoiceByValue(RedCap.user.username)
             changeEvent()
