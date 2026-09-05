@@ -1,4 +1,4 @@
-import { Calendar as FullCalendar } from "@fullcalendar/core"
+import { Calendar as FullCalendar, createPlugin } from "@fullcalendar/core"
 import interactionPlugin from "@fullcalendar/interaction"
 import dayGridPlugin from "@fullcalendar/daygrid"
 import timeGridPlugin from "@fullcalendar/timegrid"
@@ -17,6 +17,57 @@ import SearchBar from "./searchBar"
 import API from "./api"
 import Page, { updateUrlState } from "./page"
 import RedCap from "./redcap"
+
+class FontAwesomeTheme {
+    constructor(calendarOptions) {
+        this.calendarOptions = calendarOptions
+    }
+    getClass(key) {
+        return {
+            root: 'fc-theme-standard',
+            tableCellShaded: 'fc-cell-shaded',
+            buttonGroup: 'fc-button-group',
+            button: 'fc-button fc-button-primary',
+            buttonActive: 'fc-button-active',
+        }[key] || ''
+    }
+    getIconClass(buttonName, isRtl) {
+        const iconClasses = {
+            close: 'fc-icon-x',
+            prev: 'fc-icon-chevron-left',
+            next: 'fc-icon-chevron-right',
+            prevYear: 'fc-icon-chevrons-left',
+            nextYear: 'fc-icon-chevrons-right',
+        }
+        const rtlIconClasses = {
+            prev: 'fc-icon-chevron-right',
+            next: 'fc-icon-chevron-left',
+            prevYear: 'fc-icon-chevrons-right',
+            nextYear: 'fc-icon-chevrons-left',
+        }
+        const icons = isRtl ? rtlIconClasses : iconClasses
+        const icon = icons[buttonName] || iconClasses[buttonName]
+        return icon ? `fc-icon ${icon}` : ''
+    }
+    getCustomButtonIconClass(customButtonProps) {
+        let icon = customButtonProps.icon
+        if (!icon) return ''
+        if (icon === 'fa-eye' && !Calendar._showAvailability) {
+            icon = 'fa-eye-slash'
+        }
+        if (icon === 'fa-lock' && Calendar._fc && Calendar._fc.getOption('editable')) {
+            icon = 'fa-unlock'
+        }
+        return `fa-solid ${icon}`
+    }
+}
+
+const fontAwesomeThemePlugin = createPlugin({
+    name: 'fontawesome-theme',
+    themeClasses: {
+        'fa-standard': FontAwesomeTheme
+    }
+})
 
 const autoRefreshTime = 120 // seconds
 
@@ -124,7 +175,8 @@ class Calendar {
 
         Calendar._fc = new FullCalendar($.getElementById("calendar"), {
             schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source',
-            plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, adaptivePlugin],
+            plugins: [interactionPlugin, dayGridPlugin, timeGridPlugin, listPlugin, adaptivePlugin, fontAwesomeThemePlugin],
+            themeSystem: 'fa-standard',
             views: {
                 singleMonth: {
                     type: "dayGridMonth",
@@ -411,69 +463,71 @@ class Calendar {
                 return { html: title }
             },
             events: (info, successCallback, failureCallback) => {
-                let paramsCommon = {
-                    start: DateTime.fromISO(info.startStr).toFormat("yyyy-MM-dd HH:mm:ss"),
-                    end: DateTime.fromISO(info.endStr).toFormat("yyyy-MM-dd HH:mm:ss"),
-                    providers: SearchBar.getPickedProviders(true),
-                    locations: SearchBar.getPickedLocations(true),
-                }
-
-                let paramsAvailability = {
-                    all_availability: !limitAvailability,
-                }
-
-                let paramsAppointment = {
-                    subjects: SearchBar.getPickedSubjects(true),
-                    visits: SearchBar.getPickedEvents(true),
-                    all_appointments: Page.type == "my",
-                }
-
-                const commonProcessing = (calEvent) => {
-                    // Copy all non-standard fields to extendedProps
-                    // Assign unique colors to each provider
-                    calEvent["id"] = calEvent["internal_id"]
-                    for (const [key, value] of Object.entries(calEvent)) {
-                        if (!["id", "start", "end", "title"].includes(key)) {
-                            calEvent.extendedProps = calEvent.extendedProps || {}
-                            calEvent.extendedProps[key] = value
-                        }
+                SearchBar.whenReady().then(() => {
+                    let paramsCommon = {
+                        start: DateTime.fromISO(info.startStr).toFormat("yyyy-MM-dd HH:mm:ss"),
+                        end: DateTime.fromISO(info.endStr).toFormat("yyyy-MM-dd HH:mm:ss"),
+                        providers: SearchBar.getPickedProviders(true),
+                        locations: SearchBar.getPickedLocations(true),
                     }
-                    const user = calEvent.user
-                    const color = Calendar._userColors[user] || Calendar._metadata[user]?.color || ColorConfig.getRandomAccessableColor()
-                    calEvent.color = color
-                    Calendar._userColors[user] = color
-                    return calEvent
-                }
 
-                let availabilityPromise = Promise.resolve([])
-                if (["schedule", "edit"].includes(Page.type) && Calendar._showAvailability)
-                    availabilityPromise = API.getAvailability({ ...paramsCommon, ...paramsAvailability })
+                    let paramsAvailability = {
+                        all_availability: !limitAvailability,
+                    }
 
-                let appointmentPromise = Promise.resolve([])
-                if (["schedule", "my"].includes(Page.type))
-                    appointmentPromise = API.getAppointments({ ...paramsCommon, ...paramsAppointment })
+                    let paramsAppointment = {
+                        subjects: SearchBar.getPickedSubjects(true),
+                        visits: SearchBar.getPickedEvents(true),
+                        all_appointments: Page.type == "my",
+                    }
 
-                Promise.all([availabilityPromise, appointmentPromise, API.providers()]).then(([availabilityData, appointmentData, providersData]) => {
-                    let data = availabilityData.concat(appointmentData)
-                    // Filter to only schedulable and is_local providers
-                    const validProviders = Object.entries(providersData).filter(e => !e[1].is_unschedulable && e[1].is_local).map(e => e[0])
-
-                    data.forEach((event) => {
-                        event = commonProcessing(event)
-
-                        // If on schedule page, filter to only valid providers
-                        if (Page.type == "schedule" && event.is_availability) {
-                            event.display = "background"
-                            // If the provider is not valid, hide it
-                            if (!validProviders.includes(event.user))
-                                event.display = "none"
+                    const commonProcessing = (calEvent) => {
+                        // Copy all non-standard fields to extendedProps
+                        // Assign unique colors to each provider
+                        calEvent["id"] = calEvent["internal_id"]
+                        for (const [key, value] of Object.entries(calEvent)) {
+                            if (!["id", "start", "end", "title"].includes(key)) {
+                                calEvent.extendedProps = calEvent.extendedProps || {}
+                                calEvent.extendedProps[key] = value
+                            }
                         }
+                        const user = calEvent.user
+                        const color = Calendar._userColors[user] || Calendar._metadata[user]?.color || ColorConfig.getRandomAccessableColor()
+                        calEvent.color = color
+                        Calendar._userColors[user] = color
+                        return calEvent
+                    }
+
+                    let availabilityPromise = Promise.resolve([])
+                    if (["schedule", "edit"].includes(Page.type) && Calendar._showAvailability)
+                        availabilityPromise = API.getAvailability({ ...paramsCommon, ...paramsAvailability })
+
+                    let appointmentPromise = Promise.resolve([])
+                    if (["schedule", "my"].includes(Page.type))
+                        appointmentPromise = API.getAppointments({ ...paramsCommon, ...paramsAppointment })
+
+                    return Promise.all([availabilityPromise, appointmentPromise, API.providers()]).then(([availabilityData, appointmentData, providersData]) => {
+                        let data = availabilityData.concat(appointmentData)
+                        // Filter to only schedulable and is_local providers
+                        const validProviders = Object.entries(providersData).filter(e => !e[1].is_unschedulable && e[1].is_local).map(e => e[0])
+
+                        data.forEach((event) => {
+                            event = commonProcessing(event)
+
+                            // If on schedule page, filter to only valid providers
+                            if (Page.type == "schedule" && event.is_availability) {
+                                event.display = "background"
+                                // If the provider is not valid, hide it
+                                if (!validProviders.includes(event.user))
+                                    event.display = "none"
+                            }
+                        })
+
+                        successCallback(data)
+
+                        if (Calendar.getView() == "agenda")
+                            Calendar.today()
                     })
-
-                    successCallback(data)
-
-                    if (Calendar.getView() == "agenda")
-                        Calendar.today()
                 }).catch((error) => {
                     failureCallback(error)
                 })

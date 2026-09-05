@@ -4,7 +4,6 @@ import Calendar from "./calendar"
 import Page from "./page"
 import RedCap from "./redcap"
 import "./printing"
-import "./iconObserver"
 import "./style.less"
 
 $.getElementsByClassName(`type-${Page.type}`)[0].classList.add('active')

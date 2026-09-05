@@ -5,8 +5,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --config webpack.dev.js",
+    "build:prod": "webpack --config webpack.prod.js",
     "watch": "webpack --watch --progress --config webpack.dev.js",
-    "publish": "webpack --config webpack.prod.js && cd .. && wsl -e zip dist lang/English.ini config.json docs.php index.js actionTag.js actiontag.css index.php license readme.md style.css Scheduling.php ics.php schema.json"
+    "publish": "npm run build:prod && cd .. && wsl -e zip dist lang/English.ini config.json docs.php index.js actionTag.js actiontag.css index.php license readme.md style.css Scheduling.php ics.php schema.json"
   },
   "devDependencies": {
     "css-loader": "^6.11.0",
