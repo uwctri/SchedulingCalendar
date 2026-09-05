@@ -402,7 +402,7 @@ class API {
 
         let result = {}
         data["redcap_csrf_token"] = RedCap.csrf()
-        console.log("SENDING", data)
+        RedCap.log("SENDING", data)
 
         // Format times to be compatible with DB Timestamps
         // Trash the microseconds and swap T for space
@@ -427,7 +427,7 @@ class API {
             const success = data?.success ?? true
             result = data
             Calendar.hideLoading()
-            console[success ? 'log' : 'warn'](data)
+            RedCap[success ? 'log' : 'warn'](data)
             if (success) return
             Toast.fire({
                 icon: 'warning',
@@ -440,7 +440,7 @@ class API {
                 icon: 'error',
                 title: errorMsg,
             })
-            console.error('Something went wrong in API.js', error, data)
+            RedCap.error('Something went wrong in API.js', error, data)
         })
 
         return result

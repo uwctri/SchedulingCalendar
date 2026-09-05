@@ -89,7 +89,7 @@ class ActionTagScheduler {
         this.eventId = config.eventId
         this.instrument = config.instrument
         this.timezones = config.timezones || []
-        console.log("[SchedulingCalendar JS] ActionTagScheduler initialized with config:", config)
+        RedCap.log("ActionTagScheduler initialized with config:", config)
         this.init()
     }
 
@@ -99,9 +99,9 @@ class ActionTagScheduler {
     }
 
     async callAjax(payload) {
-        console.log("[SchedulingCalendar JS] callAjax sending payload:", payload)
+        RedCap.log("callAjax sending payload:", payload)
         const res = await RedCap.ajax("survey-calendar-api", payload)
-        console.log("[SchedulingCalendar JS] callAjax received response:", res)
+        RedCap.log("callAjax received response:", res)
         return res
     }
 
@@ -115,13 +115,13 @@ class ActionTagScheduler {
     }
 
     async setupField(fieldName, fieldConfig) {
-        console.log("[SchedulingCalendar JS] setupField:", fieldName, fieldConfig)
+        RedCap.log("setupField:", fieldName, fieldConfig)
         const inputEl = this.findFieldInput(fieldName)
         if (!inputEl) {
-            console.warn("[SchedulingCalendar JS] Could not find DOM element for field:", fieldName)
+            RedCap.warn("Could not find DOM element for field:", fieldName)
             return
         }
-        console.log("[SchedulingCalendar JS] Found DOM element for field:", fieldName, inputEl)
+        RedCap.log("Found DOM element for field:", fieldName, inputEl)
 
         // Container element
         let container = $.createElement("div")
@@ -135,11 +135,11 @@ class ActionTagScheduler {
                 inputEl.querySelector("td") ||
                 inputEl
             targetCell.appendChild(container)
-            console.log("[SchedulingCalendar JS] Container appended into table cell:", targetCell)
+            RedCap.log("Container appended into table cell:", targetCell)
         } else {
             const parentWrapper = inputEl.closest(".form-control-static") || inputEl.parentNode
             parentWrapper.appendChild(container)
-            console.log("[SchedulingCalendar JS] Container appended next to input wrapper:", parentWrapper)
+            RedCap.log("Container appended next to input wrapper:", parentWrapper)
         }
 
         // Render loading state
@@ -150,7 +150,7 @@ class ActionTagScheduler {
         if (this.record) {
             try {
                 const userTz = this.getResolvedTimezone(fieldConfig.timezone)
-                console.log("[SchedulingCalendar JS] Checking existing appointment for record:", this.record, "visit:", fieldConfig.visit, "timezone:", userTz)
+                RedCap.log("Checking existing appointment for record:", this.record, "visit:", fieldConfig.visit, "timezone:", userTz)
                 const apptRes = await this.callAjax({
                     action: "get-appointment",
                     pid: this.projectId,
@@ -160,10 +160,10 @@ class ActionTagScheduler {
                 })
                 if (apptRes?.has_appointment) {
                     appointment = apptRes.appointment
-                    console.log("[SchedulingCalendar JS] Existing appointment found:", appointment)
+                    RedCap.log("Existing appointment found:", appointment)
                 }
             } catch (err) {
-                console.error("[SchedulingCalendar JS] Error fetching existing appointment:", err)
+                RedCap.error("Error fetching existing appointment:", err)
             }
         }
 
@@ -208,7 +208,7 @@ class ActionTagScheduler {
     }
 
     renderWidget(container, inputEl, fieldConfig, appointment) {
-        console.log("[SchedulingCalendar JS] renderWidget for field:", fieldConfig.field_name, "appointment:", appointment)
+        RedCap.log("renderWidget for field:", fieldConfig.field_name, "appointment:", appointment)
         container.innerHTML = ""
 
         if (appointment) {
@@ -274,7 +274,7 @@ class ActionTagScheduler {
     }
 
     renderBookingInterface(container, inputEl, fieldConfig, isRescheduling = false, oldAppt = null) {
-        console.log("[SchedulingCalendar JS] renderBookingInterface:", fieldConfig.field_name, "mode:", fieldConfig.mode)
+        RedCap.log("renderBookingInterface:", fieldConfig.field_name, "mode:", fieldConfig.mode)
         container.innerHTML = ""
 
         if (fieldConfig.mode === "popup") {
@@ -328,7 +328,7 @@ class ActionTagScheduler {
     }
 
     async openModal(container, inputEl, fieldConfig, isRescheduling, oldAppt) {
-        console.log("[SchedulingCalendar JS] openModal clicked")
+        RedCap.log("openModal clicked")
         let modalOverlay = $.getElementById("sc-modal-overlay")
         if (!modalOverlay) {
             modalOverlay = $.createElement("div")
@@ -360,7 +360,7 @@ class ActionTagScheduler {
         const provider = this.getPipedValue(fieldConfig.provider, fieldConfig.piped_provider)
         const location = this.getPipedValue(fieldConfig.location, fieldConfig.piped_location)
         const userTz = this.getResolvedTimezone(fieldConfig.timezone)
-        console.log("[SchedulingCalendar JS] loadAndRenderSlots:", { visit: fieldConfig.visit, start: fieldConfig.start, end: fieldConfig.end, provider, location, timezone: userTz })
+        RedCap.log("loadAndRenderSlots:", { visit: fieldConfig.visit, start: fieldConfig.start, end: fieldConfig.end, provider, location, timezone: userTz })
 
         try {
             const res = await this.callAjax({
@@ -376,19 +376,19 @@ class ActionTagScheduler {
             })
 
             if (!res?.success || !res.slots || res.slots.length === 0) {
-                console.log("[SchedulingCalendar JS] No slots available in range")
+                RedCap.log("No slots available in range")
                 targetElement.innerHTML = RedCap.ttHTML(tplNoSlots)
                 return
             }
 
-            console.log(`[SchedulingCalendar JS] Loaded ${res.slots.length} slots`)
+            RedCap.log(`Loaded ${res.slots.length} slots`)
             if (closeModalFn) {
                 this.renderSlotExplorer(targetElement, res.slots, inputEl, fieldConfig, container, isRescheduling, closeModalFn, res.timezone || userTz)
             } else {
                 this.renderInlineAccordion(targetElement, res.slots, inputEl, fieldConfig, container, isRescheduling, res.timezone || userTz)
             }
         } catch (err) {
-            console.error("[SchedulingCalendar JS] Error loading slots:", err)
+            RedCap.error("Error loading slots:", err)
             targetElement.innerHTML = `<div class="alert alert-danger m-3 p-3">${RedCap.tt("html_error_loading_slots")}: ${err.message}</div>`
         }
     }
@@ -625,7 +625,7 @@ class ActionTagScheduler {
 
         // Rendering function
         const updateView = () => {
-            console.log("[SchedulingCalendar JS] Filter state:", filterState)
+            RedCap.log("Filter state:", filterState)
 
             // 1. Get filtered slots
             const filtered = allSlots.filter((s) => {
@@ -818,7 +818,7 @@ class ActionTagScheduler {
 
     async selectSlot(slot, inputEl, fieldConfig, container, isRescheduling, closeModalFn) {
         const saveMode = fieldConfig.save_mode
-        console.log("[SchedulingCalendar JS] selectSlot:", slot, "saveMode:", saveMode)
+        RedCap.log("selectSlot:", slot, "saveMode:", saveMode)
 
         if (saveMode === "immediate") {
             try {
@@ -876,7 +876,7 @@ class ActionTagScheduler {
                 provider: slot.provider,
                 location: slot.location
             })
-            console.log("[SchedulingCalendar JS] Attached booking payload to form:", hiddenInputName, hiddenInput.value)
+            RedCap.log("Attached booking payload to form:", hiddenInputName, hiddenInput.value)
         }
 
         // 3. Update visible badge in container
@@ -896,9 +896,9 @@ class ActionTagScheduler {
 }
 
 const initActionTag = () => {
-    console.log("[SchedulingCalendar JS] initActionTag executing. readyState:", $.readyState)
+    RedCap.log("initActionTag executing. readyState:", $.readyState)
     const config = RedCap.module.actionTagConfig
-    console.log("[SchedulingCalendar JS] Discovered actionTagConfig:", config)
+    RedCap.log("Discovered actionTagConfig:", config)
     if (config && !window.__scActionTagInitialized) {
         window.__scActionTagInitialized = true
         window.schedulerWidget = new ActionTagScheduler(config)

@@ -28,6 +28,11 @@ class RedCap {
     static popover = (target, obj) => typeof jQuery !== "undefined" ? jQuery(target).popover(obj) : null // Bootstrap popovers use Jquery
     static ajax = (action, payload) => ExternalModules.UWMadison.Scheduling.ajax(action, payload)
 
+    static _log = (level, ...args) => console[level]("[SchedulingCalendar JS]", ...args)
+    static log = (...args) => RedCap._log("log", ...args)
+    static warn = (...args) => RedCap._log("warn", ...args)
+    static error = (...args) => RedCap._log("error", ...args)
+
 }
 
 export default RedCap

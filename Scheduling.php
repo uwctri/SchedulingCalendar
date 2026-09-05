@@ -74,12 +74,16 @@ class Scheduling extends AbstractExternalModule
         while (count($args) > 1 && end($args) === null)
             array_pop($args);
 
+        $prefix = '[SchedulingCalendar]';
         $jsArgs = [];
+        if (empty($args) || !is_string($args[0]) || !str_starts_with($args[0], $prefix))
+            $jsArgs[] = json_encode($prefix);
+
         foreach ($args as $arg)
             $jsArgs[] = (is_string($arg) && (str_starts_with(trim($arg), "{") || str_starts_with(trim($arg), "["))) ? $arg : json_encode($arg);
 
         $payload = implode(", ", $jsArgs);
-        echo "<script>console.{$level}([SchedulingCalendar] {$payload});</script>";
+        echo "<script>console.{$level}({$payload});</script>";
     }
 
     /*
