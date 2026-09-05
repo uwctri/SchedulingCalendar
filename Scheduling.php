@@ -56,16 +56,43 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
+    Helper to output JavaScript console logs with templated script tags
+    */
+    public function JsLogging(...$args)
+    {
+        if (empty($args))
+            return;
+
+        $level = "log";
+        $validLevels = ["log", "warn", "error", "info", "debug"];
+
+        if (count($args) > 1 && is_string($args[0]) && in_array($args[0], $validLevels, true))
+            $level = array_shift($args);
+        elseif (count($args) > 1 && is_string(end($args)) && in_array(end($args), $validLevels, true))
+            $level = array_pop($args);
+
+        while (count($args) > 1 && end($args) === null)
+            array_pop($args);
+
+        $jsArgs = [];
+        foreach ($args as $arg)
+            $jsArgs[] = (is_string($arg) && (str_starts_with(trim($arg), "{") || str_starts_with(trim($arg), "["))) ? $arg : json_encode($arg);
+
+        $payload = implode(", ", $jsArgs);
+        echo "<script>console.{$level}([SchedulingCalendar] {$payload});</script>";
+    }
+
+    /*
     Check for action tag on data entry forms
     */
     public function redcap_data_entry_form($project_id, $record = null, $instrument = null, $event_id = null, $group_id = null, $repeat_instance = 1)
     {
-        echo "<script>console.log('[SchedulingCalendar] redcap_data_entry_form hook fired:', " . json_encode([
+        $this->JsLogging('redcap_data_entry_form hook fired:', [
             'project_id' => $project_id,
             'record' => $record,
             'instrument' => $instrument,
             'event_id' => $event_id
-        ]) . ");</script>";
+        ]);
         $this->loadActionTag($project_id, $record, $instrument, $event_id);
     }
 
@@ -74,12 +101,12 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_survey_page($project_id, $record = null, $instrument = null, $event_id = null, $group_id = null, $survey_hash = null, $response_id = null, $repeat_instance = 1)
     {
-        echo "<script>console.log('[SchedulingCalendar] redcap_survey_page hook fired:', " . json_encode([
+        $this->JsLogging('redcap_survey_page hook fired:', [
             'project_id' => $project_id,
             'record' => $record,
             'instrument' => $instrument,
             'event_id' => $event_id
-        ]) . ");</script>";
+        ]);
         $this->loadActionTag($project_id, $record, $instrument, $event_id);
     }
 
@@ -140,7 +167,7 @@ class Scheduling extends AbstractExternalModule
             "allow_cancel" => false,
             "hide_provider" => false,
             "save_mode" => "on_submit",
-            "btn_text" => "Schedule Appointment",
+            "btn_text" => $this->tt("html_schedule_appt"),
             "timezone" => "browser"
         ];
         if (empty($rawArgs))
@@ -276,7 +303,7 @@ class Scheduling extends AbstractExternalModule
 
     private function loadActionTag($project_id, $record, $instrument, $event_id)
     {
-        echo "<script>console.log('[SchedulingCalendar] loadActionTag scanning instrument: " . json_encode($instrument) . " on project $project_id');</script>";
+        $this->JsLogging("loadActionTag scanning instrument: " . json_encode($instrument) . " on project $project_id");
 
         $taggedFields = [];
         $fieldsScanned = 0;
@@ -339,10 +366,10 @@ class Scheduling extends AbstractExternalModule
             }
         }
 
-        echo "<script>console.log('[SchedulingCalendar] Scanned $fieldsScanned fields on instrument \"$instrument\". Found " . count($taggedFields) . " tagged fields:', " . json_encode($taggedFields) . ");</script>";
+        $this->JsLogging("Scanned $fieldsScanned fields on instrument \"$instrument\". Found " . count($taggedFields) . " tagged fields:", $taggedFields);
 
         if (empty($taggedFields)) {
-            echo "<script>console.warn('[SchedulingCalendar] No fields with @SCHEDULING-CALENDAR were found on this instrument ($instrument). If you just edited the field in Online Designer, make sure you clicked \"Save\" on the field.');</script>";
+            $this->JsLogging("No fields with @SCHEDULING-CALENDAR were found on this instrument ($instrument). If you just edited the field in Online Designer, make sure you clicked \"Save\" on the field.", "warn");
             return;
         }
 
@@ -360,15 +387,13 @@ class Scheduling extends AbstractExternalModule
         $configJson = json_encode($actionTagConfig);
         $scriptUrl = $this->getUrl('actionTag.js');
         $styleUrl = $this->getUrl('actiontag.css');
-        if (!file_exists($this->getModulePath() . 'actiontag.css'))
-            $styleUrl = $this->getUrl('style.css');
 
-        echo "<script>console.log('[SchedulingCalendar] Action tag active. Injecting bundle with config:', " . $configJson . ");</script>";
-        echo "<link rel='stylesheet' href='{$styleUrl}'>";
-        echo "<script>
-            {$jsObj}.actionTagConfig = {$configJson};
-        </script>";
-        echo "<script src='{$scriptUrl}' defer></script>";
+        $this->JsLogging('Action tag active. Injecting bundle with config:', $actionTagConfig);
+        echo "
+            <link rel='stylesheet' href='{$styleUrl}'>
+            <script>{$jsObj}.actionTagConfig = {$configJson};</script>
+            <script src='{$scriptUrl}' defer></script>
+        ";
     }
 
     /*

@@ -15,7 +15,7 @@ import tplPopup from "./html/actiontag_popup.html"
 import tplInline from "./html/actiontag_inline.html"
 
 class ActionTagScheduler {
-    static renderLoading(message = "Loading available appointment times...", iconClass = "fa-2x") {
+    static renderLoading(message = RedCap.tt("html_loading_slots"), iconClass = "fa-2x") {
         return RedCap.ttHTML(tplLoading, {
             SPINNER_CLASS: iconClass,
             MESSAGE: message
@@ -23,10 +23,10 @@ class ActionTagScheduler {
     }
 
     static renderAppointmentCard(appointment, fieldConfig) {
-        const locationBlock = appointment.location_name ? `<div><strong>${RedCap.tt("html_location") || "Location"}:</strong> ${appointment.location_name}</div>` : ""
-        const providerBlock = !fieldConfig.hide_provider && appointment.provider_name ? `<div><strong>${RedCap.tt("html_provider") || "Provider"}:</strong> ${appointment.provider_name}</div>` : ""
-        const rescheduleBtn = fieldConfig.allow_reschedule ? `<button type="button" class="btn btn-sm btn-outline-primary sc-reschedule-btn mb-1"><i class="fas fa-edit"></i> ${RedCap.tt("html_reschedule") || "Reschedule"}</button>` : ""
-        const cancelBtn = fieldConfig.allow_cancel ? `<button type="button" class="btn btn-sm btn-outline-danger sc-cancel-btn"><i class="fas fa-times"></i> ${RedCap.tt("html_cancel") || "Cancel"}</button>` : ""
+        const locationBlock = appointment.location_name ? `<div><strong>${RedCap.tt("html_location")}:</strong> ${appointment.location_name}</div>` : ""
+        const providerBlock = !fieldConfig.hide_provider && appointment.provider_name ? `<div><strong>${RedCap.tt("html_provider")}:</strong> ${appointment.provider_name}</div>` : ""
+        const rescheduleBtn = fieldConfig.allow_reschedule ? `<button type="button" class="btn btn-sm btn-outline-primary sc-reschedule-btn mb-1"><i class="fas fa-edit"></i> ${RedCap.tt("html_reschedule")}</button>` : ""
+        const cancelBtn = fieldConfig.allow_cancel ? `<button type="button" class="btn btn-sm btn-outline-danger sc-cancel-btn"><i class="fas fa-times"></i> ${RedCap.tt("html_cancel")}</button>` : ""
 
         return RedCap.ttHTML(tplApptCard, {
             DATE_DISPLAY: appointment.date_display,
@@ -38,8 +38,8 @@ class ActionTagScheduler {
         })
     }
 
-    static renderModalDialog(title = "Select Appointment Time") {
-        const loadingHtml = ActionTagScheduler.renderLoading("Loading available appointment times...", "fa-3x")
+    static renderModalDialog(title = RedCap.tt("html_select_time_title")) {
+        const loadingHtml = ActionTagScheduler.renderLoading(RedCap.tt("html_loading_slots"), "fa-3x")
         return RedCap.ttHTML(tplModal, {
             TITLE: title,
             CONTENT: loadingHtml
@@ -66,7 +66,7 @@ class ActionTagScheduler {
     }
 
     static renderSlotsPanel(timezone) {
-        const tzDisplay = timezone === "local" ? (RedCap.tt("html_server_time") || "Server Time") : timezone
+        const tzDisplay = timezone === "local" ? RedCap.tt("html_server_time") : timezone
         return RedCap.ttHTML(tplSlotsPanel, {
             TIMEZONE: tzDisplay
         })
@@ -143,7 +143,7 @@ class ActionTagScheduler {
         }
 
         // Render loading state
-        container.innerHTML = ActionTagScheduler.renderLoading("Checking appointment status...", "fa-2x")
+        container.innerHTML = ActionTagScheduler.renderLoading(RedCap.tt("html_checking_status"), "fa-2x")
 
         // Check if existing appointment exists
         let appointment = null
@@ -231,13 +231,14 @@ class ActionTagScheduler {
             if (fieldConfig.allow_cancel) {
                 card.querySelector(".sc-cancel-btn")?.addEventListener("click", async () => {
                     const confirm = await Swal.fire({
-                        title: "Cancel Appointment?",
-                        text: "Are you sure you want to cancel this scheduled appointment?",
+                        title: RedCap.tt("html_cancel_appt_title"),
+                        text: RedCap.tt("html_cancel_appt_text"),
                         icon: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#d33",
                         cancelButtonColor: "#6c757d",
-                        confirmButtonText: "Yes, Cancel"
+                        confirmButtonText: RedCap.tt("html_cancel_appt_confirm"),
+                        cancelButtonText: RedCap.tt("html_cancel")
                     })
                     if (confirm.isConfirmed) {
                         try {
@@ -252,13 +253,13 @@ class ActionTagScheduler {
                                     inputEl.value = ""
                                     inputEl.dispatchEvent(new Event("change", { bubbles: true }))
                                 }
-                                Swal.fire("Cancelled", "Your appointment has been cancelled.", "success")
+                                Swal.fire(RedCap.tt("html_cancelled"), RedCap.tt("html_cancelled_text"), "success")
                                 this.renderWidget(container, inputEl, fieldConfig, null)
                             } else {
-                                Swal.fire("Error", res?.msg || "Failed to cancel appointment", "error")
+                                Swal.fire(RedCap.tt("html_error"), res?.msg || RedCap.tt("html_cancel_failed"), "error")
                             }
                         } catch (err) {
-                            Swal.fire("Error", err.message || "An error occurred", "error")
+                            Swal.fire(RedCap.tt("html_error"), err.message || RedCap.tt("html_error_occurred"), "error")
                         }
                     }
                 })
@@ -277,11 +278,11 @@ class ActionTagScheduler {
         container.innerHTML = ""
 
         if (fieldConfig.mode === "popup") {
-            const prompt = isRescheduling ? (RedCap.tt("html_reschedule_prompt") || "Reschedule your appointment:") : (RedCap.tt("html_schedule_prompt") || "Schedule an appointment:")
-            const btnText = isRescheduling ? (RedCap.tt("html_choose_new_time") || "Choose New Date & Time") : fieldConfig.btn_text
+            const prompt = isRescheduling ? RedCap.tt("html_reschedule_prompt") : RedCap.tt("html_schedule_prompt")
+            const btnText = isRescheduling ? RedCap.tt("html_choose_new_time") : (fieldConfig.btn_text || RedCap.tt("html_schedule_appt"))
             const cancelReschedBtn = isRescheduling && oldAppt ? `
                 <button type="button" class="btn btn-sm btn-outline-secondary mt-3 sc-keep-current-btn">
-                    <i class="fas fa-undo mr-1"></i> ${RedCap.tt("html_keep_current_appt") || "Keep Current Appointment"}
+                    <i class="fas fa-undo mr-1"></i> ${RedCap.tt("html_keep_current_appt")}
                 </button>
             ` : ""
 
@@ -303,7 +304,7 @@ class ActionTagScheduler {
             const cancelReschedBlock = isRescheduling && oldAppt ? `
                 <div class="d-flex justify-content-end mb-2">
                     <button type="button" class="btn btn-sm btn-outline-secondary sc-cancel-resched">
-                        <i class="fas fa-undo mr-1"></i> ${RedCap.tt("html_keep_current_appt") || "Keep Current Appointment"}
+                        <i class="fas fa-undo mr-1"></i> ${RedCap.tt("html_keep_current_appt")}
                     </button>
                 </div>
             ` : ""
@@ -311,7 +312,7 @@ class ActionTagScheduler {
             const wrapper = $.createElement("div")
             wrapper.innerHTML = RedCap.ttHTML(tplInline, {
                 CANCEL_RESCHEDULE_BLOCK: cancelReschedBlock,
-                LOADING: ActionTagScheduler.renderLoading("Loading available slots...")
+                LOADING: ActionTagScheduler.renderLoading(RedCap.tt("html_loading_slots"))
             })
             const inlineWrap = wrapper.firstElementChild
 
@@ -333,7 +334,7 @@ class ActionTagScheduler {
             modalOverlay = $.createElement("div")
             modalOverlay.id = "sc-modal-overlay"
             modalOverlay.className = "sc-modal-overlay"
-            modalOverlay.innerHTML = ActionTagScheduler.renderModalDialog(fieldConfig.field_label || "Select Appointment Time")
+            modalOverlay.innerHTML = ActionTagScheduler.renderModalDialog(fieldConfig.field_label || RedCap.tt("html_select_time_title"))
             $.body.appendChild(modalOverlay)
 
             modalOverlay.querySelector(".sc-modal-close").addEventListener("click", () => {
@@ -348,7 +349,7 @@ class ActionTagScheduler {
 
         modalOverlay.classList.add("sc-modal-open")
         const slotsContent = modalOverlay.querySelector(".sc-slots-content")
-        slotsContent.innerHTML = ActionTagScheduler.renderLoading("Loading available appointment times...", "fa-3x")
+        slotsContent.innerHTML = ActionTagScheduler.renderLoading(RedCap.tt("html_loading_slots"), "fa-3x")
 
         await this.loadAndRenderSlots(slotsContent, inputEl, fieldConfig, container, isRescheduling, () => {
             modalOverlay.classList.remove("sc-modal-open")
@@ -388,7 +389,7 @@ class ActionTagScheduler {
             }
         } catch (err) {
             console.error("[SchedulingCalendar JS] Error loading slots:", err)
-            targetElement.innerHTML = `<div class="alert alert-danger m-3 p-3">Error loading slots: ${err.message}</div>`
+            targetElement.innerHTML = `<div class="alert alert-danger m-3 p-3">${RedCap.tt("html_error_loading_slots")}: ${err.message}</div>`
         }
     }
 
@@ -415,8 +416,8 @@ class ActionTagScheduler {
         const subHeader = $.createElement("div")
         subHeader.className = "d-flex justify-content-between align-items-center mb-3 text-muted small"
         subHeader.innerHTML = `
-            <span><i class="far fa-calendar-check mr-1"></i> ${sortedDates.length} date${sortedDates.length === 1 ? "" : "s"} available</span>
-            <span><i class="fas fa-clock mr-1"></i> ${timezone === "local" ? "Server Time" : timezone}</span>
+            <span><i class="far fa-calendar-check mr-1"></i> ${sortedDates.length} ${sortedDates.length === 1 ? RedCap.tt("html_date_available") : RedCap.tt("html_dates_available")}</span>
+            <span><i class="fas fa-clock mr-1"></i> ${timezone === "local" ? RedCap.tt("html_server_time") : timezone}</span>
         `
         accordionWrapper.appendChild(subHeader)
 
@@ -444,7 +445,7 @@ class ActionTagScheduler {
                     <span class="font-weight-bold text-dark">${dDisplay}</span>
                 </div>
                 <div class="d-flex align-items-center">
-                    <span class="badge badge-light border text-muted mr-2">${dateSlots.length} slot${dateSlots.length === 1 ? "" : "s"}</span>
+                    <span class="badge badge-light border text-muted mr-2">${dateSlots.length} ${dateSlots.length === 1 ? RedCap.tt("html_single_slot") : RedCap.tt("html_plural_slots")}</span>
                     <i class="fas fa-chevron-down text-secondary sc-accordion-chevron"></i>
                 </div>
             `
@@ -538,10 +539,10 @@ class ActionTagScheduler {
             locGroup.className = "sc-filter-group d-flex align-items-center"
             locGroup.innerHTML = `
                 <label class="small font-weight-bold mb-0 mr-2 text-secondary text-nowrap">
-                    <i class="fas fa-map-marker-alt text-danger mr-1"></i> Location:
+                    <i class="fas fa-map-marker-alt text-danger mr-1"></i> ${RedCap.tt("html_location")}:
                 </label>
                 <select class="form-control form-control-sm sc-filter-location" style="min-width: 170px;">
-                    <option value="">All Locations (${locations.size})</option>
+                    <option value="">${RedCap.tt("html_all_locations")} (${locations.size})</option>
                     ${Array.from(locations.entries()).map(([code, name]) => `<option value="${code}">${name}</option>`).join("")}
                 </select>
             `
@@ -550,7 +551,7 @@ class ActionTagScheduler {
         } else if (locations.size === 1) {
             const locItem = $.createElement("div")
             locItem.className = "sc-filter-group small text-muted d-flex align-items-center"
-            locItem.innerHTML = `<i class="fas fa-map-marker-alt text-danger mr-1"></i> <strong>Location:</strong>&nbsp;${Array.from(locations.values())[0]}`
+            locItem.innerHTML = `<i class="fas fa-map-marker-alt text-danger mr-1"></i> <strong>${RedCap.tt("html_location")}:</strong>&nbsp;${Array.from(locations.values())[0]}`
             toolbar.appendChild(locItem)
         }
 
@@ -561,10 +562,10 @@ class ActionTagScheduler {
             provGroup.className = "sc-filter-group d-flex align-items-center"
             provGroup.innerHTML = `
                 <label class="small font-weight-bold mb-0 mr-2 text-secondary text-nowrap">
-                    <i class="fas fa-user-md text-info mr-1"></i> Provider:
+                    <i class="fas fa-user-md text-info mr-1"></i> ${RedCap.tt("html_provider")}:
                 </label>
                 <select class="form-control form-control-sm sc-filter-provider" style="min-width: 170px;">
-                    <option value="">All Providers (${providers.size})</option>
+                    <option value="">${RedCap.tt("html_all_providers")} (${providers.size})</option>
                     ${Array.from(providers.entries()).map(([user, name]) => `<option value="${user}">${name}</option>`).join("")}
                 </select>
             `
@@ -577,7 +578,7 @@ class ActionTagScheduler {
         datePickerGroup.className = "sc-filter-group d-flex align-items-center"
         datePickerGroup.innerHTML = `
             <label class="small font-weight-bold mb-0 mr-2 text-secondary text-nowrap">
-                <i class="far fa-calendar-alt text-primary mr-1"></i> Jump to Date:
+                <i class="far fa-calendar-alt text-primary mr-1"></i> ${RedCap.tt("html_jump_to_date")}:
             </label>
             <input type="date" class="form-control form-control-sm sc-filter-date" min="${minDate}" max="${maxDate}">
         `
@@ -661,11 +662,12 @@ class ActionTagScheduler {
             }
 
             // Update active heading
+            const slotCountLabel = filtered.length === 1 ? RedCap.tt("html_single_slot") : RedCap.tt("html_plural_slots")
             if (filterState.date === "all") {
-                activeHeadingEl.textContent = `Showing All Dates (${filtered.length} slots)`
+                activeHeadingEl.textContent = `${RedCap.tt("html_showing_all_dates")} (${filtered.length} ${slotCountLabel})`
             } else {
                 const dDisplay = datesMap.get(filterState.date) || filterState.date
-                activeHeadingEl.textContent = `${dDisplay} (${filtered.length} slots)`
+                activeHeadingEl.textContent = `${dDisplay} (${filtered.length} ${slotCountLabel})`
             }
 
             // Render Dates Sidebar
@@ -676,7 +678,7 @@ class ActionTagScheduler {
             allDatesBtn.type = "button"
             allDatesBtn.className = `sc-date-nav-btn ${filterState.date === "all" ? "active" : "text-dark"}`
             allDatesBtn.innerHTML = `
-                <span><i class="far fa-calendar mr-2"></i> All Dates</span>
+                <span><i class="far fa-calendar mr-2"></i> ${RedCap.tt("html_all_dates")}</span>
                 <span class="badge ${filterState.date === "all" ? "badge-light text-primary" : "badge-secondary"}">${baseForDates.length}</span>
             `
             allDatesBtn.addEventListener("click", () => {
@@ -740,7 +742,7 @@ class ActionTagScheduler {
                     <span class="text-primary font-weight-bold">
                         <i class="far fa-calendar-check mr-2"></i> ${dDisplay}
                     </span>
-                    <span class="badge badge-light border text-muted">${dateSlots.length} slot${dateSlots.length === 1 ? "" : "s"}</span>
+                    <span class="badge badge-light border text-muted">${dateSlots.length} ${dateSlots.length === 1 ? RedCap.tt("html_single_slot") : RedCap.tt("html_plural_slots")}</span>
                 `
                 dateBlock.appendChild(blockHeader)
 
@@ -838,13 +840,13 @@ class ActionTagScheduler {
                         inputEl.dispatchEvent(new Event("change", { bubbles: true }))
                     }
                     if (closeModalFn) closeModalFn()
-                    Swal.fire("Appointment Booked", `Your appointment has been scheduled for ${slot.date_display} at ${slot.time_display}.`, "success")
+                    Swal.fire(RedCap.tt("html_booked_title"), RedCap.tt("html_booked_text", slot.date_display, slot.time_display), "success")
                     this.setupField(fieldConfig.field_name, fieldConfig)
                 } else {
-                    Swal.fire("Booking Failed", res?.msg || "Could not reserve selected slot.", "error")
+                    Swal.fire(RedCap.tt("html_booking_failed"), res?.msg || RedCap.tt("html_booking_failed_text"), "error")
                 }
             } catch (err) {
-                Swal.fire("Error", err.message || "An error occurred while booking.", "error")
+                Swal.fire(RedCap.tt("html_error"), err.message || RedCap.tt("html_error_booking"), "error")
             }
             return
         }
@@ -886,7 +888,7 @@ class ActionTagScheduler {
 
         const scheduleBtn = container.querySelector(".sc-schedule-btn")
         if (scheduleBtn) {
-            scheduleBtn.innerHTML = `<i class="fas fa-edit mr-1"></i> Change Selection`
+            scheduleBtn.innerHTML = `<i class="fas fa-edit mr-1"></i> ${RedCap.tt("html_change_selection")}`
         }
 
         if (closeModalFn) closeModalFn()
