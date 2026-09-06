@@ -395,8 +395,8 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                     <div class="row mt-3 mb-2">
                         <div class="col-md-6 mb-3">
                             <div class="feature-card h-100">
-                                <h6 class="font-weight-bold text-dark mb-1"><i class="fas fa-users-cog text-primary mr-1"></i> Multi-Provider Availability</h6>
-                                Providers configure working hours, clinic locations, and recurrence rules with cross-study conflict detection.
+                                <h6 class="font-weight-bold text-dark mb-1"><i class="fas fa-users-cog text-primary mr-1"></i> Multi-Provider & Room Availability</h6>
+                                Providers configure working hours, clinic locations, and recurrence rules with cross-study conflict detection. Supports user providers as well as project-level faux providers for room booking and external clinicians.
                             </div>
                         </div>
                         <div class="col-md-6 mb-3">
@@ -588,7 +588,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 <tr>
                                     <td><code>provider</code></td>
                                     <td><em>All providers</em></td>
-                                    <td>Filter slots to specific provider username(s). Supports a single user (<code>provider="dr_smith"</code>), comma-separated users (<code>provider="user1,user2"</code>), or piped fields (<code>provider="[assigned_doctor]"</code>).</td>
+                                    <td>Filter slots to specific provider username(s) or faux provider coded value(s). Supports a single provider (<code>provider="dr_smith"</code> or <code>provider="room_1312"</code>), comma-separated providers (<code>provider="user1,user2,room_1415"</code>), or piped fields (<code>provider="[assigned_doctor]"</code> or <code>provider="[assigned_room]"</code>).</td>
                                 </tr>
                                 <tr>
                                     <td><code>location</code></td>
@@ -710,6 +710,14 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                         <strong>Unschedulable Users:</strong> Users who retain project rights or historical data but should not appear as selectable providers in scheduling filters or dropdowns.
                     </div>
                     <div class="feature-card mb-2">
+                        <strong>Faux Providers:</strong> Define non-user providers directly at the project level by entering a newline-separated list of <code>coded_value, Display Name</code> pairs (similar to the Timezones setting, e.g., <code>room_1312, Room 1312</code>). Faux providers are treated just like normal providers across all calendar views, appointment scheduling, search filters, action tags, user color palettes, and writebacks. This is especially useful for:
+                        <ul class="mb-0 mt-1 pl-3">
+                            <li><strong>Room & Facility Booking:</strong> Schedule visits against physical examination rooms, treatment bays, MRI/scanner suites, or testing rooms (e.g., "Room 1312", "Room 1415", "Suite B").</li>
+                            <li><strong>Non-REDCap Providers:</strong> Schedule visits for external clinicians, community physicians, phlebotomists, or visiting specialists who do not have REDCap user accounts.</li>
+                        </ul>
+                        <span class="text-muted small mt-1 d-block">Because faux providers do not have REDCap logins, their working hours and availability blocks are configured and managed by Calendar Admins, while all study staff and survey participants can book appointments with them.</span>
+                    </div>
+                    <div class="feature-card mb-2">
                         <strong>Trigger DET:</strong> Dispatches an HTTP POST payload to the project's Data Entry Trigger endpoint upon availability or appointment changes.
                     </div>
                     <div class="feature-card mb-2">
@@ -762,7 +770,7 @@ include APP_PATH_VIEWS . 'HomeTabs.php';
                                 <tr>
                                     <td><strong>Provider Writeback</strong></td>
                                     <td><code>text</code> or <code>dropdown</code></td>
-                                    <td>Populated with the booked provider's REDCap username.</td>
+                                    <td>Populated with the booked provider's REDCap username or faux provider coded value (e.g., <code>room_1312</code>).</td>
                                 </tr>
                                 <tr>
                                     <td><strong>Visit Window Start & End</strong></td>
@@ -1065,7 +1073,7 @@ America/Los_Angeles, Pacific Time</code></pre>
                                 <tr>
                                     <td><code>providers</code></td>
                                     <td><code>array</code></td>
-                                    <td>List of provider REDCap usernames (e.g., <code>["dr_smith"]</code>).</td>
+                                    <td>List of provider REDCap usernames or faux provider coded values (e.g., <code>["dr_smith"]</code> or <code>["room_1312"]</code>).</td>
                                 </tr>
                                 <tr>
                                     <td><code>subjects</code></td>
@@ -1237,7 +1245,7 @@ CSV_FILE = Path(<span class="code-string">"scheduling_events.csv"</span>)
                                 </tr>
                                 <tr>
                                     <td><code>provider</code></td>
-                                    <td>Filters calendar events to one or more provider usernames (comma-separated for multiples, e.g., <code>provider=dr_smith</code> or <code>provider=user1,user2</code>).</td>
+                                    <td>Filters calendar events to one or more provider usernames or faux provider codes (comma-separated for multiples, e.g., <code>provider=dr_smith</code>, <code>provider=room_1312</code>, or <code>provider=user1,room_1415</code>).</td>
                                 </tr>
                                 <tr>
                                     <td><code>location</code></td>

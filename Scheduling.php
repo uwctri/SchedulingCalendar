@@ -597,7 +597,7 @@ class Scheduling extends AbstractExternalModule
         while ($row = $apptResult->fetch_assoc())
             $bookedAppts[] = $row;
 
-        $allUsers = $this->getAllUsers();
+        $allUsers = $this->getAllUsers($project_id);
         $allLocations = $this->getLocationStructure($project_id, true);
 
         $now = date('Y-m-d H:i:s');
@@ -682,7 +682,7 @@ class Scheduling extends AbstractExternalModule
             [$project_id, $record, $visit]
         );
         if ($row = db_fetch_assoc($sql)) {
-            $allUsers = $this->getAllUsers();
+            $allUsers = $this->getAllUsers($project_id);
             $allLocations = $this->getLocationStructure($project_id, true);
 
             $dtStart = new DateTime($row["time_start"], new DateTimeZone($server_tz));
@@ -1025,6 +1025,64 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
+    Get faux providers configured for a project (coded value => display name)
+    Parsed from newline-separated list in textarea (like timezones):
+    code, Display Name
+    */
+    public function getFauxProviders($project_id = null)
+    {
+        $project_id = $project_id ?? $this->getProjectId();
+        if (empty($project_id))
+            return [];
+
+        $config = $this->getProjectSetting("faux-providers", $project_id);
+        $faux = [];
+
+        if (!empty($config) && is_string($config)) {
+            $lines = array_map('trim', explode("\n", $config));
+            foreach ($lines as $line) {
+                if (empty($line))
+                    continue;
+
+                // Parse "coded_value, Display Name" format
+                $parts = array_map('trim', explode(',', $line, 2));
+                $code = $parts[0] ?? "";
+                if ($code !== "") {
+                    $name = isset($parts[1]) && $parts[1] !== "" ? $parts[1] : $code;
+                    $faux[$code] = $name;
+                }
+            }
+        }
+
+        // Backward compatibility fallback for sub-settings if previously saved
+        if (empty($faux)) {
+            $sub = $this->getSubSettings("faux-provider-group", $project_id);
+            if (empty($sub))
+                $sub = $this->getSubSettings("faux-providers", $project_id);
+
+            if (!empty($sub)) {
+                foreach ($sub as $row) {
+                    $code = trim($row["faux-provider-code"] ?? "");
+                    $name = trim($row["faux-provider-display-name"] ?? "");
+                    if ($code !== "")
+                        $faux[$code] = $name !== "" ? $name : $code;
+                }
+            } else {
+                $codes = (array)($this->getProjectSetting("faux-provider-code", $project_id) ?? []);
+                $names = (array)($this->getProjectSetting("faux-provider-display-name", $project_id) ?? []);
+                foreach ($codes as $idx => $code) {
+                    $code = trim($code ?? "");
+                    $name = trim($names[$idx] ?? "");
+                    if ($code !== "")
+                        $faux[$code] = $name !== "" ? $name : $code;
+                }
+            }
+        }
+
+        return $faux;
+    }
+
+    /*
     Get all providers that exist in the project or any other
     */
     private function getProviders($payload = null)
@@ -1038,15 +1096,20 @@ class Scheduling extends AbstractExternalModule
 
         // Get all local users & Settings
         $project_id = $payload["pid"] ?? $this->getProjectId();
-        $localProviders = REDCap::getUsers();
-        $unschedulables = $this->getProjectSetting("unschedulable", $project_id) ?? [];
-        $admins = $this->getProjectSetting("calendar-admin", $project_id) ?? [];
+        $localProviders = (array)(REDCap::getUsers() ?? []);
+        $unschedulables = (array)($this->getProjectSetting("unschedulable", $project_id) ?? []);
+        $admins = (array)($this->getProjectSetting("calendar-admin", $project_id) ?? []);
 
-        // Get all user info for the RC instance
-        $allUsers = $this->getAllUsers();
+        // Faux providers configured for this project
+        $fauxProviders = $this->getFauxProviders($project_id);
+        $fauxCodes = array_keys($fauxProviders);
+        $localProviders = array_unique(array_merge($localProviders, $fauxCodes));
+
+        // Get all user info for the RC instance + faux providers for this project
+        $allUsers = $this->getAllUsers($project_id);
 
         // Loop over all usernames and reformat them
-        $unformatted = array_merge($globalProviders, $localProviders);
+        $unformatted = array_unique(array_merge($globalProviders, $localProviders));
         $providers = [];
         foreach ($unformatted as $username) {
             if (array_key_exists($username, $allUsers)) {
@@ -1058,7 +1121,8 @@ class Scheduling extends AbstractExternalModule
                     "name" => $name ?? $username,
                     "is_unschedulable" => in_array($username, $unschedulables),
                     "is_admin" => in_array($username, $admins),
-                    "is_local" => in_array($username, $localProviders)
+                    "is_local" => in_array($username, $localProviders),
+                    "is_faux" => in_array($username, $fauxCodes)
                 ];
             }
         }
@@ -1067,19 +1131,28 @@ class Scheduling extends AbstractExternalModule
     }
 
     /*
-    Get all users in the redcap instance
+    Get all users in the redcap instance, optionally merged with project-level faux providers
     */
-    private function getAllUsers()
+    private function getAllUsers($project_id = null)
     {
-        if ($this->allUsersCache !== null)
-            return $this->allUsersCache;
-        $users = [];
-        $noParams = [];
-        $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", $noParams);
-        while ($row = db_fetch_assoc($sql))
-            $users[$row["username"]] = $row["displayname"];
-        $this->allUsersCache = $users;
-        return $users;
+        if ($this->allUsersCache === null) {
+            $users = [];
+            $noParams = [];
+            $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", $noParams);
+            while ($row = db_fetch_assoc($sql))
+                $users[$row["username"]] = $row["displayname"];
+            $this->allUsersCache = $users;
+        }
+
+        $allUsers = $this->allUsersCache;
+        $pid = $project_id ?? $this->getProjectId();
+        if (!empty($pid)) {
+            $faux = $this->getFauxProviders($pid);
+            if (!empty($faux)) {
+                $allUsers = array_merge($allUsers, $faux);
+            }
+        }
+        return $allUsers;
     }
 
     /*
@@ -1398,7 +1471,7 @@ class Scheduling extends AbstractExternalModule
         if (empty($codes_keys) && !$allFlag)
             return $availability;
 
-        $allUsers = $this->getAllUsers();
+        $allUsers = $this->getAllUsers($project_id);
         $allLocations = $this->getLocationStructure($project_id, true);
 
         if ($timezone != "local") {
@@ -2020,7 +2093,7 @@ class Scheduling extends AbstractExternalModule
         if (empty($rows))
             return [];
 
-        $allUsers = $this->getAllUsers();
+        $allUsers = $this->getAllUsers($project_id);
 
         $allLocations = [];
         $allVisits = [];
@@ -2048,6 +2121,7 @@ class Scheduling extends AbstractExternalModule
 
         $allVisitsCache = [];
         $allLocationsCache = [];
+        $allUsersCacheByPid = [];
 
         $appt = [];
         foreach ($rows as $row) {
@@ -2056,13 +2130,16 @@ class Scheduling extends AbstractExternalModule
                 if (!isset($allVisitsCache[$pid])) {
                     $allVisitsCache[$pid] = $this->getVisits(["pid" => $pid]);
                     $allLocationsCache[$pid] = $this->getLocationStructure($pid, true);
+                    $allUsersCacheByPid[$pid] = $this->getAllUsers($pid);
                 }
                 $curVisits = $allVisitsCache[$pid];
                 $curLocations = $allLocationsCache[$pid];
+                $curUsers = $allUsersCacheByPid[$pid];
                 $recordKey = "$pid:$row[record]";
             } else {
                 $curVisits = $allVisits;
                 $curLocations = $allLocations;
+                $curUsers = $allUsers;
                 $recordKey = $row["record"];
             }
 
@@ -2085,7 +2162,7 @@ class Scheduling extends AbstractExternalModule
                 "location" => $row["location"],
                 "location_display" => $curLocations[$row["location"]]["name"] ?? $row["location"],
                 "user" => $row["user"],
-                "user_display" => $allUsers[$row["user"]] ?? $row["user"],
+                "user_display" => $curUsers[$row["user"]] ?? $row["user"],
                 "visit" => $row["visit"],
                 "visit_display" => $curVisits[$row["visit"]]["label"] ?? $row["visit"],
                 "record" => $row["record"],

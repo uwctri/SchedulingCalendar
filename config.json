@@ -167,6 +167,12 @@
             "type": "project-id"
         },
         {
+            "key": "faux-providers",
+            "name": "<b>Faux Providers:</b><br>Newline separated list of coded value and display name pairs (i.e. room_1312, Room 1312)",
+            "tt_name": "config_faux_providers",
+            "type": "textarea"
+        },
+        {
             "key": "timezones",
             "name": "<b>Timezones:</b><br>Newline seperated list of timezone-alias pairs to offer users in tzDatabase format (i.e. America/Chicago, Central)",
             "tt_name": "config_timezones",

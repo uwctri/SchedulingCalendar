@@ -7,6 +7,7 @@ The Scheduling & Availability Calendar is a Redcap EM that tracks provider avail
 ## Things to know before installing
 
 * This EM will create a new table in your database used to track provider availability and scheduled events for the module. The table can be easily removed by an administrator if you decide you don't want to use the EM.
+* **Faux Providers & Room Booking:** In addition to REDCap users, projects can configure project-level "Faux" providers with unique display names and coded values. These are treated just like normal providers, making them ideal for booking rooms (e.g., "Room 1312", "Room 1415") or scheduling external clinicians who do not have REDCap accounts.
 * There is a considerable amount of configuration and reading required to use this. Feel free to email the author or open a github issue if you have questions. The documentation link can be found on the External Modules page when the EM is enabled on a project.
 * System settings exist that allow for sharing availability across projects.
 
