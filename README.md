@@ -28,11 +28,12 @@ The core workflow is straightforward: providers (or calendar admins) set the tim
 
 See this [Docker Compose](https://github.com/123andy/redcap-docker-compose) for starting a local Redcap instance.
 
-If you don't have NPM already then check [the node guide](https://nodejs.org/en/download/package-manager) and use it to setup the latest npm version. After setup you can...
+If you don't have NPM already then checkout [NVM](https://github.com/jasongin/nvs) to easily setup and manage node on Windows. After setup you can...
 
 ```sh
 cd webpack
 npm install
 npm run build # Or 'run watch' for dev
+npm run build:prod # Minimize the build for prod load times.
 npm run publish # Build and zip for sharing. Assumes Windows WSL is setup.
 ```
