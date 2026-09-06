@@ -164,37 +164,102 @@ class Scheduling extends AbstractExternalModule
     */
     public function redcap_save_record($project_id, $record, $instrument, $event_id, $group_id = null, $survey_hash = null, $response_id = null, $repeat_instance = 1)
     {
-        if (empty($_POST['__scheduling_calendar_booking']) || !is_array($_POST['__scheduling_calendar_booking']))
+        static $isSaving = false;
+        if ($isSaving)
             return;
 
-        foreach ($_POST['__scheduling_calendar_booking'] as $fieldName => $bookingRaw) {
-            $booking = is_array($bookingRaw) ? $bookingRaw : json_decode(stripslashes($bookingRaw), true);
-            if (empty($booking) || empty($booking["visit"]) || empty($booking["start"]) || empty($booking["end"]))
-                continue;
+        // Collect all booking payloads
+        // Case 1: Single flat JSON string or array in $_POST['__scheduling_calendar_booking']
+        $bookings = [];
+        $rawBooking = $_POST['__scheduling_calendar_booking'] ?? null;
+        if (!empty($rawBooking)) {
+            if (is_string($rawBooking) && $rawBooking !== 'Array') {
+                $decoded = json_decode(stripslashes($rawBooking), true);
+                if (is_array($decoded))
+                    $bookings = $decoded;
+            } elseif (is_array($rawBooking)) {
+                $bookings = $rawBooking;
+            }
+        }
 
-            $booking["visit"] = $this->resolveVisitCode($project_id, $booking["visit"]);
+        // Case 2: Field-specific inputs named __scheduling_calendar_booking_<fieldName>
+        foreach ($_POST as $key => $val) {
+            if (str_starts_with($key, '__scheduling_calendar_booking_') && is_string($val) && $val !== 'Array') {
+                $fieldName = substr($key, strlen('__scheduling_calendar_booking_'));
+                $decoded = json_decode(stripslashes($val), true);
+                if (is_array($decoded))
+                    $bookings[$fieldName] = $decoded;
+            }
+        }
 
-            // Check if there was an existing appointment on this record + visit to replace/reschedule
-            $existingSql = $this->query(
-                "SELECT id FROM em_scheduling_calendar WHERE project_id = ? AND record = ? AND visit = ? AND record IS NOT NULL",
-                [$project_id, $record, $booking["visit"]]
-            );
-            while ($exRow = db_fetch_assoc($existingSql))
-                $this->deleteAppointments(["pid" => $project_id, "id" => $exRow["id"]]);
+        if (empty($bookings))
+            return;
 
-            // Set appointment
-            $payload = [
-                "pid" => $project_id,
-                "visits" => $booking["visit"],
-                "start" => $booking["start"],
-                "end" => $booking["end"],
-                "providers" => $booking["provider"],
-                "locations" => $booking["location"],
-                "subjects" => $record,
-                "notes" => "Scheduled via @SCHEDULING-CALENDAR on $instrument",
-                "timezone" => "local"
-            ];
-            $this->setAppointments($payload);
+        $isSaving = true;
+        try {
+            // Unset from $_POST so any subsequent writeback REDCap::saveData calls don't re-trigger booking
+            unset($_POST['__scheduling_calendar_booking']);
+            foreach (array_keys($bookings) as $fn) {
+                unset($_POST['__scheduling_calendar_booking_' . $fn]);
+            }
+
+            foreach ($bookings as $fieldName => $bookingRaw) {
+                $booking = is_array($bookingRaw) ? $bookingRaw : json_decode(stripslashes($bookingRaw), true);
+                if (empty($booking) || empty($booking["visit"]) || empty($booking["start"]) || empty($booking["end"]))
+                    continue;
+
+                $booking["visit"] = $this->resolveVisitCode($project_id, $booking["visit"]);
+
+                // Check if there was an existing appointment on this record + visit to replace/reschedule
+                $existingSql = $this->query(
+                    "SELECT id FROM em_scheduling_calendar WHERE project_id = ? AND record = ? AND visit = ? AND record IS NOT NULL",
+                    [$project_id, $record, $booking["visit"]]
+                );
+                while ($exRow = db_fetch_assoc($existingSql))
+                    $this->deleteAppointments(["pid" => $project_id, "id" => $exRow["id"]]);
+
+                // Set appointment
+                $payload = [
+                    "pid" => $project_id,
+                    "visits" => $booking["visit"],
+                    "start" => $booking["start"],
+                    "end" => $booking["end"],
+                    "providers" => $booking["provider"] ?? null,
+                    "locations" => $booking["location"] ?? null,
+                    "subjects" => $record,
+                    "notes" => "Scheduled via @SCHEDULING-CALENDAR on $instrument",
+                    "timezone" => "local"
+                ];
+                $result = $this->setAppointments($payload);
+
+                if (!empty($result["success"])) {
+                    $this->log(
+                        "Appointment Scheduled via @SCHEDULING-CALENDAR on $instrument",
+                        [
+                            "record" => $record,
+                            "visit" => $booking["visit"],
+                            "provider" => $booking["provider"] ?? null,
+                            "location" => $booking["location"] ?? null,
+                            "start" => $booking["start"],
+                            "end" => $booking["end"],
+                            "field" => $fieldName
+                        ]
+                    );
+                } else {
+                    $this->log(
+                        "Failed to schedule appointment via @SCHEDULING-CALENDAR on $instrument",
+                        [
+                            "record" => $record,
+                            "visit" => $booking["visit"],
+                            "error" => $result["msg"] ?? "Unknown scheduling error",
+                            "field" => $fieldName,
+                            "payload" => $payload
+                        ]
+                    );
+                }
+            }
+        } finally {
+            $isSaving = false;
         }
     }
 
@@ -2253,7 +2318,7 @@ class Scheduling extends AbstractExternalModule
                 "providers" => $existing["user"],
                 "locations" => $existing["location"],
                 "timezone" => "local"
-            ]);
+            ], true);
         }
 
         // Create JSON with info for restoring avail if deleted

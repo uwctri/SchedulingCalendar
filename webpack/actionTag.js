@@ -15,6 +15,24 @@ import tplPopup from "./html/actiontag_popup.html"
 import tplInline from "./html/actiontag_inline.html"
 
 class ActionTagScheduler {
+    static clearPendingBooking(form, fieldName) {
+        if (!form) return
+        const hiddenInput = form.querySelector('input[name="__scheduling_calendar_booking"]')
+        if (hiddenInput && hiddenInput.value) {
+            try {
+                const currentBookings = JSON.parse(hiddenInput.value) || {}
+                delete currentBookings[fieldName]
+                if (Object.keys(currentBookings).length > 0) {
+                    hiddenInput.value = JSON.stringify(currentBookings)
+                } else {
+                    hiddenInput.value = ""
+                }
+            } catch (e) {}
+        }
+        const fieldInput = form.querySelector(`input[name="__scheduling_calendar_booking_${fieldName}"]`)
+        if (fieldInput) fieldInput.remove()
+    }
+
     static renderLoading(message = RedCap.tt("html_loading_slots"), iconClass = "fa-2x") {
         return RedCap.ttHTML(tplLoading, {
             SPINNER_CLASS: iconClass,
@@ -253,6 +271,8 @@ class ActionTagScheduler {
                                     inputEl.value = ""
                                     inputEl.dispatchEvent(new Event("change", { bubbles: true }))
                                 }
+                                const form = inputEl.closest("form") || $.forms["form"] || $.forms[0]
+                                ActionTagScheduler.clearPendingBooking(form, fieldConfig.field_name)
                                 Swal.fire(RedCap.tt("html_cancelled"), RedCap.tt("html_cancelled_text"), "success")
                                 this.renderWidget(container, inputEl, fieldConfig, null)
                             } else {
@@ -295,6 +315,8 @@ class ActionTagScheduler {
             const btnWrap = wrapper.firstElementChild
             btnWrap.querySelector(".sc-schedule-btn")?.addEventListener("click", () => this.openModal(container, inputEl, fieldConfig, isRescheduling, oldAppt))
             btnWrap.querySelector(".sc-keep-current-btn")?.addEventListener("click", () => {
+                const form = inputEl.closest("form") || $.forms["form"] || $.forms[0]
+                ActionTagScheduler.clearPendingBooking(form, fieldConfig.field_name)
                 this.renderWidget(container, inputEl, fieldConfig, oldAppt)
             })
 
@@ -318,6 +340,8 @@ class ActionTagScheduler {
 
             if (isRescheduling && oldAppt) {
                 inlineWrap.querySelector(".sc-cancel-resched")?.addEventListener("click", () => {
+                    const form = inputEl.closest("form") || $.forms["form"] || $.forms[0]
+                    ActionTagScheduler.clearPendingBooking(form, fieldConfig.field_name)
                     this.renderWidget(container, inputEl, fieldConfig, oldAppt)
                 })
             }
@@ -861,22 +885,42 @@ class ActionTagScheduler {
         // 2. Attach hidden booking payload input to parent form
         const form = inputEl.closest("form") || $.forms["form"] || $.forms[0]
         if (form) {
-            const hiddenInputName = `__scheduling_calendar_booking[${fieldConfig.field_name}]`
-            let hiddenInput = form.querySelector(`input[name="${hiddenInputName}"]`)
+            let hiddenInput = form.querySelector('input[name="__scheduling_calendar_booking"]')
             if (!hiddenInput) {
                 hiddenInput = $.createElement("input")
                 hiddenInput.type = "hidden"
-                hiddenInput.name = hiddenInputName
+                hiddenInput.name = "__scheduling_calendar_booking"
                 form.appendChild(hiddenInput)
             }
-            hiddenInput.value = JSON.stringify({
+            let currentBookings = {}
+            try {
+                if (hiddenInput.value) {
+                    currentBookings = JSON.parse(hiddenInput.value) || {}
+                }
+            } catch (e) {
+                currentBookings = {}
+            }
+            currentBookings[fieldConfig.field_name] = {
                 visit: fieldConfig.visit,
                 start: slot.start,
                 end: slot.end,
                 provider: slot.provider,
                 location: slot.location
-            })
-            RedCap.log("Attached booking payload to form:", hiddenInputName, hiddenInput.value)
+            }
+            hiddenInput.value = JSON.stringify(currentBookings)
+
+            // Also attach field-specific flat input for redundancy
+            const fieldSpecificName = `__scheduling_calendar_booking_${fieldConfig.field_name}`
+            let fieldInput = form.querySelector(`input[name="${fieldSpecificName}"]`)
+            if (!fieldInput) {
+                fieldInput = $.createElement("input")
+                fieldInput.type = "hidden"
+                fieldInput.name = fieldSpecificName
+                form.appendChild(fieldInput)
+            }
+            fieldInput.value = JSON.stringify(currentBookings[fieldConfig.field_name])
+
+            RedCap.log("Attached booking payload to form:", hiddenInput.value)
         }
 
         // 3. Update visible badge in container
