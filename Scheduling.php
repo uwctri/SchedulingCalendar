@@ -823,7 +823,7 @@ class Scheduling extends AbstractExternalModule
                 "read" => "getProviders",
             ],
             "subject" => [
-                "read" => "getSubjectsOrDetails",
+                "read" => "getSubjects",
             ],
             "location" => [
                 "read" => "getLocations",
@@ -1087,6 +1087,9 @@ class Scheduling extends AbstractExternalModule
     */
     private function getSubjects($payload)
     {
+        if (!empty($payload["record"]))
+            return $this->getSubjectDetails($payload);
+
         $project_id = $payload["pid"];
         $nameField = $this->getProjectSetting("name-field", $project_id);
         $subjects = [];
@@ -1227,54 +1230,6 @@ class Scheduling extends AbstractExternalModule
         }
 
         return $details;
-    }
-
-    /*
-    Routes subject read requests: single subject details if 'record' specified, otherwise all subjects
-    */
-    private function getSubjectsOrDetails($payload)
-    {
-        if (!empty($payload["record"]))
-            return $this->getSubjectDetails($payload);
-        return $this->getSubjects($payload);
-    }
-
-    private function getGlobalSubjects($providers)
-    {
-        // Pull all info for the given provider
-        // Currently we only ever have one provider
-        if (!is_array($providers))
-            $providers = [$providers];
-        if (count($providers) == 0)
-            return [];
-        $query = $this->createQuery();
-        $query->add("SELECT * FROM em_scheduling_calendar WHERE record IS NOT NULL");
-        $query->add("AND")->addInClause("user", $providers);
-        $sql = $query->execute();
-
-        $data = [];
-        $subjects = [];
-        while ($row = db_fetch_assoc($sql))
-            $data[$row["project_id"]][$row["record"]] = $row["location"];
-        foreach ($data as $pid => $records) {
-            $nameField = $this->getProjectSetting("name-field", $pid);
-            $projectData = $this->getSingleEventFields([$nameField], array_keys($records), $pid);
-            foreach ($projectData as $record_id => $record_data) {
-                $loc = $records[$record_id];
-                $name = $record_data[$nameField];
-                $subjects["$pid:$record_id"] = [
-                    "value" => $record_id,
-                    "label" => $name ?: "$record_id",
-                    "location" => $loc,
-                    "name" => $name,
-                    "record_id" => $record_id,
-                    "project_id" => $pid,
-                    "is_withdrawn" => false // Always false for My Sched page
-                ];
-            }
-        }
-
-        return $subjects;
     }
 
     private function getLocations($payload = null)
