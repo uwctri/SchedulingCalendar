@@ -18,6 +18,7 @@ class RedCap {
     static project_name = ExternalModules.UWMadison.Scheduling.project_name
     static email = ExternalModules.UWMadison.Scheduling.email
     static timezones = ExternalModules.UWMadison.Scheduling.timezones
+    static initialData = ExternalModules.UWMadison.Scheduling.initialData
     static btn_color = $.getElementById("content") ? getComputedStyle($.getElementById("content")).getPropertyValue("--redcap-btn-color") : ""
     static tt = (key, ...args) => ExternalModules.UWMadison.Scheduling.tt(key, ...args) // Redcap EM translate func
 

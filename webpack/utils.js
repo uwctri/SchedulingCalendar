@@ -83,12 +83,12 @@ const getSelectedAvailability = (selectionInfo) => {
 }
 
 export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) => {
-    const subjectData = subject ? API.cache.subjects.data[subject] : null
-    API.visits().then(visitData => {
+    const detailsPromise = subject ? API.subjectDetails(subject) : Promise.resolve(null)
+    Promise.all([detailsPromise, API.visits()]).then(([subjectData, visitData]) => {
         if (!stillOpenFn()) return
         const select = $.getElementById(el)
         for (const k in visitData) {
-            if (subject && subjectData && (subjectData.visits[k].scheduled || !subjectData.visits[k].branching_logic))
+            if (subject && subjectData && subjectData.visits && subjectData.visits[k] && (subjectData.visits[k].scheduled || !subjectData.visits[k].branching_logic))
                 continue
             let option = $.createElement("option")
             option.value = visitData[k].value

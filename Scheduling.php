@@ -14,6 +14,7 @@ class Scheduling extends AbstractExternalModule
     private $schema = null; // API Schema
     private $visitCache = []; // Cache for visit data
     private $locationCache = []; // Cache for location data
+    private $allUsersCache = null; // Cache for user list
 
     /*
     Create the core scheduling and availability table on module enable / upgrade
@@ -822,7 +823,7 @@ class Scheduling extends AbstractExternalModule
                 "read" => "getProviders",
             ],
             "subject" => [
-                "read" => "getSubjects",
+                "read" => "getSubjectsOrDetails",
             ],
             "location" => [
                 "read" => "getLocations",
@@ -1036,9 +1037,10 @@ class Scheduling extends AbstractExternalModule
             $globalProviders[] = $row["user"];
 
         // Get all local users & Settings
-        $localProviders = (array)(REDCap::getUsers() ?? []);
-        $unschedulables = (array)($this->getProjectSetting("unschedulable") ?? []);
-        $admins = (array)($this->getProjectSetting("calendar-admin") ?? []);
+        $project_id = $payload["pid"] ?? $this->getProjectId();
+        $localProviders = REDCap::getUsers();
+        $unschedulables = $this->getProjectSetting("unschedulable", $project_id) ?? [];
+        $admins = $this->getProjectSetting("calendar-admin", $project_id) ?? [];
 
         // Get all user info for the RC instance
         $allUsers = $this->getAllUsers();
@@ -1069,21 +1071,24 @@ class Scheduling extends AbstractExternalModule
     */
     private function getAllUsers()
     {
+        if ($this->allUsersCache !== null)
+            return $this->allUsersCache;
         $users = [];
         $noParams = [];
         $sql = $this->query("SELECT username, CONCAT(user_firstname, ' ' ,user_lastname) AS displayname FROM redcap_user_information", $noParams);
         while ($row = db_fetch_assoc($sql))
             $users[$row["username"]] = $row["displayname"];
+        $this->allUsersCache = $users;
         return $users;
     }
 
     /*
-    Get all subjects that exist in the current project
+    Get all subjects that exist in the current project (fast, lightweight for search bar)
     */
     private function getSubjects($payload)
     {
         $project_id = $payload["pid"];
-        $nameField = $this->getProjectSetting("name-field");
+        $nameField = $this->getProjectSetting("name-field", $project_id);
         $subjects = [];
 
         if (empty($nameField))
@@ -1100,10 +1105,6 @@ class Scheduling extends AbstractExternalModule
             $locationField = null;
         }
 
-        // Get all data we need to pull together
-        $visitSettings = $this->getVisits($payload, true);
-        $blFields = $this->getProjectSetting("visit-branch-logic-field");
-        $allData = REDCap::getData($project_id, "array", null, array_merge($blFields, [$visitSettings["rangeStart"], $visitSettings["rangeEnd"]]));
         $withdrawField = $this->getProjectSetting("withdraw-field", $project_id);
         $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField], null, $project_id);
 
@@ -1111,7 +1112,7 @@ class Scheduling extends AbstractExternalModule
         foreach ($data as $record_id => $recordData) {
             $name = htmlspecialchars_decode(htmlspecialchars_decode($recordData[$nameField] ?? '')); # We are forced to double encode by Vanderbilt
             $loc = $recordData[$locationField] ?? $locationStatic;
-            $withdraw = boolval($recordData[$withdrawField]);
+            $withdraw = boolval($recordData[$withdrawField] ?? false);
             $subjects[$record_id] = [
                 "value" => $record_id,
                 "label" => $name ?: "$record_id",
@@ -1120,49 +1121,86 @@ class Scheduling extends AbstractExternalModule
                 "record_id" => $record_id,
                 "is_withdrawn" => $withdraw,
                 "project_id" => $project_id,
-                "summary_fields" => [],
-                "visits" => [
-                    // "visit_code" = [
-                    //     "branching_logic" => true,
-                    //     "scheduled" => [],
-                    //     "range" => []
-                    // ];
-                ]
             ];
+        }
 
+        return $subjects;
+    }
 
-            // Do Branching logic evaluation for every record
-            $blData = $blFields ? $allData : [];
-            foreach ($visitSettings["visits"] as $visit => $vSet) {
-                $blValue = $vSet["blValue"];
-                $blEvent = $vSet["blEvent"];
-                $blField = $vSet["blField"];
-                $subjects[$record_id]["visits"][$visit]["branching_logic"] = true;
-                $subjects[$record_id]["visits"][$visit]["range"] = [];
-                if ($blData && $blEvent && $blField) {
-                    $not = (strlen($blValue) > 0) && ($blValue[0] == "!");
-                    $v = $blData[$record_id][$blEvent][$blField];
-                    $subjects[$record_id]["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
-                }
-                if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
-                    $rangeStart = $allData[$record_id][$vSet["link"]][$visitSettings["rangeStart"]];
-                    $rangeEnd = $allData[$record_id][$vSet["link"]][$visitSettings["rangeEnd"]];
-                    $subjects[$record_id]["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
-                }
+    /*
+    Get detailed information for a single subject: branching logic, scheduled visits, summary fields
+    */
+    private function getSubjectDetails($payload)
+    {
+        $project_id = $payload["pid"];
+        $record_id = $payload["record"] ?? $payload["subject"] ?? null;
+        if (empty($record_id)) {
+            return [];
+        }
+
+        $nameField = $this->getProjectSetting("name-field", $project_id);
+        $locDefault = $this->getProjectSetting("location-default", $project_id);
+        $locationField = $this->getProjectSetting("location-field", $project_id);
+        $locationStatic = "";
+        if ($locDefault == "static") {
+            $locationField = null;
+            $locationStatic = $this->getProjectSetting("location-static", $project_id);
+        } elseif ($locDefault == "blank" || empty($locDefault)) {
+            $locationField = null;
+        }
+        $withdrawField = $this->getProjectSetting("withdraw-field", $project_id);
+
+        $visitSettings = $this->getVisits($payload, true);
+        $blFields = (array)($this->getProjectSetting("visit-branch-logic-field", $project_id) ?? []);
+        $allData = REDCap::getData($project_id, "array", [$record_id], array_merge($blFields, array_filter([$visitSettings["rangeStart"] ?? null, $visitSettings["rangeEnd"] ?? null])));
+        $data = $this->getSingleEventFields([$nameField, $locationField, $withdrawField], [$record_id], $project_id);
+
+        $recordData = $data[$record_id] ?? [];
+        $name = htmlspecialchars_decode(htmlspecialchars_decode($recordData[$nameField] ?? ''));
+        $loc = $recordData[$locationField] ?? $locationStatic;
+        $withdraw = boolval($recordData[$withdrawField] ?? false);
+
+        $details = [
+            "value" => $record_id,
+            "label" => $name ?: "$record_id",
+            "location" => $loc,
+            "name" => $name,
+            "record_id" => $record_id,
+            "is_withdrawn" => $withdraw,
+            "project_id" => $project_id,
+            "summary_fields" => [],
+            "visits" => []
+        ];
+
+        // Evaluate Branching logic for this single record
+        $blData = $blFields ? $allData : [];
+        foreach ($visitSettings["visits"] as $visit => $vSet) {
+            $blValue = $vSet["blValue"];
+            $blEvent = $vSet["blEvent"];
+            $blField = $vSet["blField"];
+            $details["visits"][$visit]["branching_logic"] = true;
+            $details["visits"][$visit]["range"] = [];
+            if ($blData && $blEvent && $blField) {
+                $not = (strlen($blValue) > 0) && ($blValue[0] == "!");
+                $v = $blData[$record_id][$blEvent][$blField] ?? null;
+                $details["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
+            }
+            if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
+                $rangeStart = $allData[$record_id][$vSet["link"]][$visitSettings["rangeStart"]] ?? null;
+                $rangeEnd = $allData[$record_id][$vSet["link"]][$visitSettings["rangeEnd"]] ?? null;
+                $details["visits"][$visit]["range"] = [$rangeStart, $rangeEnd];
             }
         }
 
-        // Perform a second query to get all scheduled visits for the subjects
+        // Query scheduled visits for this single record
         $timezone = $payload["timezone"] ?? "local";
         $server_tz = date_default_timezone_get();
         $timezone = $timezone == $server_tz ? "local" : $timezone;
 
         $query = $this->createQuery();
-        $query->add("SELECT record, visit, time_start from em_scheduling_calendar WHERE project_id = ?", $project_id);
-        $query->add("AND")->addInClause("record", array_keys($subjects));
+        $query->add("SELECT record, visit, time_start FROM em_scheduling_calendar WHERE project_id = ? AND record = ?", [$project_id, $record_id]);
         $result = $query->execute();
         while ($row = $result->fetch_assoc()) {
-            $record = $row["record"];
             $visit = $row["visit"];
             $start = $row["time_start"];
             if ($timezone != "local") {
@@ -1170,25 +1208,35 @@ class Scheduling extends AbstractExternalModule
                 $dtStart->setTimezone(new DateTimeZone($timezone));
                 $start = $dtStart->format('Y-m-d H:i:s');
             }
-            $subjects[$record]["visits"][$visit]["scheduled"][] = $start;
+            $details["visits"][$visit]["scheduled"][] = $start;
         }
 
-        // Check if any exta info is on the subject summary (3rd query)
-        $extraFields = $this->getProjectSetting("ss-field");
+        // Summary fields for this single record
+        $extraFields = $this->getProjectSetting("ss-field", $project_id);
         if (!empty($extraFields)) {
-            $dd = Redcap::getDataDictionary($project_id, 'array', false, $extraFields);
-            $eData = $this->getSingleEventFields($extraFields, null, $project_id);
-            foreach ($eData as $record => $recordData) {
-                foreach ($recordData as $field => $val) {
-                    $subjects[$record]["summary_fields"][$field] = [
+            $dd = REDCap::getDataDictionary($project_id, 'array', false, $extraFields);
+            $eData = $this->getSingleEventFields($extraFields, [$record_id], $project_id);
+            if (isset($eData[$record_id])) {
+                foreach ($eData[$record_id] as $field => $val) {
+                    $details["summary_fields"][$field] = [
                         "value" => $val,
-                        "label" => $dd[$field]["field_label"]
+                        "label" => $dd[$field]["field_label"] ?? $field
                     ];
                 }
             }
         }
 
-        return $subjects;
+        return $details;
+    }
+
+    /*
+    Routes subject read requests: single subject details if 'record' specified, otherwise all subjects
+    */
+    private function getSubjectsOrDetails($payload)
+    {
+        if (!empty($payload["record"]))
+            return $this->getSubjectDetails($payload);
+        return $this->getSubjects($payload);
     }
 
     private function getGlobalSubjects($providers)
@@ -2403,9 +2451,20 @@ class Scheduling extends AbstractExternalModule
         ];
     }
 
-    private function getUserMetadata($payload)
+    public function getInitialData($project_id)
     {
-        $meta = $this->getProjectSetting("user-metadata");
+        return [
+            "metadata" => $this->getUserMetadata(["pid" => $project_id]),
+            "providers" => $this->getProviders(["pid" => $project_id]),
+            "locations" => $this->getLocationStructure($project_id),
+            "visits" => $this->getVisits(["pid" => $project_id]),
+        ];
+    }
+
+    private function getUserMetadata($payload = [])
+    {
+        $project_id = $payload["pid"] ?? $this->getProjectId();
+        $meta = $this->getProjectSetting("user-metadata", $project_id);
         $meta = empty($meta) ? "{}" : $meta;
         return [
             "msg" => "User metadata retrieved",

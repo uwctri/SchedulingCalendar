@@ -24,7 +24,7 @@ class Summary {
     static update() {
         if (!Summary.isOpen()) return
         Summary.close()
-        API.cache.subjects.expire = null
+        API.expireSubjectDetailsCache()
         Summary.open()
     }
 
@@ -57,19 +57,19 @@ class Summary {
             }
         }
 
-        Promise.all([API.subjects(), API.visits()]).then(([subjectsData, visitData]) => {
-            const subjectData = subjectsData[subject]
-            nameEl.innerHTML = subjectData.name
+        Promise.all([API.subjectDetails(subject), API.visits()]).then(([subjectData, visitData]) => {
+            if (!subjectData) return
+            nameEl.innerHTML = subjectData.name || subjectData.label || subject
             for (const field in subjectData.summary_fields) {
                 const sf = subjectData.summary_fields[field]
                 const div = $.createElement("div")
                 div.classList.add("subjectExtraInfo")
-                div.innerText = `${sf.label}: ${sf.value.trim()}`
+                div.innerText = `${sf.label}: ${(sf.value || "").trim()}`
                 nameEl.parentNode.append(div)
             }
 
             for (const v in visitData) {
-                const vConfig = subjectData.visits[v]
+                const vConfig = subjectData.visits?.[v]
                 if (!vConfig || !vConfig.branching_logic)
                     continue
                 let clone = template.cloneNode(true)

@@ -6,12 +6,14 @@ $module->initializeJavascriptModuleObject();
 $module->tt_transferToJavascriptModuleObject();
 $jsObj = $module->getJavascriptModuleObjectName();
 $index = $module->getUrl('index.php');
+$project_id = $_GET['pid'];
 ?>
 <script>
     <?= $jsObj; ?>.project_name = <?= json_encode($module->getProjectName()); ?>;
     <?= $jsObj; ?>.email = <?= json_encode($module->getContactEmail()); ?>;
-    <?= $jsObj; ?>.timezones = <?= $module->getTimeZones(); ?>;
+    <?= $jsObj; ?>.timezones = <?= $module->getTimeZones(); ?> > ;
     <?= $jsObj; ?>.user = <?= json_encode($module->currentUser()); ?>;
+    <?= $jsObj; ?>.initialData = <?= json_encode($module->getInitialData($project_id)); ?>;
 </script>
 <link rel="stylesheet" href="<?= $module->getUrl('style.css'); ?>">
 <script src="<?= $module->getUrl('index.js'); ?>" defer></script>

@@ -58,6 +58,10 @@ class API {
             promise: null,
             interval: 10
         },
+        subjectDetails: {
+            stor: {},
+            interval: 10
+        },
         availability: {
             stor: {
                 "hash": {
@@ -90,6 +94,7 @@ class API {
     static futureTimestamp(minutes) { return DateTime.now().plus({ "minutes": minutes }).toISO() }
     static expireAvailabilityCache() { API.cache.availability.stor = {} }
     static expireAppointmentsCache() { API.cache.appointments.stor = {} }
+    static expireSubjectDetailsCache() { API.cache.subjectDetails.stor = {} }
     static requiredKeys(obj) {
         let keyOptions = schema[obj.resource][obj.crud]
         for (const keySet of keyOptions)
@@ -168,6 +173,34 @@ class API {
             return cache.promise
         const promise = API.post(data)
         return await API.updateCache(promise, cache)
+    }
+
+    static async subjectDetails(record) {
+        if (!record) return null
+
+        const hash = String(record)
+        let cache = API.cache.subjectDetails.stor[hash]
+        if (cache && cache.expire > API.timestamp())
+            return cache.data
+        if (cache && cache.promise)
+            return cache.promise
+
+        const data = {
+            "crud": CRUD.Read,
+            "resource": Resource.Subject,
+            "record": record,
+            "timezone": Page.tz || "local",
+        }
+
+        const promise = API.post(data)
+        API.cache.subjectDetails.stor[hash] = { promise: promise }
+        const response = await promise
+        API.cache.subjectDetails.stor[hash] = {
+            data: response,
+            expire: API.futureTimestamp(API.cache.subjectDetails.interval),
+            promise: null,
+        }
+        return response
     }
 
     static async locations() {
@@ -320,6 +353,7 @@ class API {
         API.requiredKeys(data)
         API.expireAvailabilityCache()
         API.expireAppointmentsCache()
+        API.expireSubjectDetailsCache()
         return await API.post(data)
     }
 
@@ -335,6 +369,7 @@ class API {
         API.requiredKeys(data)
         API.expireAvailabilityCache()
         API.expireAppointmentsCache()
+        API.expireSubjectDetailsCache()
         return await API.post(data)
     }
 
@@ -350,6 +385,7 @@ class API {
         API.requiredKeys(data)
         API.expireAvailabilityCache()
         API.expireAppointmentsCache()
+        API.expireSubjectDetailsCache()
         return await API.post(data)
     }
 
@@ -390,8 +426,10 @@ class API {
         const crud = payload.crud
         const reso = payload.resource
 
-        if ([CRUD.Delete, CRUD.Create].includes(crud) && reso == Resource.Appointment)
+        if ([CRUD.Delete, CRUD.Create].includes(crud) && reso == Resource.Appointment) {
             API.expireAppointmentsCache()
+            API.expireSubjectDetailsCache()
+        }
         if ([CRUD.Delete, CRUD.Create].includes(crud) && reso == Resource.Availability)
             API.expireAvailabilityCache()
 
@@ -446,6 +484,29 @@ class API {
         return result
     }
 
+    static initInitialData() {
+        const initial = RedCap.initialData
+        if (!initial) return
+        if (initial.metadata) {
+            API.cache.metadata.data = initial.metadata
+            API.cache.metadata.expire = API.futureTimestamp(API.cache.metadata.interval)
+        }
+        if (initial.providers) {
+            API.cache.providers.data = initial.providers
+            API.cache.providers.expire = API.futureTimestamp(API.cache.providers.interval)
+        }
+        if (initial.locations) {
+            API.cache.locations.data = initial.locations
+            API.cache.locations.expire = API.futureTimestamp(API.cache.locations.interval)
+        }
+        if (initial.visits) {
+            API.cache.visits.data = initial.visits
+            API.cache.visits.expire = API.futureTimestamp(API.cache.visits.interval)
+        }
+    }
+
 }
+
+API.initInitialData()
 
 export default API
