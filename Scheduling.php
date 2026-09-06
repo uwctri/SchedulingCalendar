@@ -433,7 +433,7 @@ class Scheduling extends AbstractExternalModule
             "fields" => $taggedFields,
             "timezones" => json_decode($this->getTimeZones($project_id), true)
         ];
-        $configJson = json_encode($actionTagConfig);
+        $configJson = json_encode($this->escape($actionTagConfig));
         $scriptUrl = $this->getUrl('actionTag.js');
         $styleUrl = $this->getUrl('actiontag.css');
 
