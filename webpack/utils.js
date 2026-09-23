@@ -82,13 +82,20 @@ const getSelectedAvailability = (selectionInfo) => {
     }, true) : Promise.resolve([])
 }
 
+let visitDropdownRequestId = 0
+
 export const buildVisitDropdown = (el, subject, defaultSelection, stillOpenFn) => {
+    const reqId = ++visitDropdownRequestId
     const detailsPromise = subject ? API.subjectDetails(subject) : Promise.resolve(null)
     Promise.all([detailsPromise, API.visits()]).then(([subjectData, visitData]) => {
-        if (!stillOpenFn()) return
+        if (!stillOpenFn() || reqId !== visitDropdownRequestId) return
         const select = $.getElementById(el)
+        if (!select) return
+        while (select.options.length > 1) {
+            select.remove(1)
+        }
         for (const k in visitData) {
-            if (subject && subjectData && subjectData.visits && subjectData.visits[k] && (subjectData.visits[k].scheduled || !subjectData.visits[k].branching_logic))
+            if (subject && subjectData && subjectData.visits && subjectData.visits[k] && (subjectData.visits[k].scheduled?.length > 0 || !subjectData.visits[k].branching_logic))
                 continue
             let option = $.createElement("option")
             option.value = visitData[k].value
@@ -116,9 +123,11 @@ export const buildSubjectDropdown = (el, stillOpenFn) => {
         // If one subject is in the filter list then default to that subject
         const selSub = SearchBar.getPickedSubjects()
         if (selSub.length == 1) {
-            const el = $.getElementById("aPopSubject")
-            el.value = selSub[0].customProperties.record_id
-            el.dispatchEvent(new Event('change'));
+            const subId = selSub[0].value || selSub[0].customProperties?.record_id
+            if (subId) {
+                select.value = subId
+                select.dispatchEvent(new Event('change'));
+            }
         }
     })
 }

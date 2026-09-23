@@ -1324,7 +1324,8 @@ class Scheduling extends AbstractExternalModule
             if ($blData && $blEvent && $blField) {
                 $not = (strlen($blValue) > 0) && ($blValue[0] == "!");
                 $v = $blData[$record_id][$blEvent][$blField] ?? null;
-                $details["visits"][$visit]["branching_logic"] = ($v == ($not ? substr($blValue, 1) : $blValue));
+                $targetVal = $not ? substr($blValue, 1) : $blValue;
+                $details["visits"][$visit]["branching_logic"] = $not ? ($v != $targetVal) : ($v == $targetVal);
             }
             if ($allData && $vSet["link"] && $visitSettings["rangeStart"] && $visitSettings["rangeEnd"]) {
                 $rangeStart = $allData[$record_id][$vSet["link"]][$visitSettings["rangeStart"]] ?? null;

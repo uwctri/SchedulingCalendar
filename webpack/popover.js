@@ -9,6 +9,7 @@ import Calendar from "./calendar"
 import Page from "./page"
 import Summary from "./summary"
 import UserConfig from "./userConfig"
+import SearchBar from "./searchBar"
 import { buildGroupDropdown, buildLocationDropdown, buildProviderDropdown, buildVisitDropdown, buildSubjectDropdown, setProviderCurrentUser } from "./utils"
 
 const closeBtn = `<span class="close" id="PopClose">&times;</span>`
@@ -176,7 +177,10 @@ class PopOver {
         endTime.value = DateTime.fromISO(info.endStr).toFormat(PopOver.getTimeFormat())
         IMask(endTime, PopOver.getTimeMask())
 
-        buildVisitDropdown("aPopVisit", null, null, PopOver.isOpen)
+        const pickedSubjects = SearchBar.getPickedSubjects()
+        const initialSubject = pickedSubjects.length === 1 ? (pickedSubjects[0].value || pickedSubjects[0].customProperties?.record_id) : null
+
+        buildVisitDropdown("aPopVisit", initialSubject, null, PopOver.isOpen)
         buildLocationDropdown("aPopLocation", PopOver.isOpen, info)
         buildProviderDropdown("aPopProvider", PopOver.isOpen, info)
         buildSubjectDropdown("aPopSubject", PopOver.isOpen)
