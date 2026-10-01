@@ -419,6 +419,10 @@ class Calendar {
                 Calendar[isLoading ? "showLoading" : "hideLoading"]()
             },
             eventResize: (info) => {
+                if (info.event.extendedProps?.is_appointment) {
+                    info.revert()
+                    return
+                }
                 API.updateAvailability({
                     id: info.el.getAttribute("data-internal-id"),
                     start: DateTime.fromJSDate(info.event.start).toFormat("yyyy-MM-dd HH:mm:ss"),
@@ -428,6 +432,10 @@ class Calendar {
                 })
             },
             eventDrop: (info) => {
+                if (info.event.extendedProps?.is_appointment) {
+                    info.revert()
+                    return
+                }
                 API.updateAvailability({
                     id: info.el.getAttribute("data-internal-id"),
                     start: DateTime.fromJSDate(info.event.start).toFormat("yyyy-MM-dd HH:mm:ss"),
@@ -502,6 +510,11 @@ class Calendar {
                     const color = Calendar._userColors[user] || Calendar._metadata[user]?.color || ColorConfig.getRandomAccessableColor()
                     calEvent.color = color
                     Calendar._userColors[user] = color
+                    if (calEvent.is_appointment) {
+                        calEvent.editable = false
+                        calEvent.startEditable = false
+                        calEvent.durationEditable = false
+                    }
                     return calEvent
                 }
 

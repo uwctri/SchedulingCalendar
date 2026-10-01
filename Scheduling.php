@@ -561,6 +561,19 @@ class Scheduling extends AbstractExternalModule
         if ($action === "book-appointment") {
             $payload["pid"] = $project_id;
             $payload["subjects"] = $record;
+            $visit = $payload["visits"] ?? ($payload["visit"] ?? null);
+            if (!empty($visit)) {
+                $visit = $this->resolveVisitCode($project_id, $visit);
+                $payload["visits"] = $visit;
+                // Delete existing appointment for this record and visit if rescheduling
+                $existingSql = $this->query(
+                    "SELECT id FROM em_scheduling_calendar WHERE project_id = ? AND record = ? AND visit = ? AND record IS NOT NULL",
+                    [$project_id, $record, $visit]
+                );
+                while ($exRow = db_fetch_assoc($existingSql)) {
+                    $this->deleteAppointments(["pid" => $project_id, "id" => $exRow["id"]]);
+                }
+            }
             return $this->setAppointments($payload);
         }
 
@@ -2286,6 +2299,20 @@ class Scheduling extends AbstractExternalModule
             $payload["timezone"] = "local";
         }
 
+        // Check for collision with existing appointment for this provider in this project
+        $conflictSql = $this->query(
+            "SELECT id FROM em_scheduling_calendar 
+             WHERE project_id = ? AND user = ? AND record IS NOT NULL 
+               AND time_start < ? AND time_end > ? LIMIT 1",
+            [$project_id, $provider, $end, $start]
+        );
+        if (db_num_rows($conflictSql) > 0) {
+            return [
+                "msg" => "Unable to schedule appointment: Provider already has an appointment at this time",
+                "success" => false
+            ];
+        }
+
         // Search for availability that overflows the start/end
         $payload["allow_overflow"] = true;
         $existing = $this->getAvailability($payload);
@@ -2390,32 +2417,107 @@ class Scheduling extends AbstractExternalModule
         $location = $payload["locations"];
 
         // Grab needed info
-        $sql = $this->query("SELECT visit, user, record, location FROM em_scheduling_calendar WHERE id = ? ", [$id]);
+        $sql = $this->query("SELECT visit, user, record, location, time_start, time_end FROM em_scheduling_calendar WHERE id = ? ", [$id]);
         $row = db_fetch_assoc($sql);
+        if (!$row) {
+            return [
+                "msg" => "Appointment not found",
+                "success" => false
+            ];
+        }
         $oldProvider = $row["user"];
         $oldLocation = $row["location"];
         $record = $row["record"];
         $visit = $row["visit"];
+        $start = $row["time_start"];
+        $end = $row["time_end"];
 
-        // If provider is changed, restore old provider's Availability
-        // and update the writeback if any is set
+        $newMetaRestore = null;
+
+        // If provider is changed, check for conflict and handle availability
         if ($provider != $oldProvider) {
+            // Check for collision with existing appointment for the new provider in this project
+            $conflictSql = $this->query(
+                "SELECT id FROM em_scheduling_calendar 
+                 WHERE project_id = ? AND user = ? AND record IS NOT NULL AND id != ? 
+                   AND time_start < ? AND time_end > ? LIMIT 1",
+                [$project_id, $provider, $id, $end, $start]
+            );
+            if (db_num_rows($conflictSql) > 0) {
+                return [
+                    "msg" => "Cannot reassign: Provider already has an appointment at this time",
+                    "success" => false
+                ];
+            }
+
+            // Restore old provider's Availability
             $this->restoreAvailability($id);
             $vShared = $this->getVisits($payload, true);
-            $vSet = $vShared["visits"][$visit];
-            if ($vShared["wbUser"] && $vSet["link"])
+            $vSet = $vShared["visits"][$visit] ?? null;
+            if ($vShared["wbUser"] && $vSet && $vSet["link"])
                 REDCap::saveData($project_id, "array", [$record => [$vSet["link"] => [$vShared["wbUser"] => $provider]]]);
+
+            // If the new provider has matching availability covering this time, consume it
+            $availPayload = [
+                "pid" => $project_id,
+                "providers" => [$provider],
+                "locations" => !empty($location) ? [$location] : [],
+                "start" => $start,
+                "end" => $end,
+                "timezone" => "local",
+                "allow_overflow" => true,
+                "all_availability" => true
+            ];
+            $newAvail = $this->getAvailability($availPayload);
+            if (!empty($newAvail)) {
+                $targetSlot = $newAvail[0];
+                $slotId = $targetSlot["internal_id"];
+                $exStart = $targetSlot["start"];
+                $exEnd = $targetSlot["end"];
+
+                if (($exStart == $start) && ($exEnd == $end)) {
+                    $this->deleteEntry($slotId);
+                } elseif (($exStart == $start) || ($exEnd == $end)) {
+                    $newStart = ($exStart == $start) ? $end : $exStart;
+                    $newEnd = ($exEnd == $end) ? $start : $exEnd;
+                    $this->modifyAvailability($slotId, $newStart, $newEnd);
+                } else {
+                    $this->modifyAvailability($slotId, $exStart, $start);
+                    $this->setAvailability([
+                        "pid" => $project_id,
+                        "start" => $end,
+                        "end" => $exEnd,
+                        "group" => $targetSlot["availability_code"],
+                        "providers" => $targetSlot["user"],
+                        "locations" => $targetSlot["location"],
+                        "timezone" => "local"
+                    ], true);
+                }
+
+                $newMetaRestore = [
+                    "pid" => $project_id,
+                    "group" => $targetSlot["availability_code"],
+                    "providers" => $targetSlot["user"],
+                    "locations" => $targetSlot["location"]
+                ];
+            }
         }
 
-        // Preserve and update metadata restore parameters for updated provider/location
+        // Preserve and update metadata restore parameters
         $meta = $this->getRowMetadata($id);
-        $metaJson = null;
-        if (!empty($meta["restore"])) {
-            $meta["restore"]["providers"] = $provider;
-            $meta["restore"]["locations"] = $location;
-            unset($meta["start"], $meta["end"]);
-            $metaJson = json_encode($meta);
+        if ($provider != $oldProvider) {
+            if (!empty($newMetaRestore)) {
+                $meta["restore"] = $newMetaRestore;
+            } else {
+                unset($meta["restore"]);
+            }
+        } else {
+            if (!empty($meta["restore"])) {
+                $meta["restore"]["locations"] = $location;
+            }
         }
+        unset($meta["start"], $meta["end"]);
+        $metaJson = !empty($meta) ? json_encode($meta) : null;
 
         // Do the update
         $this->query(

@@ -27,7 +27,8 @@ import template from './html/modify_appointment.html'
 import RedCap from './redcap'
 import Summary from './summary'
 import { goToRecord } from './page'
-import { buildLocationDropdown, buildProviderDropdown, savingAnimation } from "./utils"
+import { DateTime } from 'luxon'
+import { buildLocationDropdown, buildProviderDropdown, buildProviderDropdownWithBusy, savingAnimation } from "./utils"
 
 const html = RedCap.ttHTML(template)
 const swalDenyColor = "#dc3741"
@@ -143,27 +144,40 @@ class ContextMenu {
             didOpen: () => {
                 $.getElementById(`aPopText${title}`).classList.remove('hidden')
                 $.getElementById(`aPop${title}`).classList.remove('hidden')
-                let _ = {
-                    "Provider": buildProviderDropdown,
-                    "Location": buildLocationDropdown
-                }[title](`aPop${title}`, Swal.isVisible, false)
+                if (title === "Provider" && fcEvent && fcEvent.start && fcEvent.end) {
+                    const startStr = DateTime.fromJSDate(fcEvent.start).toFormat("yyyy-MM-dd HH:mm:ss")
+                    const endStr = DateTime.fromJSDate(fcEvent.end).toFormat("yyyy-MM-dd HH:mm:ss")
+                    buildProviderDropdownWithBusy(`aPop${title}`, Swal.isVisible, startStr, endStr, id)
+                } else {
+                    let _ = {
+                        "Provider": buildProviderDropdown,
+                        "Location": buildLocationDropdown
+                    }[title](`aPop${title}`, Swal.isVisible, false)
+                }
             },
             preConfirm: () => {
                 const btnEl = "swal2-confirm"
                 modalUser = $.getElementById("aPopProvider").value
                 modalLoc = $.getElementById("aPopLocation").value
 
-                API.updateAppointments({
+                savingAnimation(btnEl)
+
+                return API.updateAppointments({
                     id: id,
                     providers: modalUser || fcEvent.extendedProps.user,
                     locations: modalLoc || fcEvent.extendedProps.location,
                 }).then(data => {
+                    if (data && data.success === false) {
+                        Swal.showValidationMessage(data.msg || "Failed to update appointment")
+                        return false
+                    }
                     Calendar.refresh()
+                    Swal.close()
+                    return true
+                }).catch(err => {
+                    Swal.showValidationMessage(err.message || "An error occurred")
+                    return false
                 })
-
-                savingAnimation(btnEl)
-                setTimeout(Swal.close, 2000)
-                return false
             }
         })
     }

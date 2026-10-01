@@ -71,6 +71,43 @@ export const buildProviderDropdown = (el, stillOpenFn, selectionInfo = null) => 
     })
 }
 
+export const buildProviderDropdownWithBusy = (el, stillOpenFn, startStr, endStr, excludeApptId = null) => {
+    let apptsPromise = API.getAppointments({
+        start: startStr,
+        end: endStr,
+        providers: [],
+        locations: [],
+        subjects: [],
+        visits: [],
+        all_appointments: false
+    })
+    let providersPromise = API.providers()
+    Promise.all([apptsPromise, providersPromise]).then(([appointments, providersData]) => {
+        if (!stillOpenFn()) return
+        const busyProviders = new Set(
+            (appointments || [])
+                .filter(a => String(a.internal_id) !== String(excludeApptId))
+                .map(a => a.user)
+        )
+        const select = $.getElementById(el)
+        if (!select) return
+        for (const k in providersData) {
+            if (providersData[k].is_unschedulable || !providersData[k].is_local)
+                continue
+            let option = $.createElement("option")
+            option.value = providersData[k].value
+            const isBusy = busyProviders.has(providersData[k].value)
+            option.text = providersData[k].label + (isBusy ? ` (${RedCap.tt("context_busy") || "Busy"})` : "")
+            if (isBusy) {
+                option.disabled = true
+            }
+            select.add(option)
+        }
+        if (select.options.length == 2 && !select.options[1].disabled)
+            select.value = select.options[1].value
+    })
+}
+
 const getSelectedAvailability = (selectionInfo) => {
     return selectionInfo ? API.getAvailability({
         start: DateTime.fromISO(selectionInfo.startStr).toFormat("yyyy-MM-dd HH:mm:ss"),
