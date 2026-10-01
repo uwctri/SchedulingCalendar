@@ -473,7 +473,7 @@ class API {
             })
         }).catch((error) => {
             Calendar.hideLoading()
-            const errorMsg = error?.responseJSON?.msg || error?.message || 'Fatal Server Error'
+            const errorMsg = error?.responseJSON?.msg || (typeof error === "string" ? error : error?.message) || 'Fatal Server Error'
             Toast.fire({
                 icon: 'error',
                 title: errorMsg,

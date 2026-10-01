@@ -518,15 +518,37 @@ class Scheduling extends AbstractExternalModule
         if (session_status() === PHP_SESSION_ACTIVE)
             session_write_close();
 
-        if ($action === 'calendar-api')
-            return $this->process($payload, $project_id, $user_id);
-        if ($action === 'survey-calendar-api')
-            return $this->processSurveyApi($payload, $project_id, $record);
-        http_response_code(400);
-        return [
-            "success" => false,
-            "msg" => "Invalid action: $action"
-        ];
+        try {
+            if ($action === 'calendar-api')
+                return $this->process($payload, $project_id, $user_id);
+            if ($action === 'survey-calendar-api')
+                return $this->processSurveyApi($payload, $project_id, $record);
+
+            http_response_code(400);
+            return [
+                "success" => false,
+                "msg" => "Invalid action: $action"
+            ];
+        } catch (\Throwable $e) {
+            if ($action !== 'survey-calendar-api' && !ExternalModules::isNoAuth()) {
+                $errorParams = [
+                    "action" => $action,
+                    "error_message" => $e->getMessage(),
+                    "file" => $e->getFile(),
+                    "line" => $e->getLine(),
+                    "trace" => $e->getTraceAsString(),
+                    "payload" => $payload,
+                    "project_id" => $project_id,
+                    "agent" => $this->getSafeUser()?->getUsername() ?? ($user_id ?? "anonymous")
+                ];
+                $this->log("Scheduling Calendar Server Error: " . $e->getMessage(), $errorParams);
+            }
+            http_response_code(500);
+            return [
+                "success" => false,
+                "msg" => "Server error: " . $e->getMessage()
+            ];
+        }
     }
 
     public function processSurveyApi($payload, $project_id, $record)
